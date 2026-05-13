@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GymLog</title>
+    <!-- Fonts -->
+    <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500,400&f[]=satoshi@700,500,400&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* CSS Variables */
+        :root {
+            --primary: #4ade80;
+            --primary-hover: #22c55e;
+            --bg: #0f0f0f;
+            --surface: #161616;
+            --surface-2: #1e1e1e;
+            --surface-offset: #252525;
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #f0f0f0;
+            --text-muted: #888888;
+            --text-faint: #444444;
+            
+            --workout-push: #f97316;
+            --workout-pull: #60a5fa;
+            --workout-legs: #a78bfa;
+            --workout-upper: #fbbf24;
+            --workout-lower: #2dd4bf;
+            --workout-abs: #f472b6;
+            --workout-rest: #4b5563;
+
+            --radius-tight: 4px;
+            --radius-base: 6px;
+            --radius-pill: 999px;
+            --font-heading: 'Cabinet Grotesk', sans-serif;
+            --font-body: 'Satoshi', sans-serif;
+        }
+
+        .light-theme {
+            --bg: #ffffff;
+            --surface: #f4f4f5;
+            --surface-2: #e4e4e7;
+            --surface-offset: #d4d4d8;
+            --border: rgba(0, 0, 0, 0.1);
+            --text: #171717;
+            --text-muted: #52525b;
+            --text-faint: #a1a1aa;
+        }
+
+        /* Reset */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        h1, h2, h3, h4, h5, h6 { font-family: var(--font-heading); }
+        button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+        input, select { font-family: inherit; }
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+
+        /* Utility Classes */
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-4 { gap: 1rem; }
+        
+        /* Typography */
+        .text-muted { color: var(--text-muted); }
+        .text-primary { color: var(--primary); }
+        .font-bold { font-weight: 700; }
+        
+        /* App Shell */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--border);
+            background-color: var(--surface);
+        }
+        .logo {
+            font-family: var(--font-heading);
+            font-size: 1.5rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary);
+        }
+        .nav-tabs {
+            display: flex;
+            gap: 2rem;
+        }
+        .nav-tab {
+            font-weight: 500;
+            color: var(--text-muted);
+            padding: 0.5rem 0;
+            position: relative;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .nav-tab:hover { color: var(--text); }
+        .nav-tab.active { color: var(--text); }
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--primary);
+            transition: all 0.2s ease;
+        }
+        .header-actions { display: flex; gap: 1rem; align-items: center; }
+        .icon-btn {
+            background: none;
+            color: var(--text-muted);
+            padding: 0.5rem;
+            border-radius: var(--radius-tight);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .icon-btn:hover { background-color: var(--surface-offset); color: var(--text); }
+
+        /* Main Container */
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1280px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Modals and Forms will be styled below */
+        
+        /* Layout */
+        .grid-2 { display: grid; gap: 2rem; grid-template-columns: 1fr; }
+        @media(min-width: 768px) {
+            .grid-2 { grid-template-columns: 2fr 1fr; }
+            .grid-progress { grid-template-columns: 1fr 2fr; }
+        }
+
+        /* Card */
+        .card {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-base);
+            padding: 1.5rem;
+        }
+
+        /* Buttons & Badges */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-tight);
+            font-weight: 500;
+            background-color: var(--surface-offset);
+            color: var(--text);
+            transition: all 0.2s;
+        }
+        .btn:hover { background-color: var(--surface-2); }
+        .btn-primary { background-color: var(--primary); color: #000; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.5rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* Calendar Grid */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background-color: var(--border);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-base);
+            overflow: hidden;
+        }
+        .calendar-day-header {
+            background-color: var(--surface-2);
+            padding: 0.75rem 0.5rem;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        .calendar-cell {
+            background-color: var(--surface);
+            min-height: 100px;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            position: relative;
+        }
+        .calendar-cell:hover { background-color: var(--surface-2); }
+        .calendar-cell.today { border: 2px solid var(--primary); background-color: rgba(74, 222, 128, 0.05); }
+        .calendar-cell.selected { background-color: var(--surface-offset); border: 1px solid var(--primary); }
+        .calendar-cell.empty { background-color: var(--bg); opacity: 0.5; cursor: default; }
+        .calendar-cell.empty:hover { background-color: var(--bg); }
+        .calendar-date {
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+        .calendar-cell.today .calendar-date { color: var(--primary); font-weight: 700; }
+        
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.18s ease-out;
+            padding: 1rem;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal-content {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-base);
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 500px;
+            transform: translateY(8px);
+            transition: transform 0.18s ease-out;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-overlay.open .modal-content { transform: translateY(0); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        
+        /* Workout Types Colors */
+        .type-push { background-color: rgba(249, 115, 22, 0.15); color: var(--workout-push); border: 1px solid var(--workout-push); }
+        .type-pull { background-color: rgba(96, 165, 250, 0.15); color: var(--workout-pull); border: 1px solid var(--workout-pull); }
+        .type-legs { background-color: rgba(167, 139, 250, 0.15); color: var(--workout-legs); border: 1px solid var(--workout-legs); }
+        .type-upper { background-color: rgba(251, 191, 36, 0.15); color: var(--workout-upper); border: 1px solid var(--workout-upper); }
+        .type-lower { background-color: rgba(45, 212, 191, 0.15); color: var(--workout-lower); border: 1px solid var(--workout-lower); }
+        .type-abs { background-color: rgba(244, 114, 182, 0.15); color: var(--workout-abs); border: 1px solid var(--workout-abs); }
+        .type-rest { background-color: rgba(75, 85, 99, 0.15); color: var(--workout-rest); border: 1px solid var(--workout-rest); }
+        
+        /* Inputs & Forms */
+        input, select {
+            background-color: var(--surface-offset);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.75rem;
+            border-radius: var(--radius-tight);
+            width: 100%;
+        }
+        input:focus, select:focus { border-color: var(--primary); outline: none; }
+        .form-row { display: flex; gap: 1rem; align-items: center; margin-bottom: 0.75rem; }
+        .form-row input { flex: 1; }
+        
+        /* Exercise Item */
+        .exercise-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .exercise-item:hover { background-color: var(--surface-offset); }
+        .exercise-item:last-child { border-bottom: none; }
+        
+        .dot {
+            width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+        }
+        .bg-push { background-color: var(--workout-push); }
+        .bg-pull { background-color: var(--workout-pull); }
+        .bg-legs { background-color: var(--workout-legs); }
+        .bg-upper { background-color: var(--workout-upper); }
+        .bg-lower { background-color: var(--workout-lower); }
+        .bg-abs { background-color: var(--workout-abs); }
+        .bg-rest { background-color: var(--workout-rest); }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+        td { padding: 1rem 0.5rem; border-bottom: 1px solid var(--border); }
+        tr:hover td { background-color: var(--surface-offset); cursor: pointer; }
+        
+        /* Sets Chips */
+        .set-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+        .set-chip { background-color: var(--surface-offset); padding: 0.25rem 0.5rem; border-radius: var(--radius-tight); font-size: 0.85rem; color: var(--text-muted); }
+
+    </style>
+</head>
+<body>
+    <!-- App Shell -->
+    <header>
+        <div class="logo">
+            <i data-lucide="dumbbell" style="width: 24px; height: 24px;"></i>
+            GymLog
+        </div>
+        <div class="nav-tabs">
+            <a href="#calendar" class="nav-tab active" id="tab-calendar">Calendar</a>
+            <a href="#progress" class="nav-tab" id="tab-progress">Progress</a>
+        </div>
+        <div class="header-actions">
+            <button class="icon-btn" id="btn-theme" aria-label="Toggle Theme">
+                <i data-lucide="moon"></i>
+            </button>
+            <button class="icon-btn" id="btn-settings" aria-label="Settings">
+                <i data-lucide="settings"></i>
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Calendar View -->
+        <section id="view-calendar" class="">
+            <!-- Calendar grid and Sidebar will be injected here -->
+        </section>
+
+        <!-- Progress View -->
+        <section id="view-progress" class="hidden">
+            <!-- Exercise library and Chart will be injected here -->
+        </section>
+    </main>
+
+    <!-- Modals Container -->
+    <div id="modals">
+        <!-- Day Detail Modal -->
+        <div id="modal-day" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modal-day-title">Date</h2>
+                    <button class="icon-btn" onclick="closeModal('modal-day')"><i data-lucide="x"></i></button>
+                </div>
+                <div id="modal-day-body"></div>
+            </div>
+        </div>
+
+        <!-- Log Session Modal -->
+        <div id="modal-log" class="modal-overlay">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h2 id="modal-log-title">Log Session</h2>
+                    <button class="icon-btn" onclick="closeModal('modal-log')"><i data-lucide="x"></i></button>
+                </div>
+                <div id="modal-log-body">
+                    <div class="form-row" style="margin-bottom: 1.5rem;">
+                        <span style="width: 100px;">Date:</span>
+                        <input type="date" id="log-date">
+                    </div>
+                    
+                    <div id="multi-exercise-container">
+                        <!-- Exercise blocks injected here -->
+                    </div>
+                    
+                    <div style="margin: 1.5rem 0;">
+                        <button class="btn" style="width: 100%; border: 1px dashed var(--border); background: transparent;" onclick="addExerciseToLog()">+ Add Another Exercise</button>
+                    </div>
+
+                    <div class="form-row" style="margin-top: 1.5rem;">
+                        <input type="text" id="log-notes" placeholder="General Notes (optional)">
+                    </div>
+                    
+                    <div class="flex justify-between" style="margin-top: 2rem;">
+                        <button class="btn" onclick="closeModal('modal-log')">Cancel</button>
+                        <button class="btn btn-primary" id="btn-save-session">Save Session</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        const defaultExercises = [
+            { name: 'Chest Press', category: 'Push' },
+            { name: 'Shoulder Press', category: 'Push' },
+            { name: 'Lateral Raise (Cable)', category: 'Push' },
+            { name: 'Lateral Raise (Barbell)', category: 'Push' },
+            { name: 'Tricep Pushdown', category: 'Push' },
+            { name: 'Tricep Overhead', category: 'Push' },
+            { name: 'Pec Fly', category: 'Push' },
+            { name: 'Dips', category: 'Push' },
+            { name: 'Pullups', category: 'Pull' },
+            { name: 'Lat Pulldown', category: 'Pull' },
+            { name: 'Seated Row', category: 'Pull' },
+            { name: 'Row Machine', category: 'Pull' },
+            { name: 'Chinups', category: 'Pull' },
+            { name: 'Shrugs', category: 'Pull' },
+            { name: 'Preacher Curls', category: 'Pull' },
+            { name: 'Wrist Curls', category: 'Pull' },
+            { name: 'Hammer Curls', category: 'Pull' },
+            { name: 'Squat', category: 'Legs' },
+            { name: 'Leg Press', category: 'Legs' },
+            { name: 'Leg Extension', category: 'Legs' },
+            { name: 'Leg Curls (Seated)', category: 'Legs' },
+            { name: 'Leg Curls (Laying)', category: 'Legs' },
+            { name: 'Hip Adductor', category: 'Legs' },
+            { name: 'Hip Thrust', category: 'Legs' },
+            { name: 'Deadlift', category: 'Lower' },
+            { name: 'Cable Crunches', category: 'Abs' },
+            { name: 'Crunch Machine', category: 'Abs' },
+            { name: 'Torso Rotation', category: 'Abs' },
+            { name: 'Plank', category: 'Abs' }
+        ];
+
+        let appState = {
+            unit: 'kg',
+            workoutLogs: {},
+            exercises: defaultExercises,
+            currentMonth: new Date()
+        };
+
+        const savedState = localStorage.getItem('gymLogState');
+        if (savedState) {
+            try {
+                const parsed = JSON.parse(savedState);
+                appState.unit = parsed.unit || 'kg';
+                appState.workoutLogs = parsed.workoutLogs || {};
+                appState.exercises = parsed.exercises || defaultExercises;
+            } catch (e) {
+                console.error('Failed to parse saved state', e);
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('gymLogState', JSON.stringify({
+                unit: appState.unit,
+                workoutLogs: appState.workoutLogs,
+                exercises: appState.exercises
+            }));
+        }
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Theme
+        const btnTheme = document.getElementById('btn-theme');
+        let isDark = true;
+        btnTheme.addEventListener('click', () => {
+            isDark = !isDark;
+            document.body.classList.toggle('light-theme', !isDark);
+            btnTheme.innerHTML = isDark ? '<i data-lucide="moon"></i>' : '<i data-lucide="sun"></i>';
+            lucide.createIcons();
+            if(window.myChart) {
+                window.myChart.options.scales.x.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+                window.myChart.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+                window.myChart.update();
+            }
+        });
+
+        // Utils
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+        function openModal(id) { document.getElementById(id).classList.add('open'); }
+        function getWorkoutColorClass(type) { return `type-${type.toLowerCase()}`; }
+
+        // Calendar Render
+        function renderCalendarView() {
+            const view = document.getElementById('view-calendar');
+            
+            const year = appState.currentMonth.getFullYear();
+            const month = appState.currentMonth.getMonth();
+            const monthName = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(appState.currentMonth);
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const offset = firstDay === 0 ? 6 : firstDay - 1; // Mon = 0
+            
+            let gridHTML = `
+                <div class="calendar-header">
+                    <button class="icon-btn" onclick="prevMonth()"><i data-lucide="chevron-left"></i></button>
+                    <h2>${monthName} ${year}</h2>
+                    <button class="icon-btn" onclick="nextMonth()"><i data-lucide="chevron-right"></i></button>
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-day-header">Mon</div><div class="calendar-day-header">Tue</div>
+                    <div class="calendar-day-header">Wed</div><div class="calendar-day-header">Thu</div>
+                    <div class="calendar-day-header">Fri</div><div class="calendar-day-header">Sat</div>
+                    <div class="calendar-day-header">Sun</div>
+            `;
+            
+            for(let i=0; i<offset; i++) gridHTML += `<div class="calendar-cell empty"></div>`;
+            
+            const todayStr = new Date().toISOString().split('T')[0];
+            
+            for(let i=1; i<=daysInMonth; i++) {
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                const log = appState.workoutLogs[dateStr];
+                const isToday = dateStr === todayStr ? 'today' : '';
+                
+                let badgeHTML = '';
+                if(log) {
+                    badgeHTML = `<span class="badge ${getWorkoutColorClass(log.type)}">${log.type}</span>`;
+                }
+                
+                gridHTML += `
+                    <div class="calendar-cell ${isToday}" onclick="openDayDetail('${dateStr}')">
+                        <div class="calendar-date">${i}</div>
+                        ${badgeHTML}
+                    </div>
+                `;
+            }
+            
+            const totalCells = offset + daysInMonth;
+            const remaining = Math.ceil(totalCells / 7) * 7 - totalCells;
+            for(let i=0; i<remaining; i++) gridHTML += `<div class="calendar-cell empty"></div>`;
+            
+            gridHTML += `</div>`;
+            
+            // Sidebar summary
+            const counts = {};
+            let totalSessions = 0;
+            Object.keys(appState.workoutLogs).forEach(key => {
+                if(key.startsWith(`${year}-${String(month+1).padStart(2,'0')}`)) {
+                    const type = appState.workoutLogs[key].type;
+                    counts[type] = (counts[type] || 0) + 1;
+                    totalSessions++;
+                }
+            });
+            
+            let summaryHTML = `<div class="card"><h3 style="margin-bottom:1rem;">Monthly Breakdown</h3>`;
+            summaryHTML += `<div style="font-size:2rem; font-weight:800; color:var(--primary); margin-bottom:1rem;">${totalSessions} <span style="font-size:1rem; color:var(--text-muted); font-weight:500;">sessions</span></div>`;
+            
+            Object.entries(counts).forEach(([type, count]) => {
+                summaryHTML += `
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; align-items:center;">
+                        <span style="width:60px;">${type}</span>
+                        <div style="flex:1; height:8px; background:var(--surface-offset); border-radius:4px; margin:0 1rem; overflow:hidden;">
+                            <div class="bg-${type.toLowerCase()}" style="width:${(count/10)*100}%; height:100%;"></div>
+                        </div>
+                        <span>${count}</span>
+                    </div>
+                `;
+            });
+            summaryHTML += `</div>`;
+            
+            view.innerHTML = `
+                <div class="grid-2">
+                    <div>${gridHTML}</div>
+                    <div>${summaryHTML}</div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        window.prevMonth = () => { appState.currentMonth.setMonth(appState.currentMonth.getMonth() - 1); renderCalendarView(); };
+        window.nextMonth = () => { appState.currentMonth.setMonth(appState.currentMonth.getMonth() + 1); renderCalendarView(); };
+
+        // Day Detail
+        window.openDayDetail = (dateStr) => {
+            const log = appState.workoutLogs[dateStr];
+            const modalBody = document.getElementById('modal-day-body');
+            const d = new Date(dateStr);
+            const formattedDate = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).format(d);
+            document.getElementById('modal-day-title').innerText = formattedDate;
+            
+            if(!log) {
+                const types = ['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Abs', 'Rest'];
+                let html = `<p style="margin-bottom:1rem;">What did you do today?</p><div class="flex" style="flex-wrap:wrap; gap:0.5rem;">`;
+                types.forEach(t => {
+                    html += `<button class="btn ${getWorkoutColorClass(t)}" onclick="quickLog('${dateStr}', '${t}')">${t}</button>`;
+                });
+                html += `</div>`;
+                modalBody.innerHTML = html;
+            } else {
+                let html = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                        <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:1rem;">${log.type} Day</span>
+                        <button class="btn" style="padding:0.25rem 0.5rem;" onclick="clearLog('${dateStr}')"><i data-lucide="trash" style="width:16px;"></i></button>
+                    </div>
+                `;
+                
+                if(log.type !== 'Rest' && log.exercises.length > 0) {
+                    html += `<h4 style="margin-bottom:0.5rem;">Exercises:</h4><div class="card" style="padding:0;">`;
+                    log.exercises.forEach(ex => {
+                        html += `<div style="padding:1rem; border-bottom:1px solid var(--border);">
+                            <div class="font-bold">${ex.name}</div>
+                            <div class="set-chips">
+                                ${ex.sets.map((s, idx) => `<span class="set-chip">Set ${idx+1}: ${s.weight}${appState.unit} × ${s.reps}</span>`).join('')}
+                            </div>
+                        </div>`;
+                    });
+                    html += `</div>`;
+                }
+                
+                if(log.type !== 'Rest') {
+                    html += `<div style="margin-top:1.5rem;"><button class="btn" onclick="openLogSession('${dateStr}')">+ Add / Edit Exercises</button></div>`;
+                }
+                
+                modalBody.innerHTML = html;
+            }
+            lucide.createIcons();
+            openModal('modal-day');
+        };
+
+        window.quickLog = (dateStr, type) => {
+            appState.workoutLogs[dateStr] = { type: type, exercises: [] };
+            saveState();
+            renderCalendarView();
+            closeModal('modal-day');
+            if(type !== 'Rest') openLogSession(dateStr);
+        };
+        
+        window.clearLog = (dateStr) => {
+            delete appState.workoutLogs[dateStr];
+            saveState();
+            renderCalendarView();
+            closeModal('modal-day');
+        };
+
+        // Log Session Modal
+        let logSessionData = [];
+        let logExCounter = 0;
+
+        window.openLogSession = (dateStr) => {
+            document.getElementById('log-date').value = dateStr || new Date().toISOString().split('T')[0];
+            document.getElementById('log-notes').value = '';
+            
+            logSessionData = [];
+            document.getElementById('multi-exercise-container').innerHTML = '';
+            
+            addExerciseToLog();
+            
+            closeModal('modal-day');
+            openModal('modal-log');
+        };
+
+        window.addExerciseToLog = () => {
+            saveCurrentInputs();
+            const id = logExCounter++;
+            logSessionData.push({ id, name: '', sets: [{weight: '', reps: ''}, {weight: '', reps: ''}, {weight: '', reps: ''}] });
+            renderLogExercises();
+        };
+        
+        window.removeExerciseFromLog = (id) => {
+            saveCurrentInputs();
+            logSessionData = logSessionData.filter(e => e.id !== id);
+            renderLogExercises();
+        };
+        
+        window.addSetToExercise = (id) => {
+            saveCurrentInputs();
+            const ex = logSessionData.find(e => e.id === id);
+            if(ex) ex.sets.push({weight: '', reps: ''});
+            renderLogExercises();
+        };
+
+        window.removeSetFromExercise = (id) => {
+            saveCurrentInputs();
+            const ex = logSessionData.find(e => e.id === id);
+            if(ex && ex.sets.length > 1) ex.sets.pop();
+            renderLogExercises();
+        };
+
+        function saveCurrentInputs() {
+            logSessionData.forEach(ex => {
+                const nameInput = document.getElementById(`log-ex-${ex.id}-name`);
+                if(nameInput) ex.name = nameInput.value;
+                ex.sets.forEach((set, idx) => {
+                    const wInput = document.getElementById(`log-ex-${ex.id}-w-${idx}`);
+                    const rInput = document.getElementById(`log-ex-${ex.id}-r-${idx}`);
+                    if(wInput) set.weight = wInput.value;
+                    if(rInput) set.reps = rInput.value;
+                });
+            });
+        }
+
+        window.renderLogExercises = () => {
+            const container = document.getElementById('multi-exercise-container');
+            const datalistHtml = appState.exercises.map(e => `<option value="${e.name}">`).join('');
+            
+            let html = `<datalist id="exercise-datalist">${datalistHtml}</datalist>`;
+            
+            logSessionData.forEach((ex, exIdx) => {
+                html += `
+                    <div class="card" style="margin-bottom:1rem; padding:1.25rem;">
+                        <div class="flex justify-between items-center" style="margin-bottom:1rem;">
+                            <span class="font-bold text-primary">Exercise ${exIdx + 1}</span>
+                            <button class="icon-btn" style="padding:0.25rem; color:var(--text-muted);" onclick="removeExerciseFromLog(${ex.id})"><i data-lucide="trash-2" style="width:16px;"></i></button>
+                        </div>
+                        <input type="text" id="log-ex-${ex.id}-name" placeholder="Search or type exercise name..." list="exercise-datalist" value="${ex.name}" style="margin-bottom:1rem; font-weight:bold;">
+                `;
+                
+                ex.sets.forEach((set, sIdx) => {
+                    html += `
+                        <div class="form-row" style="margin-bottom:0.5rem;">
+                            <span style="width:50px; font-size:0.85rem;" class="text-muted">Set ${sIdx + 1}</span>
+                            <input type="number" step="0.5" placeholder="Weight (${appState.unit})" id="log-ex-${ex.id}-w-${sIdx}" value="${set.weight}">
+                            <input type="number" placeholder="Reps" id="log-ex-${ex.id}-r-${sIdx}" value="${set.reps}">
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        <div class="flex gap-2" style="margin-top:1rem;">
+                            <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="addSetToExercise(${ex.id})">+ Add Set</button>
+                            <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="removeSetFromExercise(${ex.id})">- Remove Set</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+            lucide.createIcons();
+        };
+
+        document.getElementById('btn-save-session').onclick = () => {
+            saveCurrentInputs();
+            
+            const dateStr = document.getElementById('log-date').value;
+            const notes = document.getElementById('log-notes').value;
+            
+            if(!dateStr) return alert('Date is required.');
+            
+            const finalExercises = [];
+            
+            logSessionData.forEach(ex => {
+                if(!ex.name.trim()) return;
+                const validSets = [];
+                ex.sets.forEach(set => {
+                    const w = parseFloat(set.weight);
+                    const r = parseInt(set.reps);
+                    if(!isNaN(w) && !isNaN(r) && w > 0 && r > 0) {
+                        validSets.push({ weight: w, reps: r });
+                    }
+                });
+                if(validSets.length > 0) {
+                    finalExercises.push({ name: ex.name.trim(), sets: validSets, notes: '' });
+                }
+            });
+            
+            if(finalExercises.length === 0) return alert('At least one valid exercise with sets is required.');
+            
+            if(!appState.workoutLogs[dateStr]) {
+                appState.workoutLogs[dateStr] = { type: 'Push', exercises: [] }; 
+            }
+            
+            finalExercises.forEach(fex => {
+                appState.workoutLogs[dateStr].exercises.push(fex);
+                if(!appState.exercises.find(e => e.name.toLowerCase() === fex.name.toLowerCase())) {
+                    appState.exercises.push({ name: fex.name, category: appState.workoutLogs[dateStr].type });
+                }
+            });
+            
+            // Apply general notes if provided
+            if(notes.trim()) {
+                if(!finalExercises[0].notes) finalExercises[0].notes = notes.trim();
+                else finalExercises[0].notes += ' | ' + notes.trim();
+            }
+            
+            saveState();
+            
+            closeModal('modal-log');
+            if(window.location.hash === '#progress') renderProgressView();
+            else renderCalendarView();
+        };
+
+        // Progress Render
+        function renderProgressView() {
+            const view = document.getElementById('view-progress');
+            
+            // Generate list
+            let listHTML = `<div class="card" style="padding:0; overflow-y:auto; max-height:80vh;">
+                <div style="padding:1rem; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface);">
+                    <h3 style="margin-bottom:1rem;">Exercises</h3>
+                    <input type="text" placeholder="Search..." id="search-ex" onkeyup="filterExercises()">
+                </div>
+                <div id="exercise-list">
+            `;
+            
+            appState.exercises.forEach(ex => {
+                listHTML += `
+                    <div class="exercise-item flex items-center justify-between" onclick="showExerciseDetail('${ex.name}')">
+                        <div>
+                            <div class="font-bold">${ex.name}</div>
+                            <div class="text-muted" style="font-size:0.8rem;">
+                                <span class="dot bg-${ex.category.toLowerCase()}"></span> ${ex.category}
+                            </div>
+                        </div>
+                        <i data-lucide="chevron-right" class="text-muted"></i>
+                    </div>
+                `;
+            });
+            listHTML += `</div></div>`;
+            
+            view.innerHTML = `
+                <div class="grid-2 grid-progress">
+                    ${listHTML}
+                    <div id="exercise-detail" class="card flex items-center justify-center text-muted">
+                        <div style="text-align:center;">
+                            <i data-lucide="dumbbell" style="width:48px;height:48px;margin-bottom:1rem;opacity:0.5;"></i>
+                            <p>Select an exercise to see your progress</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        window.filterExercises = () => {
+            const q = document.getElementById('search-ex').value.toLowerCase();
+            document.querySelectorAll('.exercise-item').forEach(el => {
+                const name = el.querySelector('.font-bold').innerText.toLowerCase();
+                el.style.display = name.includes(q) ? 'flex' : 'none';
+            });
+        };
+
+        window.showExerciseDetail = (name) => {
+            const detail = document.getElementById('exercise-detail');
+            const exInfo = appState.exercises.find(e => e.name === name);
+            
+            // Gather session data for this exercise
+            const sessions = [];
+            Object.keys(appState.workoutLogs).sort().forEach(date => {
+                const log = appState.workoutLogs[date];
+                const exs = log.exercises.filter(e => e.name === name);
+                exs.forEach(e => {
+                    const bestSet = e.sets.reduce((max, s) => s.weight > max.weight ? s : max, e.sets[0]);
+                    const vol = e.sets.reduce((sum, s) => sum + (s.weight * s.reps), 0);
+                    sessions.push({ date, bestSet, vol, notes: e.notes, setsCount: e.sets.length });
+                });
+            });
+            
+            if(sessions.length === 0) {
+                detail.innerHTML = `<h2 style="margin-bottom:1rem;">${name}</h2><p class="text-muted">No sessions logged yet.</p>`;
+                return;
+            }
+            
+            const lastSession = sessions[sessions.length-1];
+            
+            let html = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2rem;">
+                    <div>
+                        <h2>${name} <span class="badge type-${exInfo.category.toLowerCase()}" style="margin-left:0.5rem; vertical-align:middle;">${exInfo.category}</span></h2>
+                        <div class="text-muted" style="margin-top:0.5rem;">Last session: ${lastSession.date} — ${lastSession.bestSet.weight}${appState.unit} × ${lastSession.bestSet.reps} (best set)</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="openLogSession()">+ Log Session</button>
+                </div>
+                
+                <div style="height:300px; width:100%; margin-bottom:2rem;">
+                    <canvas id="progressChart"></canvas>
+                </div>
+                
+                <h4 style="margin-bottom:1rem;">History</h4>
+                <table>
+                    <thead>
+                        <tr><th>Date</th><th>Sets</th><th>Best Set</th><th>Volume</th><th>Notes</th></tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            [...sessions].reverse().forEach(s => {
+                html += `
+                    <tr onclick="window.location.hash='#calendar'; setTimeout(()=>openDayDetail('${s.date}'), 100);">
+                        <td>${s.date}</td>
+                        <td>${s.setsCount}</td>
+                        <td>${s.bestSet.weight}${appState.unit} × ${s.bestSet.reps}</td>
+                        <td>${s.vol} ${appState.unit}</td>
+                        <td>${s.notes || '—'}</td>
+                    </tr>
+                `;
+            });
+            html += `</tbody></table>`;
+            
+            detail.classList.remove('items-center', 'justify-center');
+            detail.innerHTML = html;
+            
+            // Render Chart
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            if(window.myChart) window.myChart.destroy();
+            
+            const chartData = sessions.slice(-12); // Last 12 sessions
+            
+            window.myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.map(s => s.date.substring(5)), // MM-DD
+                    datasets: [{
+                        label: `Max Weight (${appState.unit})`,
+                        data: chartData.map(s => s.bestSet.weight),
+                        borderColor: '#4ade80',
+                        backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#161616',
+                        pointBorderColor: '#4ade80',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' } },
+                        y: { 
+                            grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                            beginAtZero: false 
+                        }
+                    }
+                }
+            });
+        };
+
+        // Router
+        function handleRoute() {
+            const hash = window.location.hash || '#calendar';
+            if (hash === '#progress') {
+                document.getElementById('view-calendar').classList.add('hidden');
+                document.getElementById('view-progress').classList.remove('hidden');
+                document.getElementById('tab-calendar').classList.remove('active');
+                document.getElementById('tab-progress').classList.add('active');
+                renderProgressView();
+            } else {
+                document.getElementById('view-calendar').classList.remove('hidden');
+                document.getElementById('view-progress').classList.add('hidden');
+                document.getElementById('tab-calendar').classList.add('active');
+                document.getElementById('tab-progress').classList.remove('active');
+                renderCalendarView();
+            }
+        }
+        window.addEventListener('hashchange', handleRoute);
+        
+        handleRoute();
+    </script>
+</body>
+</html>
