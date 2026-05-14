@@ -909,14 +909,25 @@
                         <h3 style="margin:0;">Exercises</h3>
                         <button class="icon-btn" onclick="openNewExerciseModal()"><i data-lucide="plus"></i></button>
                     </div>
-                    <input type="text" placeholder="Search..." id="search-ex" onkeyup="filterExercises()">
+                    <div class="flex gap-2">
+                        <input type="text" placeholder="Search..." id="search-ex" onkeyup="filterExercises()" style="flex:1;">
+                        <select id="filter-cat" onchange="filterExercises()" style="width:100px; padding:0.5rem;">
+                            <option value="All">All</option>
+                            <option value="Push">Push</option>
+                            <option value="Pull">Pull</option>
+                            <option value="Legs">Legs</option>
+                            <option value="Upper">Upper</option>
+                            <option value="Lower">Lower</option>
+                            <option value="Abs">Abs</option>
+                        </select>
+                    </div>
                 </div>
                 <div id="exercise-list">
             `;
             
             appState.exercises.forEach(ex => {
                 listHTML += `
-                    <div class="exercise-item flex items-center justify-between" onclick="showExerciseDetail('${ex.name}')">
+                    <div class="exercise-item flex items-center justify-between" data-category="${ex.category}" onclick="showExerciseDetail('${ex.name}')">
                         <div>
                             <div class="font-bold">${ex.name}</div>
                             <div class="text-muted" style="font-size:0.8rem;">
@@ -945,9 +956,16 @@
 
         window.filterExercises = () => {
             const q = document.getElementById('search-ex').value.toLowerCase();
+            const cat = document.getElementById('filter-cat').value;
+            
             document.querySelectorAll('.exercise-item').forEach(el => {
                 const name = el.querySelector('.font-bold').innerText.toLowerCase();
-                el.style.display = name.includes(q) ? 'flex' : 'none';
+                const itemCat = el.getAttribute('data-category');
+                
+                const matchesSearch = name.includes(q);
+                const matchesCat = cat === 'All' || itemCat === cat;
+                
+                el.style.display = (matchesSearch && matchesCat) ? 'flex' : 'none';
             });
         };
 
