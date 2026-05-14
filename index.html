@@ -400,6 +400,29 @@
                 </div>
             </div>
         </div>
+
+        <!-- Settings Modal -->
+        <div id="modal-settings" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Settings & Backup</h2>
+                    <button class="icon-btn" onclick="closeModal('modal-settings')"><i data-lucide="x"></i></button>
+                </div>
+                <div id="modal-settings-body">
+                    <div style="margin-bottom: 2rem;">
+                        <h4 style="margin-bottom: 0.5rem;">Data Backup</h4>
+                        <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.9rem;">Export your workout data to a file to keep it safe, or import a previous backup.</p>
+                        <div class="flex gap-2">
+                            <button class="btn" onclick="exportData()"><i data-lucide="download" style="width:16px;"></i> Export Data</button>
+                            <label class="btn" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.5rem; padding:0.75rem 1.5rem; background-color:var(--surface-offset); border-radius:var(--radius-tight); font-weight:500;">
+                                <i data-lucide="upload" style="width:16px;"></i> Import Data
+                                <input type="file" accept=".json" class="hidden" id="import-file" onchange="importData(event)">
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -485,6 +508,49 @@
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
         function openModal(id) { document.getElementById(id).classList.add('open'); }
         function getWorkoutColorClass(type) { return `type-${type.toLowerCase()}`; }
+
+        // Settings & Backup
+        document.getElementById('btn-settings').onclick = () => openModal('modal-settings');
+
+        window.exportData = () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+                unit: appState.unit,
+                workoutLogs: appState.workoutLogs,
+                exercises: appState.exercises
+            }));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "gym_tracker_backup_" + new Date().toISOString().split('T')[0] + ".json");
+            document.body.appendChild(downloadAnchorNode); // required for firefox
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        };
+
+        window.importData = (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed.workoutLogs && parsed.exercises) {
+                        appState.unit = parsed.unit || 'kg';
+                        appState.workoutLogs = parsed.workoutLogs;
+                        appState.exercises = parsed.exercises;
+                        saveState();
+                        closeModal('modal-settings');
+                        handleRoute(); // re-render current view
+                        alert('Backup successfully restored!');
+                    } else {
+                        alert('Invalid backup file format.');
+                    }
+                } catch (err) {
+                    alert('Error reading backup file.');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // reset input
+        };
 
         // Calendar Render
         function renderCalendarView() {
