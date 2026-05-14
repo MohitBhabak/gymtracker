@@ -380,6 +380,16 @@
                         <span style="width: 100px;">Date:</span>
                         <input type="date" id="log-date">
                     </div>
+                    <div class="form-row" style="margin-bottom: 1.5rem;">
+                        <span style="width: 100px;">Time:</span>
+                        <select id="log-time">
+                            <option value="">-- Optional --</option>
+                            <option value="Early Morning">Early Morning</option>
+                            <option value="Morning">Morning</option>
+                            <option value="Afternoon">Afternoon</option>
+                            <option value="Evening">Evening</option>
+                        </select>
+                    </div>
                     
                     <div id="multi-exercise-container">
                         <!-- Exercise blocks injected here -->
@@ -817,6 +827,12 @@
             let existingNotes = '';
             const existingLog = appState.workoutLogs[dateStr];
             
+            if (existingLog && existingLog.timeOfDay) {
+                document.getElementById('log-time').value = existingLog.timeOfDay;
+            } else {
+                document.getElementById('log-time').value = '';
+            }
+            
             if (existingLog && existingLog.exercises && existingLog.exercises.length > 0) {
                 existingLog.exercises.forEach(ex => {
                     if (ex.notes) {
@@ -955,6 +971,7 @@
             
             const dateStr = document.getElementById('log-date').value;
             const notes = document.getElementById('log-notes').value;
+            const timeOfDay = document.getElementById('log-time').value;
             
             if(!dateStr) return alert('Date is required.');
             
@@ -984,7 +1001,9 @@
             if(finalExercises.length === 0) return alert('At least one valid exercise with sets is required.');
             
             if(!appState.workoutLogs[dateStr]) {
-                appState.workoutLogs[dateStr] = { type: 'Push', timeOfDay: '', exercises: [] }; 
+                appState.workoutLogs[dateStr] = { type: 'Push', timeOfDay: timeOfDay, exercises: [] }; 
+            } else {
+                appState.workoutLogs[dateStr].timeOfDay = timeOfDay;
             }
             
             appState.workoutLogs[dateStr].exercises = [];
