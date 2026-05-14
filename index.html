@@ -32,6 +32,11 @@
             --workout-abs: #f472b6;
             --workout-rest: #4b5563;
 
+            --time-earlymorning: #14b8a6;
+            --time-morning: #10b981;
+            --time-afternoon: #eab308;
+            --time-evening: #8b5cf6;
+
             --radius-tight: 4px;
             --radius-base: 6px;
             --radius-pill: 999px;
@@ -276,6 +281,11 @@
         .type-abs { background-color: rgba(244, 114, 182, 0.15); color: var(--workout-abs); border: 1px solid var(--workout-abs); }
         .type-rest { background-color: rgba(75, 85, 99, 0.15); color: var(--workout-rest); border: 1px solid var(--workout-rest); }
         
+        .time-earlymorning { background-color: rgba(20, 184, 166, 0.15); color: var(--time-earlymorning); border: 1px solid var(--time-earlymorning); }
+        .time-morning { background-color: rgba(16, 185, 129, 0.15); color: var(--time-morning); border: 1px solid var(--time-morning); }
+        .time-afternoon { background-color: rgba(234, 179, 8, 0.15); color: var(--time-afternoon); border: 1px solid var(--time-afternoon); }
+        .time-evening { background-color: rgba(139, 92, 246, 0.15); color: var(--time-evening); border: 1px solid var(--time-evening); }
+        
         /* Inputs & Forms */
         input, select {
             background-color: var(--surface-offset);
@@ -309,6 +319,11 @@
         .bg-lower { background-color: var(--workout-lower); }
         .bg-abs { background-color: var(--workout-abs); }
         .bg-rest { background-color: var(--workout-rest); }
+
+        .bg-time-earlymorning { background-color: var(--time-earlymorning); }
+        .bg-time-morning { background-color: var(--time-morning); }
+        .bg-time-afternoon { background-color: var(--time-afternoon); }
+        .bg-time-evening { background-color: var(--time-evening); }
 
         /* Tables */
         table { width: 100%; border-collapse: collapse; text-align: left; }
@@ -561,6 +576,8 @@
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
         function openModal(id) { document.getElementById(id).classList.add('open'); }
         function getWorkoutColorClass(type) { return `type-${type.toLowerCase()}`; }
+        function getTimeColorClass(time) { return `time-${time.replace(/\s+/g, '').toLowerCase()}`; }
+        function getBgTimeColorClass(time) { return `bg-time-${time.replace(/\s+/g, '').toLowerCase()}`; }
 
         // Settings & Backup
         document.getElementById('btn-settings').onclick = () => {
@@ -709,7 +726,7 @@
                         <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; align-items:center;">
                             <span style="width:100px; font-size:0.9rem;">${time}</span>
                             <div style="flex:1; height:8px; background:var(--surface-offset); border-radius:4px; margin:0 1rem; overflow:hidden;">
-                                <div style="background-color: var(--primary); width:${(count/totalSessions)*100}%; height:100%;"></div>
+                                <div class="${getBgTimeColorClass(time)}" style="width:${(count/totalSessions)*100}%; height:100%;"></div>
                             </div>
                             <span>${count}</span>
                         </div>
@@ -753,7 +770,7 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                         <div>
                             <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:1rem;">${log.type} Day</span>
-                            ${log.timeOfDay ? `<span class="badge" style="font-size:0.8rem; background-color:var(--surface-offset); color:var(--text-muted); margin-left:0.5rem; vertical-align:middle;">${log.timeOfDay}</span>` : ''}
+                            ${log.timeOfDay ? `<span class="badge ${getTimeColorClass(log.timeOfDay)}" style="font-size:0.8rem; margin-left:0.5rem; vertical-align:middle;">${log.timeOfDay}</span>` : ''}
                         </div>
                         <button class="btn" style="padding:0.25rem 0.5rem;" onclick="clearLog('${dateStr}')"><i data-lucide="trash" style="width:16px;"></i></button>
                     </div>
@@ -793,7 +810,7 @@
             const times = ['Early Morning', 'Morning', 'Afternoon', 'Evening'];
             let html = `<p style="margin-bottom:1rem;">What time did you workout?</p><div class="flex" style="flex-wrap:wrap; gap:0.5rem;">`;
             times.forEach(time => {
-                html += `<button class="btn" style="background-color: var(--surface-offset);" onclick="quickLog('${dateStr}', '${type}', '${time}')">${time}</button>`;
+                html += `<button class="btn ${getTimeColorClass(time)}" onclick="quickLog('${dateStr}', '${type}', '${time}')">${time}</button>`;
             });
             html += `</div>`;
             modalBody.innerHTML = html;
