@@ -454,6 +454,12 @@
                         <option value="Abs">Abs</option>
                     </select>
                 </div>
+                <div class="form-row" style="margin-bottom: 1.5rem;">
+                    <label class="flex items-center gap-2" style="cursor: pointer;">
+                        <input type="checkbox" id="new-ex-bw" style="width: auto;">
+                        <span>Bodyweight Exercise</span>
+                    </label>
+                </div>
                 <div class="flex justify-end">
                     <button class="btn btn-primary" onclick="saveNewExercise()">Add Exercise</button>
                 </div>
@@ -466,17 +472,18 @@
         const defaultExercises = [
             { name: 'Chest Press', category: 'Push' },
             { name: 'Shoulder Press', category: 'Push' },
+            { name: 'Pushups', category: 'Push', isBodyweight: true },
             { name: 'Lateral Raise (Cable)', category: 'Push' },
             { name: 'Lateral Raise (Barbell)', category: 'Push' },
             { name: 'Tricep Pushdown', category: 'Push' },
             { name: 'Tricep Overhead', category: 'Push' },
             { name: 'Pec Fly', category: 'Push' },
-            { name: 'Dips', category: 'Push' },
-            { name: 'Pullups', category: 'Pull' },
+            { name: 'Dips', category: 'Push', isBodyweight: true },
+            { name: 'Pullups', category: 'Pull', isBodyweight: true },
             { name: 'Lat Pulldown', category: 'Pull' },
             { name: 'Seated Row', category: 'Pull' },
             { name: 'Row Machine', category: 'Pull' },
-            { name: 'Chinups', category: 'Pull' },
+            { name: 'Chinups', category: 'Pull', isBodyweight: true },
             { name: 'Shrugs', category: 'Pull' },
             { name: 'Preacher Curls', category: 'Pull' },
             { name: 'Wrist Curls', category: 'Pull' },
@@ -492,7 +499,7 @@
             { name: 'Cable Crunches', category: 'Abs' },
             { name: 'Crunch Machine', category: 'Abs' },
             { name: 'Torso Rotation', category: 'Abs' },
-            { name: 'Plank', category: 'Abs' }
+            { name: 'Plank', category: 'Abs', isBodyweight: true }
         ];
 
         let appState = {
@@ -652,11 +659,17 @@
             
             // Sidebar summary
             const counts = {};
+            const timeCounts = {};
             let totalSessions = 0;
             Object.keys(appState.workoutLogs).forEach(key => {
                 if(key.startsWith(`${year}-${String(month+1).padStart(2,'0')}`)) {
                     const type = appState.workoutLogs[key].type;
                     counts[type] = (counts[type] || 0) + 1;
+                    
+                    const time = appState.workoutLogs[key].timeOfDay;
+                    if(time) {
+                        timeCounts[time] = (timeCounts[time] || 0) + 1;
+                    }
                     totalSessions++;
                 }
             });
@@ -664,17 +677,36 @@
             let summaryHTML = `<div class="card"><h3 style="margin-bottom:1rem;">Monthly Breakdown</h3>`;
             summaryHTML += `<div style="font-size:2rem; font-weight:800; color:var(--primary); margin-bottom:1rem;">${totalSessions} <span style="font-size:1rem; color:var(--text-muted); font-weight:500;">sessions</span></div>`;
             
-            Object.entries(counts).forEach(([type, count]) => {
-                summaryHTML += `
-                    <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; align-items:center;">
-                        <span style="width:60px;">${type}</span>
-                        <div style="flex:1; height:8px; background:var(--surface-offset); border-radius:4px; margin:0 1rem; overflow:hidden;">
-                            <div class="bg-${type.toLowerCase()}" style="width:${(count/10)*100}%; height:100%;"></div>
+            if (Object.keys(counts).length > 0) {
+                summaryHTML += `<h4 style="margin-bottom:0.5rem; font-size:0.8rem;" class="text-muted">BY TYPE</h4>`;
+                Object.entries(counts).forEach(([type, count]) => {
+                    summaryHTML += `
+                        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; align-items:center;">
+                            <span style="width:60px;">${type}</span>
+                            <div style="flex:1; height:8px; background:var(--surface-offset); border-radius:4px; margin:0 1rem; overflow:hidden;">
+                                <div class="bg-${type.toLowerCase()}" style="width:${(count/10)*100}%; height:100%;"></div>
+                            </div>
+                            <span>${count}</span>
                         </div>
-                        <span>${count}</span>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            }
+
+            if (Object.keys(timeCounts).length > 0) {
+                summaryHTML += `<h4 style="margin-top:1.5rem; margin-bottom:0.5rem; font-size:0.8rem;" class="text-muted">BY TIME</h4>`;
+                Object.entries(timeCounts).forEach(([time, count]) => {
+                    summaryHTML += `
+                        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; align-items:center;">
+                            <span style="width:100px; font-size:0.9rem;">${time}</span>
+                            <div style="flex:1; height:8px; background:var(--surface-offset); border-radius:4px; margin:0 1rem; overflow:hidden;">
+                                <div style="background-color: var(--primary); width:${(count/totalSessions)*100}%; height:100%;"></div>
+                            </div>
+                            <span>${count}</span>
+                        </div>
+                    `;
+                });
+            }
+
             summaryHTML += `</div>`;
             
             view.innerHTML = `
@@ -701,14 +733,18 @@
                 const types = ['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Abs', 'Rest'];
                 let html = `<p style="margin-bottom:1rem;">What did you do today?</p><div class="flex" style="flex-wrap:wrap; gap:0.5rem;">`;
                 types.forEach(t => {
-                    html += `<button class="btn ${getWorkoutColorClass(t)}" onclick="quickLog('${dateStr}', '${t}')">${t}</button>`;
+                    const action = t === 'Rest' ? `quickLog('${dateStr}', '${t}')` : `selectTimeOfDay('${dateStr}', '${t}')`;
+                    html += `<button class="btn ${getWorkoutColorClass(t)}" onclick="${action}">${t}</button>`;
                 });
                 html += `</div>`;
                 modalBody.innerHTML = html;
             } else {
                 let html = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                        <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:1rem;">${log.type} Day</span>
+                        <div>
+                            <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:1rem;">${log.type} Day</span>
+                            ${log.timeOfDay ? `<span class="badge" style="font-size:0.8rem; background-color:var(--surface-offset); color:var(--text-muted); margin-left:0.5rem; vertical-align:middle;">${log.timeOfDay}</span>` : ''}
+                        </div>
                         <button class="btn" style="padding:0.25rem 0.5rem;" onclick="clearLog('${dateStr}')"><i data-lucide="trash" style="width:16px;"></i></button>
                     </div>
                 `;
@@ -719,7 +755,13 @@
                         html += `<div style="padding:1rem; border-bottom:1px solid var(--border);">
                             <div class="font-bold">${ex.name}</div>
                             <div class="set-chips">
-                                ${ex.sets.map((s, idx) => `<span class="set-chip">Set ${idx+1}: ${s.weight}${appState.unit} × ${s.reps}</span>`).join('')}
+                                ${ex.sets.map((s, idx) => {
+                                    if (s.isBodyweight || s.weight === 0) {
+                                        return `<span class="set-chip">Set ${idx+1}: BW × ${s.reps}</span>`;
+                                    } else {
+                                        return `<span class="set-chip">Set ${idx+1}: ${s.weight}${appState.unit} × ${s.reps}</span>`;
+                                    }
+                                }).join('')}
                             </div>
                         </div>`;
                     });
@@ -736,8 +778,19 @@
             openModal('modal-day');
         };
 
-        window.quickLog = (dateStr, type) => {
-            appState.workoutLogs[dateStr] = { type: type, exercises: [] };
+        window.selectTimeOfDay = (dateStr, type) => {
+            const modalBody = document.getElementById('modal-day-body');
+            const times = ['Early Morning', 'Morning', 'Afternoon', 'Evening'];
+            let html = `<p style="margin-bottom:1rem;">What time did you workout?</p><div class="flex" style="flex-wrap:wrap; gap:0.5rem;">`;
+            times.forEach(time => {
+                html += `<button class="btn" style="background-color: var(--surface-offset);" onclick="quickLog('${dateStr}', '${type}', '${time}')">${time}</button>`;
+            });
+            html += `</div>`;
+            modalBody.innerHTML = html;
+        };
+
+        window.quickLog = (dateStr, type, timeOfDay = '') => {
+            appState.workoutLogs[dateStr] = { type: type, timeOfDay: timeOfDay, exercises: [] };
             saveState();
             renderCalendarView();
             closeModal('modal-day');
@@ -771,7 +824,7 @@
         window.addExerciseToLog = () => {
             saveCurrentInputs();
             const id = logExCounter++;
-            logSessionData.push({ id, name: '', sets: [{weight: '', reps: ''}, {weight: '', reps: ''}, {weight: '', reps: ''}] });
+            logSessionData.push({ id, name: '', sets: [{weight: '', reps: ''}, {weight: '', reps: ''}, {weight: '', reps: ''}], isBodyweight: false });
             renderLogExercises();
         };
         
@@ -795,10 +848,29 @@
             renderLogExercises();
         };
 
+        window.toggleBodyweight = (id) => {
+            saveCurrentInputs();
+            renderLogExercises();
+        };
+
+        window.checkAutoBodyweight = (id) => {
+            saveCurrentInputs();
+            const ex = logSessionData.find(e => e.id === id);
+            if(ex && ex.name) {
+                const libEx = appState.exercises.find(e => e.name.toLowerCase() === ex.name.toLowerCase());
+                if (libEx && libEx.isBodyweight && !ex.isBodyweight) {
+                    ex.isBodyweight = true;
+                    renderLogExercises();
+                }
+            }
+        };
+
         function saveCurrentInputs() {
             logSessionData.forEach(ex => {
                 const nameInput = document.getElementById(`log-ex-${ex.id}-name`);
+                const bwInput = document.getElementById(`log-ex-${ex.id}-bw`);
                 if(nameInput) ex.name = nameInput.value;
+                if(bwInput) ex.isBodyweight = bwInput.checked;
                 ex.sets.forEach((set, idx) => {
                     const wInput = document.getElementById(`log-ex-${ex.id}-w-${idx}`);
                     const rInput = document.getElementById(`log-ex-${ex.id}-r-${idx}`);
@@ -821,14 +893,22 @@
                             <span class="font-bold text-primary">Exercise ${exIdx + 1}</span>
                             <button class="icon-btn" style="padding:0.25rem; color:var(--text-muted);" onclick="removeExerciseFromLog(${ex.id})"><i data-lucide="trash-2" style="width:16px;"></i></button>
                         </div>
-                        <input type="text" id="log-ex-${ex.id}-name" placeholder="Search or type exercise name..." list="exercise-datalist" value="${ex.name}" style="margin-bottom:1rem; font-weight:bold;">
+                        <div class="flex justify-between items-center gap-4" style="margin-bottom:1rem;">
+                            <input type="text" id="log-ex-${ex.id}-name" placeholder="Search or type exercise name..." list="exercise-datalist" value="${ex.name}" style="flex:1; font-weight:bold; margin-bottom:0;" onchange="checkAutoBodyweight(${ex.id})">
+                            <label class="flex items-center gap-2" style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer; white-space: nowrap;">
+                                <input type="checkbox" id="log-ex-${ex.id}-bw" ${ex.isBodyweight ? 'checked' : ''} onchange="toggleBodyweight(${ex.id})" style="width: auto;"> Bodyweight
+                            </label>
+                        </div>
                 `;
                 
                 ex.sets.forEach((set, sIdx) => {
                     html += `
                         <div class="form-row" style="margin-bottom:0.5rem;">
                             <span style="width:50px; font-size:0.85rem;" class="text-muted">Set ${sIdx + 1}</span>
-                            <input type="number" step="0.5" placeholder="Weight (${appState.unit})" id="log-ex-${ex.id}-w-${sIdx}" value="${set.weight}">
+                            ${ex.isBodyweight 
+                                ? `<div style="flex:1; padding:0.75rem; color:var(--text-muted); text-align:center; background-color:var(--surface-offset); border-radius:var(--radius-tight); border: 1px solid var(--border);">BW</div>`
+                                : `<input type="number" step="0.5" placeholder="Weight (${appState.unit})" id="log-ex-${ex.id}-w-${sIdx}" value="${set.weight}">`
+                            }
                             <input type="number" placeholder="Reps" id="log-ex-${ex.id}-r-${sIdx}" value="${set.reps}">
                         </div>
                     `;
@@ -861,10 +941,16 @@
                 if(!ex.name.trim()) return;
                 const validSets = [];
                 ex.sets.forEach(set => {
-                    const w = parseFloat(set.weight);
                     const r = parseInt(set.reps);
-                    if(!isNaN(w) && !isNaN(r) && w > 0 && r > 0) {
-                        validSets.push({ weight: w, reps: r });
+                    if (ex.isBodyweight) {
+                        if (!isNaN(r) && r > 0) {
+                            validSets.push({ weight: 0, reps: r, isBodyweight: true });
+                        }
+                    } else {
+                        const w = parseFloat(set.weight);
+                        if(!isNaN(w) && !isNaN(r) && w > 0 && r > 0) {
+                            validSets.push({ weight: w, reps: r, isBodyweight: false });
+                        }
                     }
                 });
                 if(validSets.length > 0) {
@@ -881,7 +967,7 @@
             finalExercises.forEach(fex => {
                 appState.workoutLogs[dateStr].exercises.push(fex);
                 if(!appState.exercises.find(e => e.name.toLowerCase() === fex.name.toLowerCase())) {
-                    appState.exercises.push({ name: fex.name, category: appState.workoutLogs[dateStr].type });
+                    appState.exercises.push({ name: fex.name, category: appState.workoutLogs[dateStr].type, isBodyweight: fex.sets[0].isBodyweight });
                 }
             });
             
@@ -971,17 +1057,21 @@
 
         window.openNewExerciseModal = () => {
             document.getElementById('new-ex-name').value = '';
+            const bwCheckbox = document.getElementById('new-ex-bw');
+            if(bwCheckbox) bwCheckbox.checked = false;
             openModal('modal-new-ex');
         };
 
         window.saveNewExercise = () => {
             const name = document.getElementById('new-ex-name').value.trim();
             const cat = document.getElementById('new-ex-cat').value;
+            const bwCheckbox = document.getElementById('new-ex-bw');
+            const isBw = bwCheckbox ? bwCheckbox.checked : false;
             if(!name) return alert('Name is required.');
             if(appState.exercises.find(e => e.name.toLowerCase() === name.toLowerCase())) {
                 return alert('This exercise already exists in your library.');
             }
-            appState.exercises.push({ name, category: cat });
+            appState.exercises.push({ name, category: cat, isBodyweight: isBw });
             saveState();
             closeModal('modal-new-ex');
             if(window.location.hash === '#progress') renderProgressView();
@@ -997,9 +1087,15 @@
                 const log = appState.workoutLogs[date];
                 const exs = log.exercises.filter(e => e.name === name);
                 exs.forEach(e => {
-                    const bestSet = e.sets.reduce((max, s) => s.weight > max.weight ? s : max, e.sets[0]);
-                    const vol = e.sets.reduce((sum, s) => sum + (s.weight * s.reps), 0);
-                    sessions.push({ date, bestSet, vol, notes: e.notes, setsCount: e.sets.length });
+                    const isBw = e.sets[0].isBodyweight || e.sets[0].weight === 0;
+                    let bestSet;
+                    if (isBw) {
+                        bestSet = e.sets.reduce((max, s) => s.reps > max.reps ? s : max, e.sets[0]);
+                    } else {
+                        bestSet = e.sets.reduce((max, s) => s.weight > max.weight ? s : max, e.sets[0]);
+                    }
+                    const vol = e.sets.reduce((sum, s) => sum + ((isBw ? 1 : s.weight) * s.reps), 0);
+                    sessions.push({ date, bestSet, vol, notes: e.notes, setsCount: e.sets.length, isBodyweight: isBw });
                 });
             });
             
@@ -1011,12 +1107,9 @@
             const lastSession = sessions[sessions.length-1];
             
             let html = `
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2rem;">
-                    <div>
-                        <h2>${name} <span class="badge type-${exInfo.category.toLowerCase()}" style="margin-left:0.5rem; vertical-align:middle;">${exInfo.category}</span></h2>
-                        <div class="text-muted" style="margin-top:0.5rem;">Last session: ${lastSession.date} — ${lastSession.bestSet.weight}${appState.unit} × ${lastSession.bestSet.reps} (best set)</div>
-                    </div>
-                    <button class="btn btn-primary" onclick="openLogSession()">+ Log Session</button>
+                <div style="margin-bottom:2rem;">
+                    <h2>${name} <span class="badge type-${exInfo.category.toLowerCase()}" style="margin-left:0.5rem; vertical-align:middle;">${exInfo.category}</span></h2>
+                    <div class="text-muted" style="margin-top:0.5rem;">Last session: ${lastSession.date} — ${lastSession.isBodyweight ? `BW × ${lastSession.bestSet.reps}` : `${lastSession.bestSet.weight}${appState.unit} × ${lastSession.bestSet.reps}`} (best set)</div>
                 </div>
                 
                 <div style="height:300px; width:100%; margin-bottom:2rem;">
@@ -1032,12 +1125,15 @@
             `;
             
             [...sessions].reverse().forEach(s => {
+                const bestSetStr = s.isBodyweight ? `BW × ${s.bestSet.reps}` : `${s.bestSet.weight}${appState.unit} × ${s.bestSet.reps}`;
+                const volStr = s.isBodyweight ? `${s.vol} reps` : `${s.vol} ${appState.unit}`;
+                
                 html += `
                     <tr onclick="window.location.hash='#calendar'; setTimeout(()=>openDayDetail('${s.date}'), 100);">
                         <td>${s.date}</td>
                         <td>${s.setsCount}</td>
-                        <td>${s.bestSet.weight}${appState.unit} × ${s.bestSet.reps}</td>
-                        <td>${s.vol} ${appState.unit}</td>
+                        <td>${bestSetStr}</td>
+                        <td>${volStr}</td>
                         <td>${s.notes || '—'}</td>
                     </tr>
                 `;
@@ -1058,8 +1154,8 @@
                 data: {
                     labels: chartData.map(s => s.date.substring(5)), // MM-DD
                     datasets: [{
-                        label: `Max Weight (${appState.unit})`,
-                        data: chartData.map(s => s.bestSet.weight),
+                        label: sessions[0] && sessions[0].isBodyweight ? `Max Reps` : `Max Weight (${appState.unit})`,
+                        data: chartData.map(s => s.isBodyweight ? s.bestSet.reps : s.bestSet.weight),
                         borderColor: '#4ade80',
                         backgroundColor: 'rgba(74, 222, 128, 0.1)',
                         borderWidth: 2,
