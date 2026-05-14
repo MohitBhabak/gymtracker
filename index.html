@@ -410,6 +410,16 @@
                 </div>
                 <div id="modal-settings-body">
                     <div style="margin-bottom: 2rem;">
+                        <h4 style="margin-bottom: 0.5rem;">Preferences</h4>
+                        <div class="flex items-center justify-between" style="padding: 0.5rem 0;">
+                            <span>Weight Unit</span>
+                            <select id="settings-unit" style="width: 100px;" onchange="updateUnit(this.value)">
+                                <option value="lbs">lbs</option>
+                                <option value="kg">kg</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 2rem;">
                         <h4 style="margin-bottom: 0.5rem;">Data Backup</h4>
                         <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.9rem;">Export your workout data to a file to keep it safe, or import a previous backup.</p>
                         <div class="flex gap-2">
@@ -420,6 +430,32 @@
                             </label>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Exercise Modal -->
+        <div id="modal-new-ex" class="modal-overlay">
+            <div class="modal-content" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h2>New Exercise</h2>
+                    <button class="icon-btn" onclick="closeModal('modal-new-ex')"><i data-lucide="x"></i></button>
+                </div>
+                <div class="form-row" style="margin-bottom: 1rem;">
+                    <input type="text" id="new-ex-name" placeholder="Exercise Name (e.g. Incline Press)">
+                </div>
+                <div class="form-row" style="margin-bottom: 1.5rem;">
+                    <select id="new-ex-cat">
+                        <option value="Push">Push</option>
+                        <option value="Pull">Pull</option>
+                        <option value="Legs">Legs</option>
+                        <option value="Upper">Upper</option>
+                        <option value="Lower">Lower</option>
+                        <option value="Abs">Abs</option>
+                    </select>
+                </div>
+                <div class="flex justify-end">
+                    <button class="btn btn-primary" onclick="saveNewExercise()">Add Exercise</button>
                 </div>
             </div>
         </div>
@@ -460,7 +496,7 @@
         ];
 
         let appState = {
-            unit: 'kg',
+            unit: 'lbs',
             workoutLogs: {},
             exercises: defaultExercises,
             currentMonth: new Date()
@@ -470,7 +506,7 @@
         if (savedState) {
             try {
                 const parsed = JSON.parse(savedState);
-                appState.unit = parsed.unit || 'kg';
+                appState.unit = parsed.unit || 'lbs';
                 appState.workoutLogs = parsed.workoutLogs || {};
                 appState.exercises = parsed.exercises || defaultExercises;
             } catch (e) {
@@ -510,7 +546,16 @@
         function getWorkoutColorClass(type) { return `type-${type.toLowerCase()}`; }
 
         // Settings & Backup
-        document.getElementById('btn-settings').onclick = () => openModal('modal-settings');
+        document.getElementById('btn-settings').onclick = () => {
+            document.getElementById('settings-unit').value = appState.unit;
+            openModal('modal-settings');
+        };
+
+        window.updateUnit = (newUnit) => {
+            appState.unit = newUnit;
+            saveState();
+            handleRoute(); // re-render charts and logs with new unit
+        };
 
         window.exportData = () => {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
@@ -859,8 +904,11 @@
             
             // Generate list
             let listHTML = `<div class="card" style="padding:0; overflow-y:auto; max-height:80vh;">
-                <div style="padding:1rem; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface);">
-                    <h3 style="margin-bottom:1rem;">Exercises</h3>
+                <div style="padding:1rem; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface); z-index:10;">
+                    <div class="flex justify-between items-center" style="margin-bottom:1rem;">
+                        <h3 style="margin:0;">Exercises</h3>
+                        <button class="icon-btn" onclick="openNewExerciseModal()"><i data-lucide="plus"></i></button>
+                    </div>
                     <input type="text" placeholder="Search..." id="search-ex" onkeyup="filterExercises()">
                 </div>
                 <div id="exercise-list">
@@ -901,6 +949,24 @@
                 const name = el.querySelector('.font-bold').innerText.toLowerCase();
                 el.style.display = name.includes(q) ? 'flex' : 'none';
             });
+        };
+
+        window.openNewExerciseModal = () => {
+            document.getElementById('new-ex-name').value = '';
+            openModal('modal-new-ex');
+        };
+
+        window.saveNewExercise = () => {
+            const name = document.getElementById('new-ex-name').value.trim();
+            const cat = document.getElementById('new-ex-cat').value;
+            if(!name) return alert('Name is required.');
+            if(appState.exercises.find(e => e.name.toLowerCase() === name.toLowerCase())) {
+                return alert('This exercise already exists in your library.');
+            }
+            appState.exercises.push({ name, category: cat });
+            saveState();
+            closeModal('modal-new-ex');
+            if(window.location.hash === '#progress') renderProgressView();
         };
 
         window.showExerciseDetail = (name) => {
