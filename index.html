@@ -810,12 +810,35 @@
 
         window.openLogSession = (dateStr) => {
             document.getElementById('log-date').value = dateStr || new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-            document.getElementById('log-notes').value = '';
             
             logSessionData = [];
             document.getElementById('multi-exercise-container').innerHTML = '';
             
-            addExerciseToLog();
+            let existingNotes = '';
+            const existingLog = appState.workoutLogs[dateStr];
+            
+            if (existingLog && existingLog.exercises && existingLog.exercises.length > 0) {
+                existingLog.exercises.forEach(ex => {
+                    if (ex.notes) {
+                        existingNotes += (existingNotes ? ' | ' : '') + ex.notes;
+                    }
+                    const newEx = {
+                        id: logExCounter++,
+                        name: ex.name,
+                        sets: [],
+                        isBodyweight: ex.sets[0] ? (ex.sets[0].isBodyweight || ex.sets[0].weight === 0) : false
+                    };
+                    ex.sets.forEach(set => {
+                        newEx.sets.push({ weight: set.weight === 0 ? '' : set.weight, reps: set.reps || '' });
+                    });
+                    logSessionData.push(newEx);
+                });
+                renderLogExercises();
+            } else {
+                addExerciseToLog();
+            }
+            
+            document.getElementById('log-notes').value = existingNotes;
             
             closeModal('modal-day');
             openModal('modal-log');
@@ -961,7 +984,14 @@
             if(finalExercises.length === 0) return alert('At least one valid exercise with sets is required.');
             
             if(!appState.workoutLogs[dateStr]) {
-                appState.workoutLogs[dateStr] = { type: 'Push', exercises: [] }; 
+                appState.workoutLogs[dateStr] = { type: 'Push', timeOfDay: '', exercises: [] }; 
+            }
+            
+            appState.workoutLogs[dateStr].exercises = [];
+            
+            // Apply general notes if provided
+            if(notes.trim() && finalExercises.length > 0) {
+                finalExercises[0].notes = notes.trim();
             }
             
             finalExercises.forEach(fex => {
@@ -970,12 +1000,6 @@
                     appState.exercises.push({ name: fex.name, category: appState.workoutLogs[dateStr].type, isBodyweight: fex.sets[0].isBodyweight });
                 }
             });
-            
-            // Apply general notes if provided
-            if(notes.trim()) {
-                if(!finalExercises[0].notes) finalExercises[0].notes = notes.trim();
-                else finalExercises[0].notes += ' | ' + notes.trim();
-            }
             
             saveState();
             
