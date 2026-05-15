@@ -159,7 +159,35 @@
         .grid-2 { display: grid; gap: 2rem; grid-template-columns: 1fr; }
         @media(min-width: 768px) {
             .grid-2 { grid-template-columns: 2fr 1fr; }
-            .grid-progress { grid-template-columns: 1fr 2fr; }
+        }
+
+        /* Progress View Layout */
+        .progress-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .progress-top-row {
+            display: flex;
+            gap: 1.5rem;
+            align-items: flex-start;
+        }
+        .progress-exercise-list {
+            flex: 0 0 280px;
+            min-width: 220px;
+        }
+        .progress-info-panel {
+            flex: 1;
+        }
+        .progress-chart-section {
+            width: 100%;
+        }
+        .progress-history-section {
+            width: 100%;
+        }
+        @media(max-width: 768px) {
+            .progress-top-row { flex-direction: column; }
+            .progress-exercise-list { flex: none; width: 100%; }
         }
 
         /* Card */
@@ -308,6 +336,7 @@
         }
         .exercise-item:hover { background-color: var(--surface-offset); }
         .exercise-item:last-child { border-bottom: none; }
+        .exercise-item.selected-exercise { background-color: rgba(74, 222, 128, 0.08); border-left: 3px solid var(--primary); }
         
         .dot {
             width: 8px; height: 8px; border-radius: 50%; display: inline-block;
@@ -1049,7 +1078,7 @@
             const view = document.getElementById('view-progress');
             
             // Generate list
-            let listHTML = `<div class="card" style="padding:0; overflow-y:auto; max-height:80vh;">
+            let listHTML = `<div class="card" style="padding:0; overflow-y:auto; max-height:420px;">
                 <div style="padding:1rem; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface); z-index:10;">
                     <div class="flex justify-between items-center" style="margin-bottom:1rem;">
                         <h3 style="margin:0;">Exercises</h3>
@@ -1087,12 +1116,29 @@
             listHTML += `</div></div>`;
             
             view.innerHTML = `
-                <div class="grid-2 grid-progress">
-                    ${listHTML}
-                    <div id="exercise-detail" class="card flex items-center justify-center text-muted">
-                        <div style="text-align:center;">
-                            <i data-lucide="dumbbell" style="width:48px;height:48px;margin-bottom:1rem;opacity:0.5;"></i>
-                            <p>Select an exercise to see your progress</p>
+                <div class="progress-layout">
+                    <div class="progress-top-row">
+                        <div class="progress-exercise-list">${listHTML}</div>
+                        <div id="exercise-info" class="card progress-info-panel flex items-center justify-center text-muted" style="min-height:120px;">
+                            <div style="text-align:center;">
+                                <i data-lucide="dumbbell" style="width:36px;height:36px;margin-bottom:0.75rem;opacity:0.5;"></i>
+                                <p>Select an exercise to see your progress</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="exercise-chart-section" class="progress-chart-section hidden">
+                        <div class="card">
+                            <div style="height:320px; width:100%;">
+                                <canvas id="progressChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="exercise-history-section" class="progress-history-section hidden">
+                        <div class="card" style="padding:0; overflow-x:auto;">
+                            <div style="padding:1rem 1.5rem; border-bottom:1px solid var(--border);">
+                                <h4 style="margin:0;">History</h4>
+                            </div>
+                            <div id="exercise-history-table" style="padding:0 0.5rem;"></div>
                         </div>
                     </div>
                 </div>
@@ -1138,8 +1184,16 @@
         };
 
         window.showExerciseDetail = (name) => {
-            const detail = document.getElementById('exercise-detail');
+            const infoPanel = document.getElementById('exercise-info');
+            const chartSection = document.getElementById('exercise-chart-section');
+            const historySection = document.getElementById('exercise-history-section');
+            const historyTable = document.getElementById('exercise-history-table');
             const exInfo = appState.exercises.find(e => e.name === name);
+
+            // Highlight selected exercise
+            document.querySelectorAll('.exercise-item').forEach(el => el.classList.remove('selected-exercise'));
+            const selectedEl = [...document.querySelectorAll('.exercise-item')].find(el => el.querySelector('.font-bold')?.innerText === name);
+            if (selectedEl) selectedEl.classList.add('selected-exercise');
             
             // Gather session data for this exercise
             const sessions = [];
@@ -1160,48 +1214,28 @@
             });
             
             if(sessions.length === 0) {
-                detail.innerHTML = `<h2 style="margin-bottom:1rem;">${name}</h2><p class="text-muted">No sessions logged yet.</p>`;
+                infoPanel.classList.remove('items-center', 'justify-center');
+                infoPanel.innerHTML = `<h2 style="margin-bottom:0.5rem;">${name}</h2><p class="text-muted">No sessions logged yet.</p>`;
+                chartSection.classList.add('hidden');
+                historySection.classList.add('hidden');
                 return;
             }
             
             const lastSession = sessions[sessions.length-1];
             
-            let html = `
-                <div style="margin-bottom:2rem;">
-                    <h2>${name} <span class="badge type-${exInfo.category.toLowerCase()}" style="margin-left:0.5rem; vertical-align:middle;">${exInfo.category}</span></h2>
-                    <div class="text-muted" style="margin-top:0.5rem;">Last session: ${lastSession.date} — ${lastSession.isBodyweight ? `BW × ${lastSession.bestSet.reps}` : `${lastSession.bestSet.weight}${appState.unit} × ${lastSession.bestSet.reps}`} (best set)</div>
+            // Update info panel (name, badge, last session)
+            infoPanel.classList.remove('items-center', 'justify-center');
+            infoPanel.innerHTML = `
+                <h2 style="margin-bottom:0.5rem;">${name} <span class="badge type-${exInfo.category.toLowerCase()}" style="margin-left:0.5rem; vertical-align:middle;">${exInfo.category}</span></h2>
+                <div class="text-muted" style="margin-top:0.25rem; font-size:0.95rem;">Last session: ${lastSession.date} — ${lastSession.isBodyweight ? `BW × ${lastSession.bestSet.reps}` : `${lastSession.bestSet.weight}${appState.unit} × ${lastSession.bestSet.reps}`} (best set)</div>
+                <div style="margin-top:1rem; display:flex; gap:1.5rem; flex-wrap:wrap;">
+                    <div><div style="font-size:1.5rem; font-weight:800; color:var(--primary);">${sessions.length}</div><div class="text-muted" style="font-size:0.8rem;">TOTAL SESSIONS</div></div>
+                    <div><div style="font-size:1.5rem; font-weight:800; color:var(--primary);">${lastSession.isBodyweight ? lastSession.bestSet.reps + ' reps' : lastSession.bestSet.weight + appState.unit}</div><div class="text-muted" style="font-size:0.8rem;">LAST BEST SET</div></div>
                 </div>
-                
-                <div style="height:300px; width:100%; margin-bottom:2rem;">
-                    <canvas id="progressChart"></canvas>
-                </div>
-                
-                <h4 style="margin-bottom:1rem;">History</h4>
-                <table>
-                    <thead>
-                        <tr><th>Date</th><th>Sets</th><th>Best Set</th><th>Volume</th><th>Notes</th></tr>
-                    </thead>
-                    <tbody>
             `;
-            
-            [...sessions].reverse().forEach(s => {
-                const bestSetStr = s.isBodyweight ? `BW × ${s.bestSet.reps}` : `${s.bestSet.weight}${appState.unit} × ${s.bestSet.reps}`;
-                const volStr = s.isBodyweight ? `${s.vol} reps` : `${s.vol} ${appState.unit}`;
-                
-                html += `
-                    <tr onclick="window.location.hash='#calendar'; setTimeout(()=>openDayDetail('${s.date}'), 100);">
-                        <td>${s.date}</td>
-                        <td>${s.setsCount}</td>
-                        <td>${bestSetStr}</td>
-                        <td>${volStr}</td>
-                        <td>${s.notes || '—'}</td>
-                    </tr>
-                `;
-            });
-            html += `</tbody></table>`;
-            
-            detail.classList.remove('items-center', 'justify-center');
-            detail.innerHTML = html;
+
+            // Show chart section
+            chartSection.classList.remove('hidden');
             
             // Render Chart
             const ctx = document.getElementById('progressChart').getContext('2d');
@@ -1240,6 +1274,33 @@
                     }
                 }
             });
+
+            // Build history table
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr><th>Date</th><th>Sets</th><th>Best Set</th><th>Volume</th><th>Notes</th></tr>
+                    </thead>
+                    <tbody>
+            `;
+            [...sessions].reverse().forEach(s => {
+                const bestSetStr = s.isBodyweight ? `BW × ${s.bestSet.reps}` : `${s.bestSet.weight}${appState.unit} × ${s.bestSet.reps}`;
+                const volStr = s.isBodyweight ? `${s.vol} reps` : `${s.vol} ${appState.unit}`;
+                tableHTML += `
+                    <tr onclick="window.location.hash='#calendar'; setTimeout(()=>openDayDetail('${s.date}'), 100);">
+                        <td>${s.date}</td>
+                        <td>${s.setsCount}</td>
+                        <td>${bestSetStr}</td>
+                        <td>${volStr}</td>
+                        <td>${s.notes || '—'}</td>
+                    </tr>
+                `;
+            });
+            tableHTML += `</tbody></table>`;
+            historyTable.innerHTML = tableHTML;
+
+            // Show history section
+            historySection.classList.remove('hidden');
         };
 
         // Router
