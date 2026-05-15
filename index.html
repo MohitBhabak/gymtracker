@@ -164,30 +164,25 @@
         /* Progress View Layout */
         .progress-layout {
             display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-        .progress-top-row {
-            display: flex;
             gap: 1.5rem;
             align-items: flex-start;
         }
         .progress-exercise-list {
             flex: 0 0 280px;
             min-width: 220px;
+            position: sticky;
+            top: 0;
         }
-        .progress-info-panel {
+        .progress-right-col {
             flex: 1;
-        }
-        .progress-chart-section {
-            width: 100%;
-        }
-        .progress-history-section {
-            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-width: 0;
         }
         @media(max-width: 768px) {
-            .progress-top-row { flex-direction: column; }
-            .progress-exercise-list { flex: none; width: 100%; }
+            .progress-layout { flex-direction: column; }
+            .progress-exercise-list { flex: none; width: 100%; position: static; }
         }
 
         /* Card */
@@ -1117,28 +1112,28 @@
             
             view.innerHTML = `
                 <div class="progress-layout">
-                    <div class="progress-top-row">
-                        <div class="progress-exercise-list">${listHTML}</div>
-                        <div id="exercise-info" class="card progress-info-panel flex items-center justify-center text-muted" style="min-height:120px;">
+                    <div class="progress-exercise-list">${listHTML}</div>
+                    <div class="progress-right-col">
+                        <div id="exercise-info" class="card flex items-center justify-center text-muted" style="min-height:120px;">
                             <div style="text-align:center;">
                                 <i data-lucide="dumbbell" style="width:36px;height:36px;margin-bottom:0.75rem;opacity:0.5;"></i>
                                 <p>Select an exercise to see your progress</p>
                             </div>
                         </div>
-                    </div>
-                    <div id="exercise-chart-section" class="progress-chart-section hidden">
-                        <div class="card">
-                            <div style="height:320px; width:100%;">
-                                <canvas id="progressChart"></canvas>
+                        <div id="exercise-chart-section" class="hidden">
+                            <div class="card">
+                                <div style="height:320px; width:100%;">
+                                    <canvas id="progressChart"></canvas>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div id="exercise-history-section" class="progress-history-section hidden">
-                        <div class="card" style="padding:0; overflow-x:auto;">
-                            <div style="padding:1rem 1.5rem; border-bottom:1px solid var(--border);">
-                                <h4 style="margin:0;">History</h4>
+                        <div id="exercise-history-section" class="hidden">
+                            <div class="card" style="padding:0; overflow-x:auto;">
+                                <div style="padding:1rem 1.5rem; border-bottom:1px solid var(--border);">
+                                    <h4 style="margin:0;">History</h4>
+                                </div>
+                                <div id="exercise-history-table" style="padding:0 0.5rem;"></div>
                             </div>
-                            <div id="exercise-history-table" style="padding:0 0.5rem;"></div>
                         </div>
                     </div>
                 </div>
