@@ -1221,11 +1221,29 @@
             // Update info panel (name, badge, last session)
             infoPanel.classList.remove('items-center', 'justify-center');
             infoPanel.innerHTML = `
-                <h2 style="margin-bottom:0.5rem;">${name} <span class="badge type-${exInfo.category.toLowerCase()}" style="margin-left:0.5rem; vertical-align:middle;">${exInfo.category}</span></h2>
-                <div class="text-muted" style="margin-top:0.25rem; font-size:0.95rem;">Last session: ${lastSession.date} — ${lastSession.isBodyweight ? `BW × ${lastSession.bestSet.reps}` : `${lastSession.bestSet.weight}${appState.unit} × ${lastSession.bestSet.reps}`} (best set)</div>
-                <div style="margin-top:1rem; display:flex; gap:1.5rem; flex-wrap:wrap;">
-                    <div><div style="font-size:1.5rem; font-weight:800; color:var(--primary);">${sessions.length}</div><div class="text-muted" style="font-size:0.8rem;">TOTAL SESSIONS</div></div>
-                    <div><div style="font-size:1.5rem; font-weight:800; color:var(--primary);">${lastSession.isBodyweight ? lastSession.bestSet.reps + ' reps' : lastSession.bestSet.weight + appState.unit}</div><div class="text-muted" style="font-size:0.8rem;">LAST BEST SET</div></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:1.5rem; flex-wrap:wrap;">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.4rem;">
+                            <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
+                            <span class="badge type-${exInfo.category.toLowerCase()}">${exInfo.category}</span>
+                        </div>
+                        <div class="text-muted" style="font-size:0.875rem;">
+                            Last session: <strong style="color:var(--text);">${lastSession.date}</strong>
+                            &mdash; ${lastSession.isBodyweight ? `BW &times; ${lastSession.bestSet.reps}` : `${lastSession.bestSet.weight}${appState.unit} &times; ${lastSession.bestSet.reps}`}
+                            <span style="opacity:0.6;">(best set)</span>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:2rem; flex-shrink:0;">
+                        <div style="text-align:center;">
+                            <div style="font-size:2rem; font-weight:800; color:var(--primary); line-height:1;">${sessions.length}</div>
+                            <div class="text-muted" style="font-size:0.7rem; letter-spacing:0.05em; margin-top:0.3rem;">SESSIONS</div>
+                        </div>
+                        <div style="width:1px; background:var(--border);"></div>
+                        <div style="text-align:center;">
+                            <div style="font-size:2rem; font-weight:800; color:var(--primary); line-height:1;">${lastSession.isBodyweight ? lastSession.bestSet.reps + ' reps' : lastSession.bestSet.weight + appState.unit}</div>
+                            <div class="text-muted" style="font-size:0.7rem; letter-spacing:0.05em; margin-top:0.3rem;">BEST SET</div>
+                        </div>
+                    </div>
                 </div>
             `;
 
