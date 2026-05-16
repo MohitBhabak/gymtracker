@@ -371,6 +371,7 @@
         <div class="nav-tabs">
             <a href="#calendar" class="nav-tab active" id="tab-calendar">Calendar</a>
             <a href="#progress" class="nav-tab" id="tab-progress">Progress</a>
+            <a href="#weight" class="nav-tab" id="tab-weight">Weight</a>
         </div>
         <div class="header-actions">
             <button class="icon-btn" id="btn-theme" aria-label="Toggle Theme">
@@ -391,6 +392,11 @@
         <!-- Progress View -->
         <section id="view-progress" class="hidden">
             <!-- Exercise library and Chart will be injected here -->
+        </section>
+
+        <!-- Weight View -->
+        <section id="view-weight" class="hidden">
+            <!-- Weight tracking UI will be injected here -->
         </section>
     </main>
 
@@ -555,6 +561,7 @@
             unit: 'lbs',
             workoutLogs: {},
             exercises: defaultExercises,
+            weightLogs: [],
             currentMonth: new Date()
         };
 
@@ -565,6 +572,7 @@
                 appState.unit = parsed.unit || 'lbs';
                 appState.workoutLogs = parsed.workoutLogs || {};
                 appState.exercises = parsed.exercises || defaultExercises;
+                appState.weightLogs = parsed.weightLogs || [];
             } catch (e) {
                 console.error('Failed to parse saved state', e);
             }
@@ -574,7 +582,8 @@
             localStorage.setItem('gymLogState', JSON.stringify({
                 unit: appState.unit,
                 workoutLogs: appState.workoutLogs,
-                exercises: appState.exercises
+                exercises: appState.exercises,
+                weightLogs: appState.weightLogs
             }));
         }
 
@@ -593,6 +602,11 @@
                 window.myChart.options.scales.x.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
                 window.myChart.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
                 window.myChart.update();
+            }
+            if(window.weightChartInstance) {
+                window.weightChartInstance.options.scales.x.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+                window.weightChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+                window.weightChartInstance.update();
             }
         });
 
@@ -619,7 +633,8 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
                 unit: appState.unit,
                 workoutLogs: appState.workoutLogs,
-                exercises: appState.exercises
+                exercises: appState.exercises,
+                weightLogs: appState.weightLogs
             }));
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
@@ -640,6 +655,7 @@
                         appState.unit = parsed.unit || 'kg';
                         appState.workoutLogs = parsed.workoutLogs;
                         appState.exercises = parsed.exercises;
+                        appState.weightLogs = parsed.weightLogs || [];
                         saveState();
                         closeModal('modal-settings');
                         handleRoute(); // re-render current view
@@ -1316,20 +1332,176 @@
             historySection.classList.remove('hidden');
         };
 
+        // Weight Render
+        window.renderWeightView = () => {
+            const view = document.getElementById('view-weight');
+            const sortedLogs = [...appState.weightLogs].sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+
+            // Chart Data
+            const chartData = sortedLogs.slice(-30); // Last 30 entries
+            
+            let html = `
+                <div class="card" style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem; display: block;">Date</label>
+                        <input type="date" id="weight-input-date" value="${todayStr}">
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem; display: block;">Weight (${appState.unit})</label>
+                        <input type="number" step="0.1" id="weight-input-val" placeholder="e.g. 150">
+                    </div>
+                    <button class="btn btn-primary" onclick="logWeight()">Save Weight</button>
+                </div>
+            `;
+            
+            if (sortedLogs.length === 0) {
+                html += `
+                    <div class="card flex items-center justify-center text-muted" style="min-height:200px;">
+                        <div style="text-align:center;">
+                            <i data-lucide="scale" style="width:36px;height:36px;margin-bottom:0.75rem;opacity:0.5;"></i>
+                            <p>Log your weight to see your progress</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="grid-2">
+                        <div class="card">
+                            <h3 style="margin-bottom: 1rem;">Progress</h3>
+                            <div style="height:320px; width:100%;">
+                                <canvas id="weightChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+                            <div style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);">
+                                <h3 style="margin: 0;">History</h3>
+                            </div>
+                            <div style="overflow-y: auto; max-height: 320px;">
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <thead>
+                                        <tr>
+                                            <th style="padding-left: 1.5rem; text-align: left;">Date</th>
+                                            <th style="text-align: left;">Weight</th>
+                                            <th style="text-align: right; padding-right: 1.5rem;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                `;
+                
+                // Reverse for history table
+                [...sortedLogs].reverse().forEach(log => {
+                    html += `
+                        <tr>
+                            <td style="padding-left: 1.5rem;">${log.date}</td>
+                            <td class="font-bold">${log.weight} ${appState.unit}</td>
+                            <td style="text-align: right; padding-right: 1.5rem;">
+                                <button class="icon-btn" style="display: inline-flex;" onclick="deleteWeightLog('${log.date}')"><i data-lucide="trash-2" style="width:16px;"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            view.innerHTML = html;
+            lucide.createIcons();
+            
+            if (sortedLogs.length > 0) {
+                const ctx = document.getElementById('weightChart').getContext('2d');
+                if(window.weightChartInstance) window.weightChartInstance.destroy();
+                
+                window.weightChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: chartData.map(s => s.date.substring(5)), // MM-DD
+                        datasets: [{
+                            label: \`Weight (\${appState.unit})\`,
+                            data: chartData.map(s => s.weight),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#161616',
+                            pointBorderColor: '#3b82f6',
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' } },
+                            y: { 
+                                grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                                beginAtZero: false 
+                            }
+                        }
+                    }
+                });
+            }
+        };
+
+        window.logWeight = () => {
+            const dateStr = document.getElementById('weight-input-date').value;
+            const weightVal = parseFloat(document.getElementById('weight-input-val').value);
+            
+            if (!dateStr) return alert('Date is required.');
+            if (isNaN(weightVal) || weightVal <= 0) return alert('Valid weight is required.');
+            
+            const existingIndex = appState.weightLogs.findIndex(l => l.date === dateStr);
+            if (existingIndex >= 0) {
+                appState.weightLogs[existingIndex].weight = weightVal;
+            } else {
+                appState.weightLogs.push({ date: dateStr, weight: weightVal });
+            }
+            
+            saveState();
+            renderWeightView();
+        };
+
+        window.deleteWeightLog = (dateStr) => {
+            if(confirm('Delete weight log for ' + dateStr + '?')) {
+                appState.weightLogs = appState.weightLogs.filter(l => l.date !== dateStr);
+                saveState();
+                renderWeightView();
+            }
+        };
+
         // Router
         function handleRoute() {
             const hash = window.location.hash || '#calendar';
+            
+            // Hide all views and reset tabs
+            document.getElementById('view-calendar').classList.add('hidden');
+            document.getElementById('view-progress').classList.add('hidden');
+            document.getElementById('view-weight').classList.add('hidden');
+            document.getElementById('tab-calendar').classList.remove('active');
+            document.getElementById('tab-progress').classList.remove('active');
+            document.getElementById('tab-weight').classList.remove('active');
+
             if (hash === '#progress') {
-                document.getElementById('view-calendar').classList.add('hidden');
                 document.getElementById('view-progress').classList.remove('hidden');
-                document.getElementById('tab-calendar').classList.remove('active');
                 document.getElementById('tab-progress').classList.add('active');
                 renderProgressView();
+            } else if (hash === '#weight') {
+                document.getElementById('view-weight').classList.remove('hidden');
+                document.getElementById('tab-weight').classList.add('active');
+                renderWeightView();
             } else {
                 document.getElementById('view-calendar').classList.remove('hidden');
-                document.getElementById('view-progress').classList.add('hidden');
                 document.getElementById('tab-calendar').classList.add('active');
-                document.getElementById('tab-progress').classList.remove('active');
                 renderCalendarView();
             }
         }
