@@ -1234,6 +1234,17 @@
             
             const lastSession = sessions[sessions.length-1];
             
+            // Calculate all-time best set
+            let allTimeBestSet = sessions[0].bestSet;
+            let isAllTimeBw = sessions[0].isBodyweight;
+            sessions.forEach(s => {
+                if (s.isBodyweight) {
+                    if (s.bestSet.reps > allTimeBestSet.reps) allTimeBestSet = s.bestSet;
+                } else {
+                    if (s.bestSet.weight > allTimeBestSet.weight) allTimeBestSet = s.bestSet;
+                }
+            });
+            
             // Update info panel (name, badge, last session)
             infoPanel.classList.remove('items-center', 'justify-center');
             infoPanel.innerHTML = `
@@ -1256,8 +1267,8 @@
                         </div>
                         <div style="width:1px; background:var(--border);"></div>
                         <div style="text-align:center;">
-                            <div style="font-size:2rem; font-weight:800; color:var(--primary); line-height:1;">${lastSession.isBodyweight ? lastSession.bestSet.reps + ' reps' : lastSession.bestSet.weight + appState.unit}</div>
-                            <div class="text-muted" style="font-size:0.7rem; letter-spacing:0.05em; margin-top:0.3rem;">BEST SET</div>
+                            <div style="font-size:2rem; font-weight:800; color:var(--primary); line-height:1;">${isAllTimeBw ? allTimeBestSet.reps + ' reps' : allTimeBestSet.weight + appState.unit}</div>
+                            <div class="text-muted" style="font-size:0.7rem; letter-spacing:0.05em; margin-top:0.3rem;">ALL-TIME BEST</div>
                         </div>
                     </div>
                 </div>
