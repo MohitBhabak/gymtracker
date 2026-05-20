@@ -1179,6 +1179,33 @@
             openModal('modal-new-ex');
         };
 
+        window.editExerciseName = (oldName) => {
+            const newName = prompt('Enter new exercise name:', oldName);
+            if (!newName || newName.trim() === '' || newName === oldName) return;
+            const trimmedNewName = newName.trim();
+            
+            if (appState.exercises.some(e => e.name.toLowerCase() === trimmedNewName.toLowerCase())) {
+                return alert('An exercise with this name already exists.');
+            }
+
+            const exIndex = appState.exercises.findIndex(e => e.name === oldName);
+            if (exIndex >= 0) {
+                appState.exercises[exIndex].name = trimmedNewName;
+            }
+
+            Object.values(appState.workoutLogs).forEach(log => {
+                log.exercises.forEach(ex => {
+                    if (ex.name === oldName) {
+                        ex.name = trimmedNewName;
+                    }
+                });
+            });
+
+            saveState();
+            renderProgressView();
+            showExerciseDetail(trimmedNewName);
+        };
+
         window.saveNewExercise = () => {
             const name = document.getElementById('new-ex-name').value.trim();
             const cat = document.getElementById('new-ex-cat').value;
@@ -1226,7 +1253,13 @@
             
             if(sessions.length === 0) {
                 infoPanel.classList.remove('items-center', 'justify-center');
-                infoPanel.innerHTML = `<h2 style="margin-bottom:0.5rem;">${name}</h2><p class="text-muted">No sessions logged yet.</p>`;
+                infoPanel.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+                        <h2 style="margin:0;">${name}</h2>
+                        <button class="icon-btn" style="padding:0.2rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)"><i data-lucide="edit-2" style="width:16px;height:16px;"></i></button>
+                    </div>
+                    <p class="text-muted">No sessions logged yet.</p>
+                `;
                 chartSection.classList.add('hidden');
                 historySection.classList.add('hidden');
                 return;
@@ -1252,6 +1285,7 @@
                     <div>
                         <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.4rem;">
                             <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
+                            <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
                             <span class="badge type-${exInfo.category.toLowerCase()}">${exInfo.category}</span>
                         </div>
                         <div class="text-muted" style="font-size:0.875rem;">
@@ -1341,6 +1375,7 @@
 
             // Show history section
             historySection.classList.remove('hidden');
+            lucide.createIcons();
         };
 
         // Weight Render
