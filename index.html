@@ -1252,7 +1252,7 @@
             });
             
             if(sessions.length === 0) {
-                infoPanel.classList.remove('items-center', 'justify-center');
+                infoPanel.classList.remove('items-center', 'justify-center', 'text-muted');
                 infoPanel.innerHTML = `
                     <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
                         <h2 style="margin:0;">${name}</h2>
@@ -1279,7 +1279,7 @@
             });
             
             // Update info panel (name, badge, last session)
-            infoPanel.classList.remove('items-center', 'justify-center');
+            infoPanel.classList.remove('items-center', 'justify-center', 'text-muted');
             infoPanel.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:1.5rem; flex-wrap:wrap;">
                     <div>
