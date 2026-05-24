@@ -359,6 +359,55 @@
         .set-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
         .set-chip { background-color: var(--surface-offset); padding: 0.25rem 0.5rem; border-radius: var(--radius-tight); font-size: 0.85rem; color: var(--text-muted); }
 
+        /* Progressive Overload Drawer */
+        .po-drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 60;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.22s ease;
+        }
+        .po-drawer-overlay.open { opacity: 1; pointer-events: auto; }
+        .po-drawer {
+            position: fixed;
+            top: 0; right: 0; bottom: 0;
+            width: 420px;
+            max-width: 95vw;
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            z-index: 61;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+            box-shadow: -8px 0 40px rgba(0,0,0,0.4);
+        }
+        .po-drawer-overlay.open .po-drawer { transform: translateX(0); }
+        .po-drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .po-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+        .po-drawer-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            flex-shrink: 0;
+            background: var(--surface);
+        }
+
     </style>
 </head>
 <body>
@@ -518,6 +567,31 @@
                 <div class="flex justify-end">
                     <button class="btn btn-primary" onclick="saveNewExercise()">Add Exercise</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progressive Overload Drawer -->
+    <div class="po-drawer-overlay" id="po-drawer-overlay" onclick="poCloseDrawer(event)">
+        <div class="po-drawer">
+            <div class="po-drawer-header">
+                <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <i data-lucide="trending-up" style="width:18px;height:18px;color:var(--primary);"></i>
+                    <h3 style="margin:0; font-size:1.05rem;">Progressive Overload</h3>
+                </div>
+                <button class="icon-btn" onclick="poCloseDrawer(null)">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+            <div class="po-drawer-body">
+                <p class="text-muted" style="font-size:0.85rem; margin-bottom:1.25rem;">Add your planned exercises and hit <strong style="color:var(--text);">Show Targets</strong> to see your personal bests to beat.</p>
+                <div id="po-inputs"></div>
+                <button class="btn" style="width:100%; border:1px dashed var(--border); background:transparent; margin-top:0.5rem; font-size:0.85rem;" onclick="poAddRow()">+ Add Exercise</button>
+                <div id="po-results"></div>
+            </div>
+            <div class="po-drawer-footer">
+                <button class="btn" style="font-size:0.85rem;" onclick="poClear()">Clear</button>
+                <button class="btn btn-primary" style="font-size:0.85rem;" onclick="poSubmit()">Show Targets</button>
             </div>
         </div>
     </div>
@@ -776,39 +850,41 @@
 
             summaryHTML += `</div>`;
 
-            // Progressive Overload button + panel
-            const poPanel = `
-                <div class="card" id="po-panel" style="margin-top: 1.5rem;">
-                    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
-                        <i data-lucide="trending-up" style="width:18px;height:18px;color:var(--primary);"></i>
-                        <h3 style="margin:0; font-size:1rem;">Progressive Overload</h3>
-                    </div>
-                    <p class="text-muted" style="font-size:0.85rem; margin-bottom:1rem;">Add today's planned exercises to see your personal bests to beat.</p>
-                    <div id="po-inputs"></div>
-                    <button class="btn" style="width:100%; border:1px dashed var(--border); background:transparent; margin-top:0.75rem; font-size:0.85rem;" onclick="poAddRow()">+ Add Exercise</button>
-                    <div class="flex justify-end" style="margin-top:1rem; gap:0.75rem;">
-                        <button class="btn" style="font-size:0.85rem; padding:0.5rem 1rem;" onclick="poClear()">Clear</button>
-                        <button class="btn btn-primary" style="font-size:0.85rem; padding:0.5rem 1rem;" onclick="poSubmit()">Show Targets</button>
-                    </div>
-                    <div id="po-results"></div>
-                </div>
+            // Progressive Overload button
+            const poBtn = `
+                <button class="btn" onclick="poOpenDrawer()" style="width:100%; margin-top:1.5rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; border:1px solid var(--border);">
+                    <i data-lucide="trending-up" style="width:16px;height:16px;"></i>
+                    Progressive Overload
+                </button>
             `;
-            
+
             view.innerHTML = `
                 <div class="grid-2">
                     <div>${gridHTML}</div>
-                    <div>${summaryHTML}${poPanel}</div>
+                    <div>${summaryHTML}${poBtn}</div>
                 </div>
             `;
             lucide.createIcons();
-            poRenderInputs();
         }
 
         window.prevMonth = () => { appState.currentMonth.setMonth(appState.currentMonth.getMonth() - 1); renderCalendarView(); };
         window.nextMonth = () => { appState.currentMonth.setMonth(appState.currentMonth.getMonth() + 1); renderCalendarView(); };
 
-        // --- Progressive Overload Feature ---
+        // --- Progressive Overload Drawer ---
         let poRows = [''];
+
+        window.poOpenDrawer = () => {
+            poRows = [''];
+            document.getElementById('po-results').innerHTML = '';
+            poRenderInputs();
+            document.getElementById('po-drawer-overlay').classList.add('open');
+            lucide.createIcons();
+        };
+
+        window.poCloseDrawer = (e) => {
+            if (e && e.target !== document.getElementById('po-drawer-overlay')) return;
+            document.getElementById('po-drawer-overlay').classList.remove('open');
+        };
 
         function poRenderInputs() {
             const container = document.getElementById('po-inputs');
