@@ -589,6 +589,18 @@
             </div>
             <div class="po-drawer-body">
                 <p class="text-muted" style="font-size:0.85rem; margin-bottom:1.25rem;">Add your planned exercises and hit <strong style="color:var(--text);">Show Targets</strong> to see your personal bests to beat.</p>
+                
+                <div style="margin-bottom: 1.25rem;">
+                    <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Autofill Preset</div>
+                    <div class="flex" style="flex-wrap: wrap; gap: 0.5rem;">
+                        <button class="type-push" style="padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius:var(--radius-tight); cursor:pointer; font-weight:600;" onclick="poAutofill('Push')">Push</button>
+                        <button class="type-pull" style="padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius:var(--radius-tight); cursor:pointer; font-weight:600;" onclick="poAutofill('Pull')">Pull</button>
+                        <button class="type-legs" style="padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius:var(--radius-tight); cursor:pointer; font-weight:600;" onclick="poAutofill('Legs')">Legs</button>
+                        <button class="type-upper" style="padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius:var(--radius-tight); cursor:pointer; font-weight:600;" onclick="poAutofill('Upper')">Upper</button>
+                        <button class="type-lower" style="padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius:var(--radius-tight); cursor:pointer; font-weight:600;" onclick="poAutofill('Lower')">Lower</button>
+                    </div>
+                </div>
+
                 <div id="po-inputs"></div>
                 <button class="btn" style="width:100%; border:1px dashed var(--border); background:transparent; margin-top:0.5rem; font-size:0.85rem;" onclick="poAddRow()">+ Add Exercise</button>
                 <div id="po-results"></div>
@@ -897,6 +909,28 @@
         window.poCloseDrawer = (e) => {
             if (e && e.target !== document.getElementById('po-drawer-overlay')) return;
             document.getElementById('po-drawer-overlay').classList.remove('open');
+        };
+
+        window.poAutofill = (type) => {
+            const dates = Object.keys(appState.workoutLogs).sort((a, b) => b.localeCompare(a));
+            let foundSession = null;
+            for (let d of dates) {
+                if (appState.workoutLogs[d].type.toLowerCase() === type.toLowerCase()) {
+                    foundSession = appState.workoutLogs[d];
+                    break;
+                }
+            }
+
+            if (foundSession && foundSession.exercises && foundSession.exercises.length > 0) {
+                poRows = foundSession.exercises.map(e => e.name);
+                poRenderInputs();
+                
+                // Clear any previous results when autofilling
+                const resultsEl = document.getElementById('po-results');
+                if (resultsEl) resultsEl.innerHTML = '';
+            } else {
+                alert(`No recent ${type} session found with logged exercises.`);
+            }
         };
 
         function poRenderInputs() {
