@@ -515,12 +515,16 @@
                 <div id="modal-settings-body">
                     <div style="margin-bottom: 2rem;">
                         <h4 style="margin-bottom: 0.5rem;">Preferences</h4>
-                        <div class="flex items-center justify-between" style="padding: 0.5rem 0;">
+                        <div class="flex items-center justify-between" style="padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
                             <span>Weight Unit</span>
                             <select id="settings-unit" style="width: 100px;" onchange="updateUnit(this.value)">
                                 <option value="lbs">lbs</option>
                                 <option value="kg">kg</option>
                             </select>
+                        </div>
+                        <div class="flex items-center justify-between" style="padding: 0.5rem 0;">
+                            <span>Target Email</span>
+                            <input type="email" id="settings-email" placeholder="e.g. gym@example.com" style="width: 200px;" onchange="updateEmail(this.value)">
                         </div>
                     </div>
                     <div style="margin-bottom: 2rem;">
@@ -636,7 +640,8 @@
             workoutLogs: {},
             exercises: defaultExercises,
             weightLogs: [],
-            currentMonth: new Date()
+            currentMonth: new Date(),
+            targetEmail: ''
         };
 
         const savedState = localStorage.getItem('gymLogState');
@@ -647,6 +652,7 @@
                 appState.workoutLogs = parsed.workoutLogs || {};
                 appState.exercises = parsed.exercises || defaultExercises;
                 appState.weightLogs = parsed.weightLogs || [];
+                appState.targetEmail = parsed.targetEmail || '';
             } catch (e) {
                 console.error('Failed to parse saved state', e);
             }
@@ -657,7 +663,8 @@
                 unit: appState.unit,
                 workoutLogs: appState.workoutLogs,
                 exercises: appState.exercises,
-                weightLogs: appState.weightLogs
+                weightLogs: appState.weightLogs,
+                targetEmail: appState.targetEmail
             }));
         }
 
@@ -694,7 +701,13 @@
         // Settings & Backup
         document.getElementById('btn-settings').onclick = () => {
             document.getElementById('settings-unit').value = appState.unit;
+            document.getElementById('settings-email').value = appState.targetEmail || '';
             openModal('modal-settings');
+        };
+
+        window.updateEmail = (newEmail) => {
+            appState.targetEmail = newEmail;
+            saveState();
         };
 
         window.updateUnit = (newUnit) => {
@@ -948,6 +961,7 @@
             html += '<h4 style="margin-bottom:1rem; font-size:0.9rem; letter-spacing:0.04em;" class="text-muted">TO-BEAT TARGETS</h4>';
 
             let anyFound = false;
+            let emailBody = "My Target Scores to Beat:\n\n";
 
             names.forEach(name => {
                 // Find all sessions for this exercise (case-insensitive)
@@ -988,6 +1002,16 @@
                 const libEx = appState.exercises.find(e => e.name.toLowerCase() === name.toLowerCase());
                 const displayName = libEx ? libEx.name : name;
 
+                if (allTimeBest) {
+                    if (isBw) {
+                        emailBody += `${displayName}: ${allTimeBest.reps} reps\n`;
+                    } else {
+                        emailBody += `${displayName}: ${allTimeBest.weight}${appState.unit} x ${allTimeBest.reps}\n`;
+                    }
+                } else {
+                    emailBody += `${displayName}: No history\n`;
+                }
+
                 html += `
                     <div style="padding:0.875rem; background:var(--surface-offset); border-radius:var(--radius-base); margin-bottom:0.75rem;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
@@ -1021,7 +1045,18 @@
                 anyFound = true;
             });
 
-            if (!anyFound) html += '<p class="text-muted" style="font-size:0.85rem;">No logged sessions found for the entered exercises.</p>';
+            if (!anyFound) {
+                html += '<p class="text-muted" style="font-size:0.85rem;">No logged sessions found for the entered exercises.</p>';
+            } else if (appState.targetEmail) {
+                const mailtoLink = `mailto:${appState.targetEmail}?subject=Workout Targets to Beat&body=${encodeURIComponent(emailBody)}`;
+                html += `<div style="margin-top:1.5rem; text-align:center;">
+                    <a href="${mailtoLink}" class="btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem; width:100%; justify-content:center;"><i data-lucide="mail" style="width:16px;height:16px;"></i> Email Targets</a>
+                </div>`;
+            } else {
+                html += `<div style="margin-top:1.5rem; text-align:center; font-size:0.8rem;" class="text-muted">
+                    Set a Target Email in Settings to email these targets.
+                </div>`;
+            }
             html += '</div>';
             resultsEl.innerHTML = html;
         };
