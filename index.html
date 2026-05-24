@@ -775,18 +775,180 @@
             }
 
             summaryHTML += `</div>`;
+
+            // Progressive Overload button + panel
+            const poPanel = `
+                <div class="card" id="po-panel" style="margin-top: 1.5rem;">
+                    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                        <i data-lucide="trending-up" style="width:18px;height:18px;color:var(--primary);"></i>
+                        <h3 style="margin:0; font-size:1rem;">Progressive Overload</h3>
+                    </div>
+                    <p class="text-muted" style="font-size:0.85rem; margin-bottom:1rem;">Add today's planned exercises to see your personal bests to beat.</p>
+                    <div id="po-inputs"></div>
+                    <button class="btn" style="width:100%; border:1px dashed var(--border); background:transparent; margin-top:0.75rem; font-size:0.85rem;" onclick="poAddRow()">+ Add Exercise</button>
+                    <div class="flex justify-end" style="margin-top:1rem; gap:0.75rem;">
+                        <button class="btn" style="font-size:0.85rem; padding:0.5rem 1rem;" onclick="poClear()">Clear</button>
+                        <button class="btn btn-primary" style="font-size:0.85rem; padding:0.5rem 1rem;" onclick="poSubmit()">Show Targets</button>
+                    </div>
+                    <div id="po-results"></div>
+                </div>
+            `;
             
             view.innerHTML = `
                 <div class="grid-2">
                     <div>${gridHTML}</div>
-                    <div>${summaryHTML}</div>
+                    <div>${summaryHTML}${poPanel}</div>
                 </div>
             `;
             lucide.createIcons();
+            poRenderInputs();
         }
 
         window.prevMonth = () => { appState.currentMonth.setMonth(appState.currentMonth.getMonth() - 1); renderCalendarView(); };
         window.nextMonth = () => { appState.currentMonth.setMonth(appState.currentMonth.getMonth() + 1); renderCalendarView(); };
+
+        // --- Progressive Overload Feature ---
+        let poRows = [''];
+
+        function poRenderInputs() {
+            const container = document.getElementById('po-inputs');
+            if (!container) return;
+            const datalistHtml = appState.exercises.map(e => `<option value="${e.name}">`).join('');
+            let html = `<datalist id="po-datalist">${datalistHtml}</datalist>`;
+            poRows.forEach((val, idx) => {
+                html += `
+                    <div class="flex gap-2" style="margin-bottom:0.5rem; align-items:center;">
+                        <input type="text" list="po-datalist" placeholder="Exercise name..." value="${val}" id="po-row-${idx}" style="flex:1; font-size:0.85rem;" oninput="poUpdateRow(${idx}, this.value)">
+                        ${poRows.length > 1 ? `<button class="icon-btn" style="flex-shrink:0;" onclick="poRemoveRow(${idx})"><i data-lucide="x" style="width:14px;height:14px;"></i></button>` : ''}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        window.poUpdateRow = (idx, val) => { poRows[idx] = val; };
+
+        window.poAddRow = () => {
+            // save current input values before re-rendering
+            poRows.forEach((_, idx) => {
+                const el = document.getElementById(`po-row-${idx}`);
+                if (el) poRows[idx] = el.value;
+            });
+            poRows.push('');
+            poRenderInputs();
+        };
+
+        window.poRemoveRow = (idx) => {
+            poRows.forEach((_, i) => {
+                const el = document.getElementById(`po-row-${i}`);
+                if (el) poRows[i] = el.value;
+            });
+            poRows.splice(idx, 1);
+            poRenderInputs();
+        };
+
+        window.poClear = () => {
+            poRows = [''];
+            poRenderInputs();
+            const resultsEl = document.getElementById('po-results');
+            if (resultsEl) resultsEl.innerHTML = '';
+        };
+
+        window.poSubmit = () => {
+            // Collect current input values
+            poRows.forEach((_, idx) => {
+                const el = document.getElementById(`po-row-${idx}`);
+                if (el) poRows[idx] = el.value;
+            });
+
+            const names = poRows.map(r => r.trim()).filter(r => r.length > 0);
+            if (names.length === 0) return alert('Please add at least one exercise.');
+
+            const resultsEl = document.getElementById('po-results');
+            if (!resultsEl) return;
+
+            let html = '<div style="margin-top:1.5rem; border-top:1px solid var(--border); padding-top:1.5rem;">';
+            html += '<h4 style="margin-bottom:1rem; font-size:0.9rem; letter-spacing:0.04em;" class="text-muted">TO-BEAT TARGETS</h4>';
+
+            let anyFound = false;
+
+            names.forEach(name => {
+                // Find all sessions for this exercise (case-insensitive)
+                const sessions = [];
+                Object.keys(appState.workoutLogs).sort().forEach(date => {
+                    const log = appState.workoutLogs[date];
+                    log.exercises.filter(e => e.name.toLowerCase() === name.toLowerCase()).forEach(ex => {
+                        if (!ex.sets || ex.sets.length === 0) return;
+                        const isBw = ex.sets[0].isBodyweight || ex.sets[0].weight === 0;
+                        let bestSet;
+                        if (isBw) {
+                            bestSet = ex.sets.reduce((max, s) => s.reps > max.reps ? s : max, ex.sets[0]);
+                        } else {
+                            bestSet = ex.sets.reduce((max, s) => s.weight > max.weight ? s : max, ex.sets[0]);
+                        }
+                        sessions.push({ date, bestSet, isBw });
+                    });
+                });
+
+                // Find all-time best
+                let allTimeBest = null;
+                let isBw = false;
+                if (sessions.length > 0) {
+                    isBw = sessions[0].isBw;
+                    allTimeBest = sessions[0].bestSet;
+                    sessions.forEach(s => {
+                        if (s.isBw) {
+                            if (s.bestSet.reps > allTimeBest.reps) allTimeBest = s.bestSet;
+                        } else {
+                            if (s.bestSet.weight > allTimeBest.weight) allTimeBest = s.bestSet;
+                        }
+                    });
+                }
+
+                const lastSession = sessions.length > 0 ? sessions[sessions.length - 1] : null;
+
+                // Resolve display name from library
+                const libEx = appState.exercises.find(e => e.name.toLowerCase() === name.toLowerCase());
+                const displayName = libEx ? libEx.name : name;
+
+                html += `
+                    <div style="padding:0.875rem; background:var(--surface-offset); border-radius:var(--radius-base); margin-bottom:0.75rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
+                            <div style="font-weight:700; font-size:0.95rem;">${displayName}</div>
+                `;
+
+                if (!allTimeBest) {
+                    html += `<span class="text-muted" style="font-size:0.8rem;">No history</span>`;
+                } else if (isBw) {
+                    html += `<div style="text-align:right;">
+                        <div style="font-size:1.4rem; font-weight:800; color:var(--primary); line-height:1;">${allTimeBest.reps} <span style="font-size:0.75rem; font-weight:500;">reps</span></div>
+                        <div class="text-muted" style="font-size:0.7rem; margin-top:0.2rem;">ALL-TIME BEST</div>
+                    </div>`;
+                } else {
+                    html += `<div style="text-align:right;">
+                        <div style="font-size:1.4rem; font-weight:800; color:var(--primary); line-height:1;">${allTimeBest.weight}<span style="font-size:0.75rem; font-weight:500;">${appState.unit}</span> &times; ${allTimeBest.reps}</div>
+                        <div class="text-muted" style="font-size:0.7rem; margin-top:0.2rem;">ALL-TIME BEST</div>
+                    </div>`;
+                }
+
+                html += `</div>`;
+
+                if (lastSession && allTimeBest) {
+                    const lastStr = lastSession.isBw
+                        ? `BW &times; ${lastSession.bestSet.reps} reps`
+                        : `${lastSession.bestSet.weight}${appState.unit} &times; ${lastSession.bestSet.reps}`;
+                    html += `<div class="text-muted" style="font-size:0.78rem; margin-top:0.4rem;">Last: <strong style="color:var(--text);">${lastStr}</strong> &mdash; ${lastSession.date}</div>`;
+                }
+
+                html += `</div>`;
+                anyFound = true;
+            });
+
+            if (!anyFound) html += '<p class="text-muted" style="font-size:0.85rem;">No logged sessions found for the entered exercises.</p>';
+            html += '</div>';
+            resultsEl.innerHTML = html;
+        };
 
         // Day Detail
         window.openDayDetail = (dateStr) => {
