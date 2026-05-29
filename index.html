@@ -1015,7 +1015,7 @@
                         if (isBw) {
                             bestSet = ex.sets.reduce((max, s) => s.reps > max.reps ? s : max, ex.sets[0]);
                         } else {
-                            bestSet = ex.sets.reduce((max, s) => s.weight > max.weight ? s : max, ex.sets[0]);
+                            bestSet = ex.sets.reduce((max, s) => (s.weight > max.weight || (s.weight === max.weight && s.reps > max.reps)) ? s : max, ex.sets[0]);
                         }
                         sessions.push({ date, bestSet, isBw });
                     });
@@ -1031,7 +1031,7 @@
                         if (s.isBw) {
                             if (s.bestSet.reps > allTimeBest.reps) allTimeBest = s.bestSet;
                         } else {
-                            if (s.bestSet.weight > allTimeBest.weight) allTimeBest = s.bestSet;
+                            if (s.bestSet.weight > allTimeBest.weight || (s.bestSet.weight === allTimeBest.weight && s.bestSet.reps > allTimeBest.reps)) allTimeBest = s.bestSet;
                         }
                     });
                 }
