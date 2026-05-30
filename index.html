@@ -1520,6 +1520,20 @@
             showExerciseDetail(trimmedNewName);
         };
 
+        window.editExerciseCategory = (name) => {
+            const exIndex = appState.exercises.findIndex(e => e.name === name);
+            if (exIndex < 0) return;
+            const currentCat = appState.exercises[exIndex].category;
+            const newCat = prompt(`Enter new category for ${name} (e.g. Push, Pull, Legs, Upper, Lower, Abs, Rest):`, currentCat);
+            if (!newCat || newCat.trim() === '' || newCat === currentCat) return;
+            
+            const formattedCat = newCat.trim().charAt(0).toUpperCase() + newCat.trim().slice(1).toLowerCase();
+            appState.exercises[exIndex].category = formattedCat;
+            saveState();
+            renderProgressView();
+            showExerciseDetail(name);
+        };
+
         window.saveNewExercise = () => {
             const name = document.getElementById('new-ex-name').value.trim();
             const cat = document.getElementById('new-ex-cat').value;
@@ -1599,8 +1613,8 @@
                     <div>
                         <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.4rem;">
                             <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
-                            <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
-                            <span class="badge type-${exInfo.category.toLowerCase()}">${exInfo.category}</span>
+                            <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem; margin-right: 0.5rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
+                            <span class="badge type-${exInfo.category.toLowerCase()}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
                         </div>
                         <div class="text-muted" style="font-size:0.875rem;">
                             Last session: <strong style="color:var(--text);">${lastSession.date}</strong>
