@@ -1171,7 +1171,28 @@
         };
 
         window.quickLog = (dateStr, type, timeOfDay = '') => {
-            appState.workoutLogs[dateStr] = { type: type, timeOfDay: timeOfDay, exercises: [] };
+            let autofillExercises = [];
+            if (type !== 'Rest') {
+                const dates = Object.keys(appState.workoutLogs).filter(d => d < dateStr).sort((a, b) => b.localeCompare(a));
+                for (let d of dates) {
+                    if (appState.workoutLogs[d].type.toLowerCase() === type.toLowerCase()) {
+                        const prevSession = appState.workoutLogs[d];
+                        if (prevSession.exercises && prevSession.exercises.length > 0) {
+                            autofillExercises = prevSession.exercises.map(ex => {
+                                const isBw = ex.sets && ex.sets[0] ? (ex.sets[0].isBodyweight || ex.sets[0].weight === 0) : false;
+                                return {
+                                    name: ex.name,
+                                    notes: '',
+                                    sets: [{ weight: isBw ? 0 : '', reps: '', isBodyweight: isBw }]
+                                };
+                            });
+                        }
+                        break;
+                    }
+                }
+            }
+
+            appState.workoutLogs[dateStr] = { type: type, timeOfDay: timeOfDay, exercises: autofillExercises };
             saveState();
             renderCalendarView();
             closeModal('modal-day');
