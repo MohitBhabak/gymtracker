@@ -1126,7 +1126,10 @@
                             <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:1rem;">${log.type} Day</span>
                             ${log.timeOfDay ? `<span class="badge ${getTimeColorClass(log.timeOfDay)}" style="font-size:0.8rem; margin-left:0.5rem; vertical-align:middle;">${log.timeOfDay}</span>` : ''}
                         </div>
-                        <button class="btn" style="padding:0.25rem 0.5rem;" onclick="clearLog('${dateStr}')"><i data-lucide="trash" style="width:16px;"></i></button>
+                        <div style="display:flex; gap:0.5rem;">
+                            <button class="btn" style="padding:0.25rem 0.5rem;" onclick="swapLog('${dateStr}')" title="Move / Swap to another day"><i data-lucide="arrow-left-right" style="width:16px;"></i></button>
+                            <button class="btn" style="padding:0.25rem 0.5rem;" onclick="clearLog('${dateStr}')" title="Clear log"><i data-lucide="trash" style="width:16px;"></i></button>
+                        </div>
                     </div>
                 `;
                 
@@ -1199,6 +1202,38 @@
             if(type !== 'Rest') openLogSession(dateStr);
         };
         
+        window.swapLog = (dateStr) => {
+            const targetDate = prompt(`Enter the date to move/swap with ${dateStr} (Format: YYYY-MM-DD):`);
+            if (!targetDate) return;
+            
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
+                return alert('Invalid date format. Please use YYYY-MM-DD.');
+            }
+            
+            if (targetDate === dateStr) {
+                return alert('Cannot swap a day with itself.');
+            }
+            
+            const currentLog = appState.workoutLogs[dateStr];
+            const targetLog = appState.workoutLogs[targetDate];
+            
+            if (targetLog) {
+                appState.workoutLogs[dateStr] = targetLog;
+            } else {
+                delete appState.workoutLogs[dateStr];
+            }
+            
+            if (currentLog) {
+                appState.workoutLogs[targetDate] = currentLog;
+            } else {
+                delete appState.workoutLogs[targetDate];
+            }
+            
+            saveState();
+            renderCalendarView();
+            closeModal('modal-day');
+        };
+
         window.clearLog = (dateStr) => {
             delete appState.workoutLogs[dateStr];
             saveState();
