@@ -655,7 +655,33 @@
 
         let appState = {
             unit: 'lbs',
-            workoutLogs: {},
+            workoutLogs: {
+                "2026-07-16": {
+                    type: "Push",
+                    timeOfDay: "",
+                    exercises: [
+                        { name: "Incline press", notes: "", sets: [ { weight: 175, reps: 6, isBodyweight: false }, { weight: 150, reps: 6, isBodyweight: false } ] },
+                        { name: "Pec fly", notes: "", sets: [ { weight: 175, reps: 7, isBodyweight: false }, { weight: 160, reps: 5, isBodyweight: false } ] },
+                        { name: "Shoulder press", notes: "", sets: [ { weight: 110, reps: 5, isBodyweight: false }, { weight: 100, reps: 6, isBodyweight: false } ] },
+                        { name: "Overhead extension", notes: "", sets: [ { weight: 52.5, reps: 7, isBodyweight: false }, { weight: 47.5, reps: 7, isBodyweight: false } ] },
+                        { name: "Lateral raises", notes: "", sets: [ { weight: 95, reps: 7, isBodyweight: false }, { weight: 85, reps: 6, isBodyweight: false } ] },
+                        { name: "Dips", notes: "", sets: [ { weight: 0, reps: 19, isBodyweight: true } ] }
+                    ]
+                },
+                "2026-07-18": {
+                    type: "Pull",
+                    timeOfDay: "",
+                    exercises: [
+                        { name: "Pull-ups", notes: "", sets: [ { weight: 160, reps: 9, isBodyweight: false }, { weight: 160, reps: 5, isBodyweight: false } ] },
+                        { name: "Seated row", notes: "", sets: [ { weight: 145, reps: 7, isBodyweight: false }, { weight: 130, reps: 7, isBodyweight: false } ] },
+                        { name: "Preacher curl", notes: "", sets: [ { weight: 125, reps: 7, isBodyweight: false }, { weight: 110, reps: 4, isBodyweight: false } ] },
+                        { name: "Hammer curl", notes: "", sets: [ { weight: 40, reps: 6, isBodyweight: false }, { weight: 40, reps: 5, isBodyweight: false } ] },
+                        { name: "Wrist curl", notes: "", sets: [ { weight: 45, reps: 6, isBodyweight: false }, { weight: 45, reps: 6, isBodyweight: false } ] },
+                        { name: "Wrist extension", notes: "", sets: [ { weight: 35, reps: 7, isBodyweight: false }, { weight: 35, reps: 6, isBodyweight: false } ] },
+                        { name: "Rear delt fly", notes: "", sets: [ { weight: 115, reps: 7, isBodyweight: false }, { weight: 100, reps: 7, isBodyweight: false } ] }
+                    ]
+                }
+            },
             exercises: defaultExercises,
             weightLogs: [],
             currentMonth: new Date(),
