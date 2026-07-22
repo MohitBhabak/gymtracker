@@ -693,7 +693,7 @@
             try {
                 const parsed = JSON.parse(savedState);
                 appState.unit = parsed.unit || 'lbs';
-                appState.workoutLogs = parsed.workoutLogs || {};
+                appState.workoutLogs = { ...appState.workoutLogs, ...(parsed.workoutLogs || {}) };
                 appState.exercises = parsed.exercises || defaultExercises;
                 appState.weightLogs = parsed.weightLogs || [];
                 appState.targetEmail = parsed.targetEmail || '';
