@@ -754,6 +754,23 @@
             }
         }
 
+        // Ensure all logged exercises are in the library and have matching case
+        Object.values(appState.workoutLogs).forEach(log => {
+            if (!log.exercises) return;
+            log.exercises.forEach(ex => {
+                const exists = appState.exercises.find(e => e.name.toLowerCase() === ex.name.toLowerCase());
+                if (!exists) {
+                    appState.exercises.push({
+                        name: ex.name,
+                        category: log.type,
+                        isBodyweight: ex.sets && ex.sets[0] ? (ex.sets[0].isBodyweight || ex.sets[0].weight === 0) : false
+                    });
+                } else if (exists.name !== ex.name) {
+                    ex.name = exists.name; // Normalize case to match library
+                }
+            });
+        });
+
         function saveState() {
             localStorage.setItem('gymLogState', JSON.stringify({
                 unit: appState.unit,
