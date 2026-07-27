@@ -1184,9 +1184,9 @@
                 html += '<p class="text-muted" style="font-size:0.85rem;">No logged sessions found for the entered exercises.</p>';
             } else if (appState.targetEmail) {
                 const todayStr = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric' }).format(new Date());
-                const mailtoLink = `mailto:${appState.targetEmail}?subject=Workout Targets to Beat - ${todayStr}&body=${encodeURIComponent(emailBody)}`;
+                const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(appState.targetEmail)}&su=${encodeURIComponent('Workout Targets to Beat - ' + todayStr)}&body=${encodeURIComponent(emailBody)}`;
                 html += `<div style="margin-top:1.5rem; text-align:center;">
-                    <a href="${mailtoLink}" target="_blank" class="btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem; width:100%; justify-content:center;"><i data-lucide="mail" style="width:16px;height:16px;"></i> Email Targets</a>
+                    <a href="${gmailLink}" target="_blank" rel="noopener noreferrer" class="btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem; width:100%; justify-content:center;"><i data-lucide="mail" style="width:16px;height:16px;"></i> Email Targets</a>
                 </div>`;
             } else {
                 html += `<div style="margin-top:1.5rem; text-align:center; font-size:0.8rem;" class="text-muted">
