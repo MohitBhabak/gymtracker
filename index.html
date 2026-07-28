@@ -620,7 +620,7 @@
             </div>
             <div class="po-drawer-footer">
                 <button class="btn" style="font-size:0.85rem;" onclick="poClear()">Clear</button>
-                <button class="btn btn-primary" style="font-size:0.85rem;" onclick="poSubmit()">Show Targets</button>
+                <button class="btn btn-primary" id="po-submit-btn" style="font-size:0.85rem;" onclick="poSubmit()">Show Targets</button>
             </div>
         </div>
     </div>
@@ -1015,6 +1015,27 @@
 
         // --- Progressive Overload Drawer ---
         let poRows = [''];
+        let lastPoEmailBody = '';
+
+        function poResetBtn() {
+            const btn = document.getElementById('po-submit-btn');
+            if (btn) {
+                btn.innerHTML = 'Show Targets';
+                btn.onclick = poSubmit;
+            }
+        }
+
+        window.poEmailTargets = () => {
+            if (!lastPoEmailBody) return;
+            if (!appState.targetEmail) {
+                alert('Please set a Target Email in Settings to email targets.');
+                document.getElementById('btn-settings').click();
+                return;
+            }
+            const todayStr = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric' }).format(new Date());
+            const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(appState.targetEmail)}&su=${encodeURIComponent('Workout Targets to Beat - ' + todayStr)}&body=${encodeURIComponent(lastPoEmailBody)}`;
+            window.open(gmailLink, '_blank', 'noopener,noreferrer');
+        };
 
         window.poOpenDrawer = () => {
             poRows = [''];
@@ -1052,6 +1073,7 @@
         };
 
         function poRenderInputs() {
+            poResetBtn();
             const container = document.getElementById('po-inputs');
             if (!container) return;
             const datalistHtml = appState.exercises.map(e => `<option value="${e.name}">`).join('');
@@ -1199,19 +1221,19 @@
 
             if (!anyFound) {
                 html += '<p class="text-muted" style="font-size:0.85rem;">No logged sessions found for the entered exercises.</p>';
-            } else if (appState.targetEmail) {
-                const todayStr = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric' }).format(new Date());
-                const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(appState.targetEmail)}&su=${encodeURIComponent('Workout Targets to Beat - ' + todayStr)}&body=${encodeURIComponent(emailBody)}`;
-                html += `<div style="margin-top:1.5rem; text-align:center;">
-                    <a href="${gmailLink}" target="_blank" rel="noopener noreferrer" class="btn" style="text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem; width:100%; justify-content:center;"><i data-lucide="mail" style="width:16px;height:16px;"></i> Email Targets</a>
-                </div>`;
-            } else {
-                html += `<div style="margin-top:1.5rem; text-align:center; font-size:0.8rem;" class="text-muted">
-                    Set a Target Email in Settings to email these targets.
-                </div>`;
             }
             html += '</div>';
             resultsEl.innerHTML = html;
+
+            if (anyFound) {
+                lastPoEmailBody = emailBody;
+                const submitBtn = document.getElementById('po-submit-btn');
+                if (submitBtn) {
+                    submitBtn.innerHTML = '<i data-lucide="mail" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:0.25rem;"></i> Email Targets';
+                    submitBtn.onclick = poEmailTargets;
+                    lucide.createIcons();
+                }
+            }
         };
 
         // Day Detail
