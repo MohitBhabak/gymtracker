@@ -80,6 +80,7 @@
         .hidden { display: none !important; }
         .flex { display: flex; }
         .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
         .justify-between { justify-content: space-between; }
         .gap-2 { gap: 0.5rem; }
         .gap-4 { gap: 1rem; }
@@ -1772,13 +1773,16 @@
             
             if(sessions.length === 0) {
                 infoPanel.classList.remove('items-center', 'justify-center', 'text-muted');
+                infoPanel.style.display = 'block';
                 infoPanel.innerHTML = `
-                    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
-                        <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
-                        <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem; margin-right: 0.5rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
-                        <span class="badge type-${exInfo.category.toLowerCase()}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+                        <div style="display:flex; align-items:center; gap:0.75rem;">
+                            <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
+                            <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem; margin-right: 0.5rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
+                            <span class="badge type-${exInfo.category.toLowerCase()}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
+                        </div>
+                        <div class="text-muted" style="font-size:0.875rem;">No sessions logged yet.</div>
                     </div>
-                    <p class="text-muted">No sessions logged yet.</p>
                 `;
                 chartSection.classList.add('hidden');
                 historySection.classList.add('hidden');
