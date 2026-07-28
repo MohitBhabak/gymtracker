@@ -1988,24 +1988,55 @@
             if (sortedLogs.length > 0) {
                 const ctx = document.getElementById('weightChart').getContext('2d');
                 if(window.weightChartInstance) window.weightChartInstance.destroy();
+
+                const n = chartData.length;
+                const datasets = [{
+                    label: `Weight (${appState.unit})`,
+                    data: chartData.map(s => s.weight),
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#161616',
+                    pointBorderColor: '#3b82f6',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }];
+
+                if (n >= 2) {
+                    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+                    chartData.forEach((s, i) => {
+                        const x = i;
+                        const y = s.weight;
+                        sumX += x;
+                        sumY += y;
+                        sumXY += x * y;
+                        sumXX += x * x;
+                    });
+                    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+                    const intercept = (sumY - slope * sumX) / n;
+
+                    const trendlineData = chartData.map((_, i) => parseFloat((slope * i + intercept).toFixed(2)));
+
+                    datasets.push({
+                        label: `Trendline`,
+                        data: trendlineData,
+                        borderColor: isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.35)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        tension: 0,
+                        fill: false,
+                        pointRadius: 0,
+                        pointHoverRadius: 0
+                    });
+                }
                 
                 window.weightChartInstance = new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: chartData.map(s => s.date.substring(5)), // MM-DD
-                        datasets: [{
-                            label: `Weight (${appState.unit})`,
-                            data: chartData.map(s => s.weight),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.4,
-                            fill: true,
-                            pointBackgroundColor: '#161616',
-                            pointBorderColor: '#3b82f6',
-                            pointRadius: 4,
-                            pointHoverRadius: 6
-                        }]
+                        datasets: datasets
                     },
                     options: {
                         responsive: true,
