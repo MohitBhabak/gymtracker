@@ -1411,11 +1411,23 @@
             renderLogExercises();
         };
         
-        window.addSetToExercise = (id) => {
+        window.addSetToExercise = (id, autoFocus = true) => {
             saveCurrentInputs();
             const ex = logSessionData.find(e => e.id === id);
-            if(ex) ex.sets.push({weight: '', reps: ''});
-            renderLogExercises();
+            if(ex) {
+                ex.sets.push({weight: '', reps: ''});
+                const newSetIdx = ex.sets.length - 1;
+                renderLogExercises(autoFocus ? { exId: id, setIdx: newSetIdx, field: ex.isBodyweight ? 'reps' : 'weight' } : null);
+            } else {
+                renderLogExercises();
+            }
+        };
+
+        window.handleLastSetRepsTab = (e, exId) => {
+            if (e.key === 'Tab' && !e.shiftKey) {
+                e.preventDefault();
+                addSetToExercise(exId, true);
+            }
         };
 
         window.removeSetFromExercise = (id) => {
@@ -1457,7 +1469,7 @@
             });
         }
 
-        window.renderLogExercises = () => {
+        window.renderLogExercises = (focusInfo = null) => {
             const container = document.getElementById('multi-exercise-container');
             const datalistHtml = appState.exercises.map(e => `<option value="${e.name}">`).join('');
             
@@ -1479,6 +1491,7 @@
                 `;
                 
                 ex.sets.forEach((set, sIdx) => {
+                    const isLastSet = (sIdx === ex.sets.length - 1);
                     html += `
                         <div class="form-row" style="margin-bottom:0.5rem;">
                             <span style="width:50px; font-size:0.85rem;" class="text-muted">Set ${sIdx + 1}</span>
@@ -1486,14 +1499,14 @@
                                 ? `<div style="flex:1; padding:0.75rem; color:var(--text-muted); text-align:center; background-color:var(--surface-offset); border-radius:var(--radius-tight); border: 1px solid var(--border);">BW</div>`
                                 : `<input type="number" step="0.5" placeholder="Weight (${appState.unit})" id="log-ex-${ex.id}-w-${sIdx}" value="${set.weight}">`
                             }
-                            <input type="number" placeholder="Reps" id="log-ex-${ex.id}-r-${sIdx}" value="${set.reps}">
+                            <input type="number" placeholder="Reps" id="log-ex-${ex.id}-r-${sIdx}" value="${set.reps}" ${isLastSet ? `onkeydown="handleLastSetRepsTab(event, ${ex.id})"` : ''}>
                         </div>
                     `;
                 });
                 
                 html += `
                         <div class="flex gap-2" style="margin-top:1rem;">
-                            <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="addSetToExercise(${ex.id})">+ Add Set</button>
+                            <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="addSetToExercise(${ex.id}, true)">+ Add Set</button>
                             <button class="btn" style="padding:0.3rem 0.6rem; font-size:0.8rem;" onclick="removeSetFromExercise(${ex.id})">- Remove Set</button>
                         </div>
                     </div>
@@ -1502,6 +1515,17 @@
             
             container.innerHTML = html;
             lucide.createIcons();
+
+            if (focusInfo) {
+                const fieldId = focusInfo.field === 'weight'
+                    ? `log-ex-${focusInfo.exId}-w-${focusInfo.setIdx}`
+                    : `log-ex-${focusInfo.exId}-r-${focusInfo.setIdx}`;
+                const inputEl = document.getElementById(fieldId);
+                if (inputEl) {
+                    inputEl.focus();
+                    if (inputEl.select) inputEl.select();
+                }
+            }
         };
 
         document.getElementById('btn-save-session').onclick = () => {
