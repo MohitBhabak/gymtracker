@@ -1,0 +1,46 @@
+# GymLog 🏋️‍♂️
+
+A clean, intuitive, privacy-first single-page web application designed for tracking workout sessions, bodyweight progression, bench press PRs, and progressive overload targets. Built with vanilla HTML/JS, zero build step required, and runs entirely in the browser.
+
+---
+
+## ✨ Features
+
+- 📅 **Interactive Workout Calendar:** Log workout types (Push, Pull, Legs, Upper, Lower, Abs, Rest), duration, effort intensity, time of day, and track monthly consistency streaks.
+- ⚡ **Rapid Keyboard Set Logging:** Type weight, press `Tab`, type reps, and press `Tab` to automatically create and focus the next set for high-speed logging without touching the mouse.
+- 📊 **Progress Tracker & Analytics:** Inspect exercise performance history with interactive Chart.js graphs (Estimated 1RM, Max Weight, Total Reps, and Volume).
+- ⚖️ **Bodyweight Tracker with Trendline:** Log bodyweight entries over time with an automated linear regression trendline overlay to visualize long-term weight trends through daily fluctuations.
+- 🏆 **Bench PR Tracker:** Dedicated Bench Press PR tracker featuring a progress graph and historical performance table.
+- 🚀 **Progressive Overload Assistant:** Select planned exercises to view your all-time best scores to beat, with direct one-click export to Gmail.
+- 🌙 **Dark-Mode First Design:** Sleek gym-aesthetic UI featuring `Cabinet Grotesk` and `Satoshi` typography, smooth micro-interactions, responsive mobile-first layout, and light/dark mode toggle.
+- 💾 **Local Data Ownership:** All data persists locally in `localStorage` with full JSON backup export and import capabilities. No server or backend needed.
+
+---
+
+## 🚀 Getting Started
+
+Since **GymLog** is a static single-page application, no installation or package managers are required:
+
+1. Clone or download this repository:
+   ```bash
+   git clone https://github.com/MohitBhabak/gymtracker.git
+   ```
+2. Open `index.html` directly in any browser (Chrome, Safari, Firefox, Edge).
+
+Alternatively, deploy `index.html` instantly on **GitHub Pages**, **Vercel**, or **Netlify**.
+
+---
+
+## 🛠️ Built With
+
+- **HTML5 & CSS3** (Vanilla CSS Variables)
+- **JavaScript (ES6+)**
+- **[Chart.js](https://www.chartjs.org/)** — Data visualization
+- **[Lucide Icons](https://lucide.dev/)** — Iconography
+- **[Fontshare](https://www.fontshare.com/)** — Cabinet Grotesk & Satoshi fonts
+
+---
+
+## 📄 License
+
+MIT License — Feel free to use, modify, and distribute for your personal training needs!
