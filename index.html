@@ -749,6 +749,7 @@
                 const parsed = JSON.parse(savedState);
                 appState.unit = parsed.unit || 'lbs';
                 appState.workoutLogs = { ...appState.workoutLogs, ...(parsed.workoutLogs || {}) };
+                delete appState.workoutLogs['2026-07-19'];
                 appState.exercises = parsed.exercises || defaultExercises;
                 appState.weightLogs = parsed.weightLogs || [];
                 appState.benchLogs = parsed.benchLogs || [];
