@@ -144,6 +144,7 @@
             justify-content: center;
         }
         .icon-btn:hover { background-color: var(--surface-offset); color: var(--text); }
+        .icon-btn.ex-delete-btn:hover { color: #ef4444 !important; }
 
         /* Main Container */
         main {
@@ -1638,14 +1639,17 @@
             
             appState.exercises.forEach(ex => {
                 listHTML += `
-                    <div class="exercise-item flex items-center justify-between" data-category="${ex.category}" onclick="showExerciseDetail('${ex.name}')">
+                    <div class="exercise-item flex items-center justify-between" data-category="${ex.category}" onclick="showExerciseDetail('${ex.name.replace(/'/g, "\\'")}')">
                         <div>
                             <div class="font-bold">${ex.name}</div>
                             <div class="text-muted" style="font-size:0.8rem;">
                                 <span class="dot bg-${ex.category.toLowerCase()}"></span> ${ex.category}
                             </div>
                         </div>
-                        <i data-lucide="chevron-right" class="text-muted"></i>
+                        <div class="flex items-center gap-2">
+                            <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${ex.name.replace(/"/g, '&quot;')}" onclick="event.stopPropagation(); deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+                            <i data-lucide="chevron-right" class="text-muted"></i>
+                        </div>
                     </div>
                 `;
             });
@@ -1745,6 +1749,23 @@
             showExerciseDetail(name);
         };
 
+        window.deleteExerciseFromLibrary = (name) => {
+            if (!confirm(`Are you sure you want to delete "${name}" from your exercise library?`)) return;
+            
+            // Remove from exercise library
+            appState.exercises = appState.exercises.filter(e => e.name.toLowerCase() !== name.toLowerCase());
+
+            // Remove from workout logs
+            Object.values(appState.workoutLogs).forEach(log => {
+                if (log.exercises) {
+                    log.exercises = log.exercises.filter(e => e.name.toLowerCase() !== name.toLowerCase());
+                }
+            });
+
+            saveState();
+            renderProgressView();
+        };
+
         window.saveNewExercise = () => {
             const name = document.getElementById('new-ex-name').value.trim();
             const cat = document.getElementById('new-ex-cat').value;
@@ -1797,7 +1818,8 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
                         <div style="display:flex; align-items:center; gap:0.75rem;">
                             <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
-                            <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem; margin-right: 0.5rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
+                            <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
+                            <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${name.replace(/"/g, '&quot;')}" onclick="deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:18px;height:18px;"></i></button>
                             <span class="badge type-${exInfo.category.toLowerCase()}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
                         </div>
                         <div class="text-muted" style="font-size:0.875rem;">No sessions logged yet.</div>
@@ -1828,7 +1850,8 @@
                     <div>
                         <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.4rem;">
                             <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
-                            <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem; margin-right: 0.5rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
+                            <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
+                            <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${name.replace(/"/g, '&quot;')}" onclick="deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:18px;height:18px;"></i></button>
                             <span class="badge type-${exInfo.category.toLowerCase()}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
                         </div>
                         <div class="text-muted" style="font-size:0.875rem;">
