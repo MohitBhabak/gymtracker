@@ -1638,9 +1638,14 @@
         window.poAutofill = (type) => {
             const dates = Object.keys(appState.workoutLogs).sort((a, b) => b.localeCompare(a));
             let foundSession = null;
+            
+            const typeLower = type.toLowerCase();
+            const targetTypes = (typeLower === 'lower' || typeLower === 'legs') ? ['lower', 'legs'] : [typeLower];
+
             for (let d of dates) {
-                if (appState.workoutLogs[d].type.toLowerCase() === type.toLowerCase()) {
-                    foundSession = appState.workoutLogs[d];
+                const session = appState.workoutLogs[d];
+                if (session && session.type && targetTypes.includes(session.type.toLowerCase())) {
+                    foundSession = session;
                     break;
                 }
             }
@@ -1653,7 +1658,8 @@
                 const resultsEl = document.getElementById('po-results');
                 if (resultsEl) resultsEl.innerHTML = '';
             } else {
-                alert(`No recent ${type} session found with logged exercises.`);
+                const displayType = (typeLower === 'lower' || typeLower === 'legs') ? 'Lower or Legs' : type;
+                alert(`No recent ${displayType} session found with logged exercises.`);
             }
         };
 
