@@ -1050,7 +1050,16 @@
                 headers: { Authorization: `Bearer ${gdriveToken}` }
             });
 
-            if (!searchRes.ok) throw new Error('Failed to access Google Drive App Data');
+            if (!searchRes.ok) {
+                if (searchRes.status === 401 || searchRes.status === 403) {
+                    // Token invalid, clear and prompt reconnect
+                    gdriveToken = null;
+                    localStorage.removeItem('gymlog_gdrive_token');
+                    throw new Error('Access Token Expired or Permission Pending. Please Disconnect and Reconnect.');
+                }
+                const errBody = await searchRes.json().catch(() => ({}));
+                throw new Error(errBody.error?.message || 'Failed to access Google Drive App Data');
+            }
 
             const searchData = await searchRes.json();
             if (searchData.files && searchData.files.length > 0) {
@@ -1074,7 +1083,10 @@
                 body: form
             });
 
-            if (!createRes.ok) throw new Error('Failed to create gymlog_data.json in Drive');
+            if (!createRes.ok) {
+                const errBody = await createRes.json().catch(() => ({}));
+                throw new Error(errBody.error?.message || 'Failed to create gymlog_data.json in Drive');
+            }
 
             const createData = await createRes.json();
             gdriveFileId = createData.id;
