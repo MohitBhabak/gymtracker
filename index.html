@@ -507,9 +507,6 @@
         .mobile-nav-item.active i {
             transform: translateY(-2px);
         }
-        .dh-short {
-            display: none;
-        }
         .mobile-exercise-picker {
             display: none;
         }
@@ -543,12 +540,6 @@
 
             /* Calendar Grid Mobile Tweaks */
             .calendar-day-header { padding: 0.5rem 0.1rem; font-size: 0.75rem; }
-        }
-
-        @media (max-width: 500px) {
-            .calendar-day-header .dh-full { display: none; }
-            .calendar-day-header .dh-short { display: inline; }
-        }
             .calendar-cell {
                 min-height: 58px;
                 padding: 0.35rem 0.2rem;
@@ -1511,13 +1502,13 @@
                     <button class="icon-btn" onclick="nextMonth()"><i data-lucide="chevron-right"></i></button>
                 </div>
                 <div class="calendar-grid">
-                    <div class="calendar-day-header"><span class="dh-full">Sun</span><span class="dh-short">S</span></div>
-                    <div class="calendar-day-header"><span class="dh-full">Mon</span><span class="dh-short">M</span></div>
-                    <div class="calendar-day-header"><span class="dh-full">Tue</span><span class="dh-short">T</span></div>
-                    <div class="calendar-day-header"><span class="dh-full">Wed</span><span class="dh-short">W</span></div>
-                    <div class="calendar-day-header"><span class="dh-full">Thu</span><span class="dh-short">T</span></div>
-                    <div class="calendar-day-header"><span class="dh-full">Fri</span><span class="dh-short">F</span></div>
-                    <div class="calendar-day-header"><span class="dh-full">Sat</span><span class="dh-short">S</span></div>
+                    <div class="calendar-day-header">Sun</div>
+                    <div class="calendar-day-header">Mon</div>
+                    <div class="calendar-day-header">Tue</div>
+                    <div class="calendar-day-header">Wed</div>
+                    <div class="calendar-day-header">Thu</div>
+                    <div class="calendar-day-header">Fri</div>
+                    <div class="calendar-day-header">Sat</div>
             `;
             
             for(let i=0; i<offset; i++) gridHTML += `<div class="calendar-cell empty"></div>`;
