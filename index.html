@@ -621,12 +621,22 @@
                         <!-- Disconnected View -->
                         <div id="gdrive-disconnected-view">
                             <div style="margin-bottom: 0.75rem;">
-                                <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:0.25rem;">Google OAuth Client ID (Optional custom Client ID)</label>
-                                <input type="text" id="gdrive-client-id-input" placeholder="Paste Client ID (e.g. xxx.apps.googleusercontent.com)" style="width:100%; font-size:0.8rem; font-family:monospace; padding:0.4rem 0.6rem;" onchange="saveCustomClientId(this.value)">
+                                <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:0.25rem;">Google OAuth Client ID</label>
+                                <input type="text" id="gdrive-client-id-input" placeholder="Paste your Google OAuth Client ID here" style="width:100%; font-size:0.8rem; font-family:monospace; padding:0.5rem 0.6rem; border-radius:var(--radius-tight); border:1px solid var(--border); background:var(--surface);" onchange="saveCustomClientId(this.value)">
                             </div>
-                            <button class="btn" id="btn-connect-gdrive" onclick="connectGDrive()" style="background-color:var(--primary); color:#000; font-weight:600; width:100%; justify-content:center; gap:0.5rem;">
+                            <button class="btn" id="btn-connect-gdrive" onclick="connectGDrive()" style="background-color:var(--primary); color:#000; font-weight:600; width:100%; justify-content:center; gap:0.5rem; margin-bottom:0.75rem;">
                                 <i data-lucide="cloud" style="width:16px; height:16px;"></i> Connect Google Drive Sync
                             </button>
+                            <details style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">
+                                <summary style="cursor:pointer; color:var(--primary); font-weight:500;">Need a Client ID? View 1-Minute Setup Instructions</summary>
+                                <ol style="padding-left:1.2rem; margin-top:0.5rem; margin-bottom:0.5rem;">
+                                    <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--primary);">Google Cloud Console Credentials</a>.</li>
+                                    <li>Click <strong>+ Create Credentials</strong> &gt; <strong>OAuth client ID</strong>.</li>
+                                    <li>Select Application type: <strong>Web application</strong>.</li>
+                                    <li>Under <em>Authorized JavaScript origins</em>, add your app's URL (e.g. <code>https://mohitbhabak.github.io</code> or <code>http://localhost:3000</code>).</li>
+                                    <li>Copy your <strong>Client ID</strong> and paste it into the box above!</li>
+                                </ol>
+                            </details>
                         </div>
                     </div>
 
@@ -1002,11 +1012,18 @@
         };
 
         window.connectGDrive = function() {
-            if (!tokenClient) {
-                window.initGDriveGIS();
+            const inputVal = document.getElementById('gdrive-client-id-input')?.value?.trim();
+            if (inputVal) {
+                localStorage.setItem('gymlog_gdrive_client_id', inputVal);
             }
+            const clientId = getClientId();
+            if (!clientId) {
+                alert('Please paste your Google OAuth 2.0 Client ID into the box before connecting.\n\nNeed help? Click "How to get a Client ID" below.');
+                return;
+            }
+            window.initGDriveGIS();
             if (!tokenClient) {
-                alert('Please ensure you are connected to the internet or provide a valid Google OAuth Client ID.');
+                alert('Failed to initialize Google Auth with the provided Client ID. Please check the Client ID and try again.');
                 return;
             }
             tokenClient.requestAccessToken({ prompt: 'consent' });
