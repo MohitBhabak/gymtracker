@@ -589,14 +589,6 @@
                 margin: 0 auto 1rem auto;
             }
 
-            /* Mobile Progress Layout */
-            .mobile-exercise-picker {
-                display: block;
-            }
-            .progress-exercise-list {
-                display: none;
-            }
-
             /* Log Session Sets Form Row & Cards */
             .form-row {
                 gap: 0.5rem;
@@ -2260,16 +2252,6 @@
                 <div class="progress-layout">
                     <div class="progress-exercise-list">${listHTML}</div>
                     <div class="progress-right-col">
-                        <div class="mobile-exercise-picker card" style="margin-bottom:1rem; padding:0.75rem;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-                                <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Select Exercise</label>
-                                <button class="btn" style="padding:0.25rem 0.5rem; font-size:0.75rem;" onclick="openNewExerciseModal()">+ New Exercise</button>
-                            </div>
-                            <select id="mobile-ex-select" onchange="if(this.value) showExerciseDetail(this.value)" style="font-weight:bold; padding:0.6rem;">
-                                <option value="">-- Choose Exercise --</option>
-                                ${appState.exercises.map(ex => `<option value="${ex.name.replace(/"/g, '&quot;')}">${ex.name} (${ex.category})</option>`).join('')}
-                            </select>
-                        </div>
                         <div id="exercise-info" class="card flex items-center justify-center text-muted" style="min-height:120px;">
                             <div style="text-align:center;">
                                 <i data-lucide="dumbbell" style="width:36px;height:36px;margin-bottom:0.75rem;opacity:0.5;"></i>
@@ -2398,9 +2380,6 @@
             const historySection = document.getElementById('exercise-history-section');
             const historyTable = document.getElementById('exercise-history-table');
             const exInfo = appState.exercises.find(e => e.name === name);
-
-            const mSelect = document.getElementById('mobile-ex-select');
-            if (mSelect) mSelect.value = name;
 
             // Highlight selected exercise
             document.querySelectorAll('.exercise-item').forEach(el => el.classList.remove('selected-exercise'));
