@@ -456,6 +456,165 @@
         .badge-synced { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
         .badge-syncing { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
         .badge-error { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        /* Mobile Navigation & Responsiveness Overhaul */
+        .mobile-nav-bar {
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: calc(60px + env(safe-area-inset-bottom));
+            padding-bottom: env(safe-area-inset-bottom);
+            background-color: var(--surface);
+            border-top: 1px solid var(--border);
+            z-index: 45;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+        }
+        @media (min-width: 768px) {
+            .mobile-nav-bar {
+                display: none !important;
+            }
+            .dh-short { display: none !important; }
+            .mobile-exercise-picker { display: none !important; }
+        }
+        .mobile-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            flex: 1;
+            height: 100%;
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 500;
+            transition: color 0.2s, transform 0.15s ease;
+            text-decoration: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .mobile-nav-item i {
+            width: 20px;
+            height: 20px;
+            transition: transform 0.2s ease;
+        }
+        .mobile-nav-item.active {
+            color: var(--primary);
+            font-weight: 700;
+        }
+        .mobile-nav-item.active i {
+            transform: translateY(-2px);
+        }
+        .mobile-exercise-picker {
+            display: none;
+        }
+
+        @media (max-width: 767px) {
+            header {
+                padding: 0.75rem 1rem;
+                position: sticky;
+                top: 0;
+                z-index: 30;
+            }
+            .logo {
+                font-size: 1.2rem;
+            }
+            .nav-tabs {
+                display: none !important;
+            }
+            #sync-status-text {
+                display: none;
+            }
+            .btn-sync {
+                padding: 0.45rem 0.6rem;
+            }
+            main {
+                padding: 1rem 0.75rem;
+                margin-bottom: calc(64px + env(safe-area-inset-bottom));
+            }
+            input, select, button {
+                font-size: 16px; /* Prevents auto-zoom on mobile iOS Safari */
+            }
+
+            /* Calendar Grid Mobile Tweaks */
+            .calendar-day-header .dh-full { display: none; }
+            .calendar-day-header .dh-short { display: inline; }
+            .calendar-day-header { padding: 0.5rem 0.1rem; font-size: 0.75rem; }
+            .calendar-cell {
+                min-height: 58px;
+                padding: 0.35rem 0.2rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+            }
+            .calendar-date {
+                font-size: 0.8rem;
+                margin-bottom: 0.25rem;
+            }
+            .calendar-cell .badge {
+                font-size: 0.65rem;
+                padding: 0.15rem 0.35rem;
+                border-radius: 4px;
+                max-width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                line-height: 1;
+            }
+
+            /* Modals Mobile Bottom Sheet */
+            .modal-overlay {
+                align-items: flex-end;
+                padding: 0;
+            }
+            .modal-content {
+                max-width: 100%;
+                border-radius: 20px 20px 0 0;
+                max-height: 90vh;
+                transform: translateY(100%);
+                border-bottom: none;
+                padding: 1.25rem 1rem 2rem 1rem;
+            }
+            .modal-overlay.open .modal-content {
+                transform: translateY(0);
+            }
+            .modal-content::before {
+                content: '';
+                display: block;
+                width: 40px;
+                height: 4px;
+                background: var(--border);
+                border-radius: 2px;
+                margin: 0 auto 1rem auto;
+            }
+
+            /* Mobile Progress Layout */
+            .mobile-exercise-picker {
+                display: block;
+            }
+            .progress-exercise-list {
+                display: none;
+            }
+
+            /* Log Session Sets Form Row & Cards */
+            .form-row {
+                gap: 0.5rem;
+            }
+            .card-form-row {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            .card-form-row > div {
+                width: 100% !important;
+                min-width: 100% !important;
+            }
+            .card-form-row button {
+                width: 100% !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1345,10 +1504,13 @@
                     <button class="icon-btn" onclick="nextMonth()"><i data-lucide="chevron-right"></i></button>
                 </div>
                 <div class="calendar-grid">
-                    <div class="calendar-day-header">Sun</div><div class="calendar-day-header">Mon</div>
-                    <div class="calendar-day-header">Tue</div><div class="calendar-day-header">Wed</div>
-                    <div class="calendar-day-header">Thu</div><div class="calendar-day-header">Fri</div>
-                    <div class="calendar-day-header">Sat</div>
+                    <div class="calendar-day-header"><span class="dh-full">Sun</span><span class="dh-short">S</span></div>
+                    <div class="calendar-day-header"><span class="dh-full">Mon</span><span class="dh-short">M</span></div>
+                    <div class="calendar-day-header"><span class="dh-full">Tue</span><span class="dh-short">T</span></div>
+                    <div class="calendar-day-header"><span class="dh-full">Wed</span><span class="dh-short">W</span></div>
+                    <div class="calendar-day-header"><span class="dh-full">Thu</span><span class="dh-short">T</span></div>
+                    <div class="calendar-day-header"><span class="dh-full">Fri</span><span class="dh-short">F</span></div>
+                    <div class="calendar-day-header"><span class="dh-full">Sat</span><span class="dh-short">S</span></div>
             `;
             
             for(let i=0; i<offset; i++) gridHTML += `<div class="calendar-cell empty"></div>`;
@@ -2100,6 +2262,16 @@
                 <div class="progress-layout">
                     <div class="progress-exercise-list">${listHTML}</div>
                     <div class="progress-right-col">
+                        <div class="mobile-exercise-picker card" style="margin-bottom:1rem; padding:0.75rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                                <label style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Select Exercise</label>
+                                <button class="btn" style="padding:0.25rem 0.5rem; font-size:0.75rem;" onclick="openNewExerciseModal()">+ New Exercise</button>
+                            </div>
+                            <select id="mobile-ex-select" onchange="if(this.value) showExerciseDetail(this.value)" style="font-weight:bold; padding:0.6rem;">
+                                <option value="">-- Choose Exercise --</option>
+                                ${appState.exercises.map(ex => `<option value="${ex.name.replace(/"/g, '&quot;')}">${ex.name} (${ex.category})</option>`).join('')}
+                            </select>
+                        </div>
                         <div id="exercise-info" class="card flex items-center justify-center text-muted" style="min-height:120px;">
                             <div style="text-align:center;">
                                 <i data-lucide="dumbbell" style="width:36px;height:36px;margin-bottom:0.75rem;opacity:0.5;"></i>
@@ -2228,6 +2400,9 @@
             const historySection = document.getElementById('exercise-history-section');
             const historyTable = document.getElementById('exercise-history-table');
             const exInfo = appState.exercises.find(e => e.name === name);
+
+            const mSelect = document.getElementById('mobile-ex-select');
+            if (mSelect) mSelect.value = name;
 
             // Highlight selected exercise
             document.querySelectorAll('.exercise-item').forEach(el => el.classList.remove('selected-exercise'));
@@ -2396,7 +2571,7 @@
             const chartData = sortedLogs.slice(-30); // Last 30 entries
             
             let html = `
-                <div class="card" style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                <div class="card card-form-row" style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 200px;">
                         <label class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem; display: block;">Date</label>
                         <input type="date" id="weight-input-date" value="${todayStr}">
@@ -2574,7 +2749,7 @@
             const chartData = sortedLogs.slice(-30); // Last 30 entries
             
             let html = `
-                <div class="card" style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+                <div class="card card-form-row" style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 200px;">
                         <label class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem; display: block;">Date</label>
                         <input type="date" id="bench-input-date" value="${todayStr}">
@@ -2725,21 +2900,34 @@
             document.getElementById('tab-weight').classList.remove('active');
             document.getElementById('tab-bench').classList.remove('active');
 
+            const mNavCal = document.getElementById('mnav-calendar');
+            const mNavProg = document.getElementById('mnav-progress');
+            const mNavWgt = document.getElementById('mnav-weight');
+            const mNavBench = document.getElementById('mnav-bench');
+            if (mNavCal) mNavCal.classList.remove('active');
+            if (mNavProg) mNavProg.classList.remove('active');
+            if (mNavWgt) mNavWgt.classList.remove('active');
+            if (mNavBench) mNavBench.classList.remove('active');
+
             if (hash === '#progress') {
                 document.getElementById('view-progress').classList.remove('hidden');
                 document.getElementById('tab-progress').classList.add('active');
+                if (mNavProg) mNavProg.classList.add('active');
                 renderProgressView();
             } else if (hash === '#weight') {
                 document.getElementById('view-weight').classList.remove('hidden');
                 document.getElementById('tab-weight').classList.add('active');
+                if (mNavWgt) mNavWgt.classList.add('active');
                 renderWeightView();
             } else if (hash === '#bench') {
                 document.getElementById('view-bench').classList.remove('hidden');
                 document.getElementById('tab-bench').classList.add('active');
+                if (mNavBench) mNavBench.classList.add('active');
                 renderBenchView();
             } else {
                 document.getElementById('view-calendar').classList.remove('hidden');
                 document.getElementById('tab-calendar').classList.add('active');
+                if (mNavCal) mNavCal.classList.add('active');
                 renderCalendarView();
             }
         }
@@ -2747,5 +2935,25 @@
         
         handleRoute();
     </script>
+
+    <!-- Mobile Bottom Navigation Bar -->
+    <div class="mobile-nav-bar">
+        <a href="#calendar" class="mobile-nav-item active" id="mnav-calendar">
+            <i data-lucide="calendar"></i>
+            <span>Calendar</span>
+        </a>
+        <a href="#progress" class="mobile-nav-item" id="mnav-progress">
+            <i data-lucide="trending-up"></i>
+            <span>Progress</span>
+        </a>
+        <a href="#weight" class="mobile-nav-item" id="mnav-weight">
+            <i data-lucide="scale"></i>
+            <span>Weight</span>
+        </a>
+        <a href="#bench" class="mobile-nav-item" id="mnav-bench">
+            <i data-lucide="trophy"></i>
+            <span>Bench PR</span>
+        </a>
+    </div>
 </body>
 </html>
