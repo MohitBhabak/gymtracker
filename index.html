@@ -1903,11 +1903,14 @@
             let autofillExercises = [];
             if (type !== 'Rest') {
                 const dates = Object.keys(appState.workoutLogs).filter(d => d < dateStr).sort((a, b) => b.localeCompare(a));
+                const typeLower = type.toLowerCase();
+                const targetTypes = (typeLower === 'lower' || typeLower === 'legs') ? ['lower', 'legs'] : [typeLower];
+
                 for (let d of dates) {
-                    if (appState.workoutLogs[d].type.toLowerCase() === type.toLowerCase()) {
-                        const prevSession = appState.workoutLogs[d];
-                        if (prevSession.exercises && prevSession.exercises.length > 0) {
-                            autofillExercises = prevSession.exercises.map(ex => {
+                    const session = appState.workoutLogs[d];
+                    if (session && session.type && targetTypes.includes(session.type.toLowerCase())) {
+                        if (session.exercises && session.exercises.length > 0) {
+                            autofillExercises = session.exercises.map(ex => {
                                 const isBw = ex.sets && ex.sets[0] ? (ex.sets[0].isBodyweight || ex.sets[0].weight === 0) : false;
                                 return {
                                     name: ex.name,
