@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Identity Services for Google Drive Sync -->
+    <script src="https://accounts.google.com/gsi/client" async defer onload="if(window.initGDriveGIS) window.initGDriveGIS()"></script>
     <style>
         /* CSS Variables */
         :root {
@@ -413,9 +415,47 @@
             gap: 0.75rem;
             justify-content: flex-end;
             flex-shrink: 0;
-            background: var(--surface);
+        /* Cloud Sync Styles */
+        .btn-sync {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 0.8rem;
+            font-size: 0.82rem;
+            border-radius: var(--radius-tight);
+            background: var(--surface-offset);
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        .btn-sync:hover {
+            border-color: var(--primary);
+            background: var(--surface-2);
+        }
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+        .sync-dot.disconnected { background-color: var(--text-muted, #71717a); }
+        .sync-dot.synced { background-color: #22c55e; box-shadow: 0 0 6px rgba(34, 197, 94, 0.4); }
+        .sync-dot.syncing { background-color: #3b82f6; animation: pulse-dot 1.2s infinite ease-in-out; }
+        .sync-dot.error { background-color: #ef4444; }
+
+        @keyframes pulse-dot {
+            0% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 0.3; transform: scale(0.8); }
         }
 
+        .badge-disconnected { background: rgba(255,255,255,0.1); color: var(--text-muted); }
+        .badge-synced { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .badge-syncing { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-error { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
     </style>
 </head>
 <body>
@@ -432,6 +472,11 @@
             <a href="#bench" class="nav-tab" id="tab-bench">Bench PR</a>
         </div>
         <div class="header-actions">
+            <button class="btn-sync" id="btn-sync-header" onclick="openModal('modal-settings')" title="Google Drive Cloud Sync">
+                <span id="sync-status-dot" class="sync-dot disconnected"></span>
+                <i data-lucide="cloud" style="width: 16px; height: 16px;"></i>
+                <span id="sync-status-text">Drive Sync</span>
+            </button>
             <button class="icon-btn" id="btn-theme" aria-label="Toggle Theme">
                 <i data-lucide="moon"></i>
             </button>
@@ -536,13 +581,57 @@
                                 <option value="kg">kg</option>
                             </select>
                         </div>
-                        <div class="flex items-center justify-between" style="padding: 0.5rem 0;">
-                            <span>Target Email</span>
-                            <input type="email" id="settings-email" placeholder="e.g. gym@example.com" style="width: 200px;" onchange="updateEmail(this.value)">
+                    <div style="margin-bottom: 2rem; padding: 1.25rem; background-color: var(--surface-offset); border-radius: var(--radius-base); border: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                            <h4 style="margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
+                                <i data-lucide="cloud" style="width: 18px; height: 18px; color: var(--primary);"></i>
+                                Google Drive Cross-Device Sync
+                            </h4>
+                            <span id="sync-badge" class="badge-disconnected" style="padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Disconnected</span>
+                        </div>
+                        <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.85rem; line-height: 1.4;">
+                            Sync your workouts, bodyweight, and PRs seamlessly across your phone and desktop using your Google Account. Data is stored privately in your personal Google Drive <code>appDataFolder</code>.
+                        </p>
+
+                        <!-- Connected View -->
+                        <div id="gdrive-connected-view" class="hidden" style="margin-bottom: 1rem;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:var(--surface-2); padding:0.6rem 0.8rem; border-radius:var(--radius-tight); margin-bottom:0.75rem; font-size:0.85rem;">
+                                <div>
+                                    <div style="color:var(--text-muted); font-size:0.75rem;">Connected Account</div>
+                                    <strong id="gdrive-user-email">User Account</strong>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="color:var(--text-muted); font-size:0.75rem;">Last Synced</div>
+                                    <span id="gdrive-last-sync-time">Never</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-2" style="flex-wrap: wrap;">
+                                <button class="btn" onclick="syncWithDrive('manual')" id="btn-sync-now">
+                                    <i data-lucide="refresh-cw" style="width:14px;"></i> Sync Now
+                                </button>
+                                <button class="btn" onclick="syncWithDrive('pull')" id="btn-sync-pull" style="background:var(--surface-2);">
+                                    <i data-lucide="download-cloud" style="width:14px;"></i> Pull from Cloud
+                                </button>
+                                <button class="btn" onclick="disconnectGDrive()" style="background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3);">
+                                    <i data-lucide="log-out" style="width:14px;"></i> Disconnect
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Disconnected View -->
+                        <div id="gdrive-disconnected-view">
+                            <div style="margin-bottom: 0.75rem;">
+                                <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:0.25rem;">Google OAuth Client ID (Optional custom Client ID)</label>
+                                <input type="text" id="gdrive-client-id-input" placeholder="Paste Client ID (e.g. xxx.apps.googleusercontent.com)" style="width:100%; font-size:0.8rem; font-family:monospace; padding:0.4rem 0.6rem;" onchange="saveCustomClientId(this.value)">
+                            </div>
+                            <button class="btn" id="btn-connect-gdrive" onclick="connectGDrive()" style="background-color:var(--primary); color:#000; font-weight:600; width:100%; justify-content:center; gap:0.5rem;">
+                                <i data-lucide="cloud" style="width:16px; height:16px;"></i> Connect Google Drive Sync
+                            </button>
                         </div>
                     </div>
+
                     <div style="margin-bottom: 2rem;">
-                        <h4 style="margin-bottom: 0.5rem;">Data Backup</h4>
+                        <h4 style="margin-bottom: 0.5rem;">Local Data Backup</h4>
                         <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.9rem;">Export your workout data to a file to keep it safe, or import a previous backup.</p>
                         <div class="flex gap-2">
                             <button class="btn" onclick="exportData()"><i data-lucide="download" style="width:16px;"></i> Export Data</button>
@@ -777,7 +866,7 @@
             });
         });
 
-        function saveState() {
+        function saveStateLocalOnly() {
             localStorage.setItem('gymLogState', JSON.stringify({
                 unit: appState.unit,
                 workoutLogs: appState.workoutLogs,
@@ -786,6 +875,329 @@
                 benchLogs: appState.benchLogs,
                 targetEmail: appState.targetEmail
             }));
+        }
+
+        function saveState() {
+            saveStateLocalOnly();
+            triggerAutoSync();
+        }
+
+        // --- GOOGLE DRIVE CROSS-DEVICE SYNC ENGINE ---
+        const GDRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.email';
+        const GDRIVE_FILE_NAME = 'gymlog_data.json';
+        const DEFAULT_CLIENT_ID = '937666249216-2g557b7kln1c6p3v0d8p9b45g5s0j2n5.apps.googleusercontent.com';
+
+        let tokenClient = null;
+        let gdriveToken = localStorage.getItem('gymlog_gdrive_token') || null;
+        let gdriveTokenExp = parseInt(localStorage.getItem('gymlog_gdrive_token_exp') || '0', 10);
+        let gdriveFileId = localStorage.getItem('gymlog_gdrive_file_id') || null;
+        let gdriveUserEmail = localStorage.getItem('gymlog_gdrive_user_email') || null;
+        let syncDebounceTimer = null;
+
+        function getClientId() {
+            return localStorage.getItem('gymlog_gdrive_client_id') || DEFAULT_CLIENT_ID;
+        }
+
+        window.saveCustomClientId = function(val) {
+            if (val && val.trim()) {
+                localStorage.setItem('gymlog_gdrive_client_id', val.trim());
+            } else {
+                localStorage.removeItem('gymlog_gdrive_client_id');
+            }
+            if (tokenClient) tokenClient = null; // Reset token client to re-init
+        };
+
+        function isTokenValid() {
+            return gdriveToken && (Date.now() < gdriveTokenExp - 60000);
+        }
+
+        function updateSyncUI(status, message) {
+            const dot = document.getElementById('sync-status-dot');
+            const text = document.getElementById('sync-status-text');
+            const badge = document.getElementById('sync-badge');
+            const connectedView = document.getElementById('gdrive-connected-view');
+            const disconnectedView = document.getElementById('gdrive-disconnected-view');
+            const userEmailSpan = document.getElementById('gdrive-user-email');
+            const lastSyncSpan = document.getElementById('gdrive-last-sync-time');
+
+            if (dot && text) {
+                dot.className = 'sync-dot ' + status;
+
+                if (status === 'synced') {
+                    text.innerText = 'Synced';
+                    if (badge) { badge.className = 'badge-synced'; badge.innerText = 'Synced'; }
+                } else if (status === 'syncing') {
+                    text.innerText = 'Syncing...';
+                    if (badge) { badge.className = 'badge-syncing'; badge.innerText = 'Syncing...'; }
+                } else if (status === 'error') {
+                    text.innerText = 'Sync Error';
+                    if (badge) { badge.className = 'badge-error'; badge.innerText = message || 'Sync Error'; }
+                } else {
+                    text.innerText = 'Drive Sync';
+                    if (badge) { badge.className = 'badge-disconnected'; badge.innerText = 'Disconnected'; }
+                }
+            }
+
+            if (gdriveUserEmail && isTokenValid()) {
+                if (connectedView) connectedView.classList.remove('hidden');
+                if (disconnectedView) disconnectedView.classList.add('hidden');
+                if (userEmailSpan) userEmailSpan.innerText = gdriveUserEmail;
+                
+                const lastSync = localStorage.getItem('gymlog_gdrive_last_sync');
+                if (lastSyncSpan) {
+                    lastSyncSpan.innerText = lastSync ? new Date(parseInt(lastSync, 10)).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Just now';
+                }
+            } else {
+                if (connectedView) connectedView.classList.add('hidden');
+                if (disconnectedView) disconnectedView.classList.remove('hidden');
+            }
+
+            const clientIdInput = document.getElementById('gdrive-client-id-input');
+            if (clientIdInput && !clientIdInput.value) {
+                clientIdInput.value = localStorage.getItem('gymlog_gdrive_client_id') || '';
+            }
+        }
+
+        window.initGDriveGIS = function() {
+            const clientId = getClientId();
+            if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: clientId,
+                    scope: GDRIVE_SCOPE,
+                    callback: async (resp) => {
+                        if (resp.error) {
+                            console.error('OAuth error:', resp);
+                            updateSyncUI('error', 'OAuth Authorization Failed');
+                            return;
+                        }
+                        gdriveToken = resp.access_token;
+                        gdriveTokenExp = Date.now() + (parseInt(resp.expires_in, 10) * 1000);
+                        localStorage.setItem('gymlog_gdrive_token', gdriveToken);
+                        localStorage.setItem('gymlog_gdrive_token_exp', gdriveTokenExp);
+
+                        try {
+                            const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                                headers: { Authorization: `Bearer ${gdriveToken}` }
+                            });
+                            if (userRes.ok) {
+                                const userData = await userRes.json();
+                                gdriveUserEmail = userData.email;
+                                localStorage.setItem('gymlog_gdrive_user_email', gdriveUserEmail);
+                            }
+                        } catch(e) {
+                            console.error('Failed to fetch user email', e);
+                        }
+
+                        syncWithDrive('full');
+                    }
+                });
+            }
+
+            if (isTokenValid()) {
+                updateSyncUI('synced');
+                syncWithDrive('pull_silent');
+            } else {
+                updateSyncUI('disconnected');
+            }
+        };
+
+        window.connectGDrive = function() {
+            if (!tokenClient) {
+                window.initGDriveGIS();
+            }
+            if (!tokenClient) {
+                alert('Please ensure you are connected to the internet or provide a valid Google OAuth Client ID.');
+                return;
+            }
+            tokenClient.requestAccessToken({ prompt: 'consent' });
+        };
+
+        window.disconnectGDrive = function() {
+            if (confirm('Disconnect Google Drive sync? Your local data will remain safe in your browser.')) {
+                gdriveToken = null;
+                gdriveTokenExp = 0;
+                gdriveFileId = null;
+                gdriveUserEmail = null;
+                localStorage.removeItem('gymlog_gdrive_token');
+                localStorage.removeItem('gymlog_gdrive_token_exp');
+                localStorage.removeItem('gymlog_gdrive_file_id');
+                localStorage.removeItem('gymlog_gdrive_user_email');
+                updateSyncUI('disconnected');
+            }
+        };
+
+        async function findOrCreateDriveFile() {
+            if (gdriveFileId) return gdriveFileId;
+
+            const searchRes = await fetch("https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='" + GDRIVE_FILE_NAME + "' and trashed=false", {
+                headers: { Authorization: `Bearer ${gdriveToken}` }
+            });
+
+            if (!searchRes.ok) throw new Error('Failed to access Google Drive App Data');
+
+            const searchData = await searchRes.json();
+            if (searchData.files && searchData.files.length > 0) {
+                gdriveFileId = searchData.files[0].id;
+                localStorage.setItem('gymlog_gdrive_file_id', gdriveFileId);
+                return gdriveFileId;
+            }
+
+            const metadata = {
+                name: GDRIVE_FILE_NAME,
+                parents: ['appDataFolder']
+            };
+
+            const form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', new Blob([JSON.stringify(getExportableState())], { type: 'application/json' }));
+
+            const createRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${gdriveToken}` },
+                body: form
+            });
+
+            if (!createRes.ok) throw new Error('Failed to create gymlog_data.json in Drive');
+
+            const createData = await createRes.json();
+            gdriveFileId = createData.id;
+            localStorage.setItem('gymlog_gdrive_file_id', gdriveFileId);
+            return gdriveFileId;
+        }
+
+        function getExportableState() {
+            return {
+                unit: appState.unit,
+                workoutLogs: appState.workoutLogs,
+                exercises: appState.exercises,
+                weightLogs: appState.weightLogs,
+                benchLogs: appState.benchLogs,
+                targetEmail: appState.targetEmail,
+                updatedAt: Date.now()
+            };
+        }
+
+        function mergeAppState(remoteData) {
+            if (!remoteData) return;
+
+            if (remoteData.unit) appState.unit = remoteData.unit;
+            if (remoteData.targetEmail) appState.targetEmail = remoteData.targetEmail;
+
+            if (remoteData.workoutLogs) {
+                Object.keys(remoteData.workoutLogs).forEach(dateKey => {
+                    const localLog = appState.workoutLogs[dateKey];
+                    const remoteLog = remoteData.workoutLogs[dateKey];
+
+                    if (!localLog) {
+                        appState.workoutLogs[dateKey] = remoteLog;
+                    } else if (remoteLog) {
+                        const mergedExercises = [...(localLog.exercises || [])];
+                        (remoteLog.exercises || []).forEach(remoteEx => {
+                            const exIdx = mergedExercises.findIndex(e => e.name.toLowerCase() === remoteEx.name.toLowerCase());
+                            if (exIdx === -1) {
+                                mergedExercises.push(remoteEx);
+                            } else if ((remoteEx.sets || []).length > (mergedExercises[exIdx].sets || []).length) {
+                                mergedExercises[exIdx] = remoteEx;
+                            }
+                        });
+                        appState.workoutLogs[dateKey] = {
+                            type: remoteLog.type || localLog.type,
+                            duration: remoteLog.duration || localLog.duration,
+                            effort: remoteLog.effort || localLog.effort,
+                            timeOfDay: remoteLog.timeOfDay || localLog.timeOfDay,
+                            notes: remoteLog.notes || localLog.notes,
+                            exercises: mergedExercises
+                        };
+                    }
+                });
+            }
+
+            if (remoteData.exercises && Array.isArray(remoteData.exercises)) {
+                remoteData.exercises.forEach(remoteEx => {
+                    const exists = appState.exercises.find(e => e.name.toLowerCase() === remoteEx.name.toLowerCase());
+                    if (!exists) appState.exercises.push(remoteEx);
+                });
+            }
+
+            if (remoteData.weightLogs && Array.isArray(remoteData.weightLogs)) {
+                if (!appState.weightLogs) appState.weightLogs = [];
+                remoteData.weightLogs.forEach(rw => {
+                    const idx = appState.weightLogs.findIndex(lw => lw.date === rw.date);
+                    if (idx === -1) appState.weightLogs.push(rw);
+                    else appState.weightLogs[idx].weight = rw.weight;
+                });
+                appState.weightLogs.sort((a,b) => new Date(a.date) - new Date(b.date));
+            }
+
+            if (remoteData.benchLogs && Array.isArray(remoteData.benchLogs)) {
+                if (!appState.benchLogs) appState.benchLogs = [];
+                remoteData.benchLogs.forEach(rb => {
+                    const idx = appState.benchLogs.findIndex(lb => lb.date === rb.date);
+                    if (idx === -1) appState.benchLogs.push(rb);
+                    else appState.benchLogs[idx].weight = rb.weight;
+                });
+                appState.benchLogs.sort((a,b) => new Date(a.date) - new Date(b.date));
+            }
+
+            saveStateLocalOnly();
+            if (typeof handleRoute === 'function') handleRoute();
+        }
+
+        window.syncWithDrive = async function(mode = 'auto') {
+            if (!isTokenValid()) {
+                if (mode !== 'pull_silent' && mode !== 'auto') {
+                    window.connectGDrive();
+                } else {
+                    updateSyncUI('disconnected');
+                }
+                return;
+            }
+
+            updateSyncUI('syncing');
+
+            try {
+                const fileId = await findOrCreateDriveFile();
+
+                if (mode === 'pull' || mode === 'pull_silent' || mode === 'full' || mode === 'auto') {
+                    const downloadRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+                        headers: { Authorization: `Bearer ${gdriveToken}` }
+                    });
+
+                    if (downloadRes.ok) {
+                        const remoteData = await downloadRes.json();
+                        mergeAppState(remoteData);
+                    }
+                }
+
+                if (mode === 'push' || mode === 'full' || mode === 'auto' || mode === 'manual') {
+                    const payload = JSON.stringify(getExportableState());
+                    const uploadRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+                        method: 'PATCH',
+                        headers: {
+                            Authorization: `Bearer ${gdriveToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: payload
+                    });
+
+                    if (!uploadRes.ok) throw new Error('Upload to Google Drive failed');
+                }
+
+                const now = Date.now();
+                localStorage.setItem('gymlog_gdrive_last_sync', now.toString());
+                updateSyncUI('synced');
+            } catch(err) {
+                console.error('Google Drive Sync error:', err);
+                updateSyncUI('error', err.message || 'Sync Error');
+            }
+        };
+
+        function triggerAutoSync() {
+            if (!isTokenValid()) return;
+            if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
+            syncDebounceTimer = setTimeout(() => {
+                window.syncWithDrive('push');
+            }, 2500);
         }
 
         // Initialize Icons

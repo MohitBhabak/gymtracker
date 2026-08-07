@@ -13,9 +13,20 @@ A clean, intuitive, privacy-first single-page web application designed for track
 - 🏆 **Bench PR Tracker:** Dedicated Bench Press PR tracker featuring a progress graph and historical performance table.
 - 🚀 **Progressive Overload Assistant:** Select planned exercises to view your all-time best scores to beat, with direct one-click export to Gmail.
 - 🌙 **Dark-Mode First Design:** Sleek gym-aesthetic UI featuring `Cabinet Grotesk` and `Satoshi` typography, smooth micro-interactions, responsive mobile-first layout, and light/dark mode toggle.
-- 💾 **Local Data Ownership:** All data persists locally in `localStorage` with full JSON backup export and import capabilities. No server or backend needed.
+- ☁️ **Google Drive Cross-Device Sync:** Sync workout logs, bodyweight entries, and PRs seamlessly across phones, tablets, and desktops using your personal Google account (`appDataFolder`).
+- 💾 **Local Data Ownership:** All data persists locally in `localStorage` with full JSON backup export and import capabilities. No external backend server required.
 
 ---
+
+## ☁️ Google Drive Cross-Device Sync Setup
+
+GymLog uses Google's official Identity Services API to sync data directly to your personal Google Drive account in a hidden, secure `appDataFolder`.
+
+1. Click **Drive Sync** (or open **Settings & Backup**).
+2. Click **Connect Google Drive Sync** and authorize with your Google account.
+3. Your data will now automatically sync across any browser or device where you sign into GymLog!
+
+*Note for custom deployments:* If hosting on a custom domain, you can optionally paste your own Google OAuth 2.0 Client ID in **Settings** (created via Google Cloud Console under APIs & Services > Credentials).
 
 ## 🚀 Getting Started
 
