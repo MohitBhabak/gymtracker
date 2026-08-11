@@ -692,6 +692,13 @@
                         </select>
                     </div>
                     
+                    <div style="margin-bottom: 1.25rem;">
+                        <button type="button" class="btn" onclick="openQuickPasteModal(document.getElementById('log-date').value)" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; background: var(--surface-offset); border: 1px solid var(--border); font-weight: 600; padding: 0.65rem 1rem; font-size: 0.85rem; border-radius: var(--radius-tight);">
+                            <i data-lucide="clipboard-paste" style="width: 16px; height: 16px; color: var(--primary);"></i>
+                            Quick Paste / Import Notes
+                        </button>
+                    </div>
+                    
                     <div id="multi-exercise-container">
                         <!-- Exercise blocks injected here -->
                     </div>
@@ -708,6 +715,78 @@
                         <button class="btn" onclick="closeModal('modal-log')">Cancel</button>
                         <button class="btn btn-primary" id="btn-save-session">Save Session</button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Paste / Smart Import Modal -->
+        <div id="modal-quick-paste" class="modal-overlay">
+            <div class="modal-content" style="max-width: 650px; max-height: 90vh; display: flex; flex-direction: column;">
+                <div class="modal-header" style="margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.6rem;">
+                        <div style="width: 32px; height: 32px; border-radius: var(--radius-tight); background: rgba(249, 115, 22, 0.15); display: flex; align-items: center; justify-content: center;">
+                            <i data-lucide="clipboard-paste" style="width: 18px; height: 18px; color: var(--primary);"></i>
+                        </div>
+                        <div>
+                            <h2 id="modal-quick-paste-title" style="margin: 0; font-size: 1.25rem;">Quick Paste Notes</h2>
+                        </div>
+                    </div>
+                    <button class="icon-btn" onclick="closeModal('modal-quick-paste')"><i data-lucide="x"></i></button>
+                </div>
+                <div id="modal-quick-paste-body" style="overflow-y: auto; flex: 1; padding-right: 2px;">
+                    <p class="text-muted" style="font-size: 0.85rem; margin-bottom: 1.25rem; line-height: 1.4;">
+                        Paste raw notes from Apple Notes, Google Keep, or messages. Weights, reps, sets, decimals, and bodyweight exercises are automatically detected and parsed in real time.
+                    </p>
+
+                    <div class="flex gap-3" style="margin-bottom: 1rem; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 150px;">
+                            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">Workout Date</label>
+                            <input type="date" id="quick-paste-date">
+                        </div>
+                        <div style="flex: 1; min-width: 150px;">
+                            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">Time of Day</label>
+                            <select id="quick-paste-time">
+                                <option value="">-- Optional --</option>
+                                <option value="Early Morning">Early Morning</option>
+                                <option value="Morning">Morning</option>
+                                <option value="Afternoon">Afternoon</option>
+                                <option value="Evening">Evening</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                        <label style="font-size: 0.8rem; font-weight: 600;">Raw Notes Input:</label>
+                        <div class="flex gap-2">
+                            <button type="button" class="btn" onclick="loadQuickPasteSample()" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-tight);">Load Sample</button>
+                            <button type="button" class="btn" onclick="clearQuickPaste()" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-tight);">Clear</button>
+                        </div>
+                    </div>
+
+                    <textarea id="quick-paste-input" rows="7" placeholder="Paste your workout notes here...&#10;&#10;e.g.&#10;Incline Chest Press   175-7   160-6&#10;Pec fly   190-7   175-6&#10;Shoulder press   110-7   95-6&#10;Lateral raise machine   110-6   95-8&#10;Tricep overhead   57.5-6   52.5-7&#10;Dips   22&#10;Crunches   72.5-6   67.5-7" style="width: 100%; font-family: monospace; font-size: 0.85rem; line-height: 1.45; padding: 0.75rem; border-radius: var(--radius-tight); border: 1px solid var(--border); background: var(--surface-offset); color: var(--text); resize: vertical;" oninput="handleQuickPasteInput()"></textarea>
+
+                    <div style="margin-top: 1.25rem;">
+                        <div class="flex justify-between items-center" style="margin-bottom: 0.5rem;">
+                            <span style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">✨ Live Parsed Preview</span>
+                            <span id="quick-paste-stats-badge" class="badge" style="background: var(--surface-offset); color: var(--text-muted); border: 1px solid var(--border); font-size: 0.75rem;">0 exercises detected</span>
+                        </div>
+                        
+                        <div id="quick-paste-preview-list" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-tight); padding: 0.75rem; background: var(--surface-offset);">
+                            <p class="text-muted" style="font-size: 0.85rem; text-align: center; margin: 1rem 0;">Type or paste notes above to preview parsed exercises & sets.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between" style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+                        <label class="flex items-center gap-2" style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer;">
+                            <input type="checkbox" id="quick-paste-append" style="width: auto;"> Append to existing exercises in logger
+                        </label>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center" style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border);">
+                    <button type="button" class="btn" onclick="closeModal('modal-quick-paste')">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="btn-apply-quick-paste" onclick="applyQuickPasteToSession()" disabled style="font-weight: 600; opacity: 0.5; cursor: not-allowed;">
+                        <i data-lucide="check" style="width: 16px; height: 16px;"></i> Apply to Session
+                    </button>
                 </div>
             </div>
         </div>
@@ -1860,6 +1939,13 @@
                     html += `<button class="btn ${getWorkoutColorClass(t)}" onclick="selectTimeOfDay('${dateStr}', '${t}')">${t}</button>`;
                 });
                 html += `</div>`;
+                html += `
+                    <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border);">
+                        <button class="btn" onclick="openQuickPasteModal('${dateStr}')" style="width:100%; display:flex; justify-content:center; align-items:center; gap:0.5rem; background:var(--surface-offset); border:1px solid var(--border); font-weight:600; font-size:0.85rem;">
+                            <i data-lucide="clipboard-paste" style="width:16px;height:16px;color:var(--primary);"></i> Or Quick Paste Workout Notes
+                        </button>
+                    </div>
+                `;
                 modalBody.innerHTML = html;
             } else {
                 let html = `
@@ -1895,7 +1981,14 @@
                 }
                 
                 if(log.type !== 'Rest') {
-                    html += `<div style="margin-top:1.5rem;"><button class="btn" onclick="openLogSession('${dateStr}')">+ Add / Edit Exercises</button></div>`;
+                    html += `
+                        <div style="margin-top:1.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                            <button class="btn" onclick="openLogSession('${dateStr}')">+ Add / Edit Exercises</button>
+                            <button class="btn" onclick="openQuickPasteModal('${dateStr}')" style="background:var(--surface-offset); border:1px solid var(--border);">
+                                <i data-lucide="clipboard-paste" style="width:16px;height:16px;color:var(--primary);"></i> Quick Paste
+                            </button>
+                        </div>
+                    `;
                 }
                 
                 modalBody.innerHTML = html;
@@ -1917,29 +2010,24 @@
 
         window.quickLog = (dateStr, type, timeOfDay = '') => {
             let autofillExercises = [];
-            if (type !== 'Rest') {
-                const dates = Object.keys(appState.workoutLogs).filter(d => d < dateStr).sort((a, b) => b.localeCompare(a));
-                const typeLower = type.toLowerCase();
-                const targetTypes = (typeLower === 'lower' || typeLower === 'legs') ? ['lower', 'legs'] : [typeLower];
-
-                for (let d of dates) {
-                    const session = appState.workoutLogs[d];
-                    if (session && session.type && targetTypes.includes(session.type.toLowerCase())) {
-                        if (session.exercises && session.exercises.length > 0) {
-                            autofillExercises = session.exercises.map(ex => {
-                                const isBw = ex.sets && ex.sets[0] ? (ex.sets[0].isBodyweight || ex.sets[0].weight === 0) : false;
-                                return {
-                                    name: ex.name,
-                                    notes: '',
-                                    sets: [{ weight: isBw ? 0 : '', reps: '', isBodyweight: isBw }]
-                                };
-                            });
-                        }
-                        break;
-                    }
+            const previousSessions = Object.entries(appState.workoutLogs)
+                .filter(([d, s]) => s.type === type && d < dateStr)
+                .sort((a, b) => b[0].localeCompare(a[0]));
+            if (previousSessions.length > 0) {
+                const session = previousSessions[0][1];
+                if (session.exercises && session.exercises.length > 0) {
+                    autofillExercises = session.exercises.map(ex => {
+                        return {
+                            name: ex.name,
+                            sets: ex.sets.map(s => ({
+                                weight: s.weight === 0 ? '' : s.weight,
+                                reps: '',
+                                isBodyweight: s.isBodyweight || s.weight === 0
+                            }))
+                        };
+                    });
                 }
             }
-
             appState.workoutLogs[dateStr] = { type: type, timeOfDay: timeOfDay, exercises: autofillExercises };
             saveState();
             renderCalendarView();
@@ -1984,6 +2072,420 @@
             saveState();
             renderCalendarView();
             closeModal('modal-day');
+        };
+
+        // ==========================================
+        // Smart Workout Notes Parser & Quick Paste
+        // ==========================================
+        window.parseWorkoutNotes = (text, exerciseLibrary = (window.appState ? window.appState.exercises : [])) => {
+            if (!text || !text.trim()) return { exercises: [], detectedDate: null, detectedTime: null, detectedType: null };
+
+            const lines = text.split(/\r?\n/);
+            const exercises = [];
+            let currentExercise = null;
+            let detectedDate = null;
+            let detectedTime = null;
+            let detectedType = null;
+
+            const workoutTypes = ['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Arms & Delts', 'Arms', 'Abs', 'Cardio', 'Rest'];
+            const timesOfDay = ['Early Morning', 'Morning', 'Afternoon', 'Evening'];
+
+            function cleanExName(rawName) {
+                return rawName.replace(/^[\d+.\-•*#>\s]+/, '').replace(/[:\-–—]+$/, '').trim();
+            }
+
+            function findLibMatch(name) {
+                const cleaned = cleanExName(name);
+                const match = (exerciseLibrary || []).find(e => e.name.toLowerCase() === cleaned.toLowerCase());
+                if (match) return { name: match.name, isBodyweight: !!match.isBodyweight, category: match.category || 'Push' };
+                
+                const lower = cleaned.toLowerCase();
+                const isBwHeuristic = /pull[\s-]?up|chin[\s-]?up|push[\s-]?up|dip|crunch|plank|sit[\s-]?up|hanging leg|leg raise/i.test(lower);
+                return { name: cleaned, isBodyweight: isBwHeuristic, category: 'Push' };
+            }
+
+            function parseSetToken(token, defaultBw = false) {
+                token = token.trim();
+                if (!token) return null;
+
+                token = token.replace(/^[(\[{]+|[)\]}]+$/g, '').trim();
+
+                // Check Multi-set format: e.g., "135-10-3" or "135x10x3" (Weight x Reps x SetCount)
+                const multiMatch = token.match(/^(\d+(?:\.\d+)?)\s*(?:lbs?|kg)?\s*[-xX*@/]\s*(\d+)\s*[-xX*@/]\s*(\d+)$/i);
+                if (multiMatch) {
+                    const w = parseFloat(multiMatch[1]);
+                    const r = parseInt(multiMatch[2]);
+                    const count = parseInt(multiMatch[3]);
+                    if (!isNaN(w) && !isNaN(r) && !isNaN(count) && count > 0) {
+                        const sets = [];
+                        for (let i = 0; i < count; i++) {
+                            sets.push({ weight: w, reps: r, isBodyweight: false });
+                        }
+                        return sets;
+                    }
+                }
+
+                // Check explicit BW format: e.g., "BW-22", "BWx12", "BW 10", "BW: 15"
+                const bwMatch = token.match(/^(?:bw|bodyweight)\s*[-xX*@/:]?\s*(\d+)(?:\s*reps?)?$/i);
+                if (bwMatch) {
+                    const r = parseInt(bwMatch[1]);
+                    if (!isNaN(r)) return [{ weight: '', reps: r, isBodyweight: true }];
+                }
+
+                // Check Weight - Reps / Weight x Reps / Weight @ Reps: e.g., "175-7", "57.5-6", "175x7"
+                const setMatch = token.match(/^(\d+(?:\.\d+)?)\s*(?:lbs?|kg)?\s*[-xX*@/]\s*(\d+)(?:\s*reps?)?$/i);
+                if (setMatch) {
+                    const w = parseFloat(setMatch[1]);
+                    const r = parseInt(setMatch[2]);
+                    if (!isNaN(w) && !isNaN(r)) {
+                        return [{ weight: w, reps: r, isBodyweight: false }];
+                    }
+                }
+
+                // Check Weight with units followed by space and reps: e.g. "175 lbs 7", "175 lb 7 reps"
+                const unitMatch = token.match(/^(\d+(?:\.\d+)?)\s*(?:lbs?|kg)\s+(\d+)(?:\s*reps?)?$/i);
+                if (unitMatch) {
+                    const w = parseFloat(unitMatch[1]);
+                    const r = parseInt(unitMatch[2]);
+                    if (!isNaN(w) && !isNaN(r)) {
+                        return [{ weight: w, reps: r, isBodyweight: false }];
+                    }
+                }
+
+                // Check single number reps (for bodyweight or rep-only sets): e.g. "22", "22 reps"
+                const singleMatch = token.match(/^(\d+)(?:\s*reps?)?$/i);
+                if (singleMatch) {
+                    const r = parseInt(singleMatch[1]);
+                    if (!isNaN(r)) {
+                        return [{ weight: defaultBw ? '' : '', reps: r, isBodyweight: defaultBw }];
+                    }
+                }
+
+                return null;
+            }
+
+            function extractSetsFromTokens(tokens, defaultBw = false) {
+                const sets = [];
+                tokens.forEach(t => {
+                    const subTokens = t.split(/[,;]+/).map(s => s.trim()).filter(Boolean);
+                    if (subTokens.length > 1) {
+                        subTokens.forEach(sub => {
+                            const parsed = parseSetToken(sub, defaultBw);
+                            if (parsed) sets.push(...parsed);
+                        });
+                    } else {
+                        const parsed = parseSetToken(t, defaultBw);
+                        if (parsed) sets.push(...parsed);
+                    }
+                });
+                return sets;
+            }
+
+            function normalizeDate(rawDate) {
+                if (!rawDate) return null;
+                const parts = rawDate.split(/[-/.]/);
+                if (parts.length === 3) {
+                    if (parts[0].length === 4) {
+                        return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                    } else if (parts[2].length === 4 || parts[2].length === 2) {
+                        const y = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+                        return `${y}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
+                    }
+                }
+                return null;
+            }
+
+            lines.forEach(rawLine => {
+                const line = rawLine.trim();
+                if (!line) return;
+
+                // Check metadata lines: Date
+                const dateMatch = line.match(/(?:date|day):\s*(\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/]\d{1,2}[-/]\d{2,4})/i);
+                if (dateMatch && !detectedDate) {
+                    detectedDate = normalizeDate(dateMatch[1]);
+                    return;
+                }
+
+                // Check workout type
+                for (const type of workoutTypes) {
+                    if (new RegExp(`^#?\\s*${type.replace('&', '\\&')}\\s*(?:day|workout)?$`, 'i').test(line) || new RegExp(`^(?:type|routine):\\s*${type.replace('&', '\\&')}`, 'i').test(line)) {
+                        detectedType = type;
+                        return;
+                    }
+                }
+
+                // Check time of day
+                for (const time of timesOfDay) {
+                    if (new RegExp(`^(?:time):?\\s*${time}`, 'i').test(line) || new RegExp(`^${time}$`, 'i').test(line)) {
+                        detectedTime = time;
+                        return;
+                    }
+                }
+
+                // Case 1: Tab-separated (e.g., "Incline Chest Press \t 175-7 \t 160-6" or "Dips \t 22")
+                if (rawLine.includes('\t')) {
+                    const parts = rawLine.split('\t').map(p => p.trim()).filter(Boolean);
+                    if (parts.length >= 2) {
+                        const nameInfo = findLibMatch(parts[0]);
+                        const sets = extractSetsFromTokens(parts.slice(1), nameInfo.isBodyweight);
+                        if (sets.length > 0) {
+                            exercises.push({
+                                name: nameInfo.name,
+                                sets: sets,
+                                isBodyweight: nameInfo.isBodyweight || sets.every(s => s.isBodyweight)
+                            });
+                            currentExercise = null;
+                            return;
+                        }
+                    } else if (parts.length === 1) {
+                        const nameInfo = findLibMatch(parts[0]);
+                        currentExercise = { name: nameInfo.name, sets: [], isBodyweight: nameInfo.isBodyweight };
+                        exercises.push(currentExercise);
+                        return;
+                    }
+                }
+
+                // Case 2: Colon separated (e.g., "Barbell Bench: 135x10, 185x8, 205x5" or "Dips: 22, 20")
+                if (line.includes(':')) {
+                    const colonIdx = line.indexOf(':');
+                    const possibleName = line.substring(0, colonIdx).trim();
+                    const afterColon = line.substring(colonIdx + 1).trim();
+
+                    if (possibleName && afterColon) {
+                        const nameInfo = findLibMatch(possibleName);
+                        const tokens = afterColon.split(/[,;\t|]+/).map(t => t.trim()).filter(Boolean);
+                        const sets = extractSetsFromTokens(tokens, nameInfo.isBodyweight);
+                        if (sets.length > 0) {
+                            exercises.push({
+                                name: nameInfo.name,
+                                sets: sets,
+                                isBodyweight: nameInfo.isBodyweight || sets.every(s => s.isBodyweight)
+                            });
+                            currentExercise = null;
+                            return;
+                        }
+                    }
+                }
+
+                // Case 3: Line with exercise name followed by sets
+                const setPatternRegex = /(?:\b\d+(?:\.\d+)?\s*(?:lbs?|kg)?\s*[-xX*@/]\s*\d+\b|\b(?:bw|bodyweight)\s*[-xX*@/]?\s*\d+\b|\b\d+\s*reps?\b)/i;
+                const match = line.match(setPatternRegex);
+
+                if (match) {
+                    const matchIndex = match.index;
+                    const possibleName = line.substring(0, matchIndex).trim();
+                    const setPart = line.substring(matchIndex).trim();
+
+                    if (possibleName) {
+                        const nameInfo = findLibMatch(possibleName);
+                        const tokens = setPart.split(/[,;\t|]+|\s+(?=\d+(?:\.\d+)?\s*[-xX*@/]|(?:bw|bodyweight)|\d+\s*reps?)/i).map(t => t.trim()).filter(Boolean);
+                        const sets = extractSetsFromTokens(tokens, nameInfo.isBodyweight);
+                        if (sets.length > 0) {
+                            exercises.push({
+                                name: nameInfo.name,
+                                sets: sets,
+                                isBodyweight: nameInfo.isBodyweight || sets.every(s => s.isBodyweight)
+                            });
+                            currentExercise = null;
+                            return;
+                        }
+                    } else if (currentExercise) {
+                        const tokens = line.split(/[,;\t|]+|\s+(?=\d+(?:\.\d+)?\s*[-xX*@/]|(?:bw|bodyweight)|\d+\s*reps?)/i).map(t => t.trim()).filter(Boolean);
+                        const sets = extractSetsFromTokens(tokens, currentExercise.isBodyweight);
+                        currentExercise.sets.push(...sets);
+                        return;
+                    }
+                }
+
+                // Case 4: Line has single numbers or bodyweight reps at the end (e.g. "Dips 22", "Pullups 12 10 8")
+                const endNumberMatch = line.match(/^(.*?)\s+((?:\d+\s*)+)$/);
+                if (endNumberMatch && isNaN(Number(endNumberMatch[1]))) {
+                    const possibleName = endNumberMatch[1].trim();
+                    const numbers = endNumberMatch[2].trim().split(/\s+/).map(n => parseInt(n)).filter(n => !isNaN(n));
+                    if (possibleName && numbers.length > 0) {
+                        const nameInfo = findLibMatch(possibleName);
+                        const sets = numbers.map(r => ({ weight: '', reps: r, isBodyweight: true }));
+                        exercises.push({
+                            name: nameInfo.name,
+                            sets: sets,
+                            isBodyweight: true
+                        });
+                        currentExercise = null;
+                        return;
+                    }
+                }
+
+                // Case 5: Standalone set line for multi-line format
+                if (currentExercise) {
+                    const tokens = line.split(/[,;\t|]+/).map(t => t.trim()).filter(Boolean);
+                    const sets = extractSetsFromTokens(tokens, currentExercise.isBodyweight);
+                    if (sets.length > 0) {
+                        currentExercise.sets.push(...sets);
+                        return;
+                    }
+                }
+
+                // Case 6: Pure exercise name line (starts a new exercise block)
+                const nameInfo = findLibMatch(line);
+                currentExercise = { name: nameInfo.name, sets: [], isBodyweight: nameInfo.isBodyweight };
+                exercises.push(currentExercise);
+            });
+
+            const finalExercises = exercises.filter(e => e.sets && e.sets.length > 0);
+
+            return {
+                exercises: finalExercises,
+                detectedDate,
+                detectedTime,
+                detectedType
+            };
+        };
+
+        let lastParsedResult = null;
+
+        window.openQuickPasteModal = (dateStr) => {
+            const currentDate = dateStr || document.getElementById('log-date')?.value || new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+            const dateInput = document.getElementById('quick-paste-date');
+            if (dateInput) dateInput.value = currentDate;
+            
+            const existingTime = document.getElementById('log-time')?.value || '';
+            const timeSelect = document.getElementById('quick-paste-time');
+            if (timeSelect) timeSelect.value = existingTime;
+
+            closeModal('modal-day');
+            closeModal('modal-log');
+            openModal('modal-quick-paste');
+            
+            handleQuickPasteInput();
+            lucide.createIcons();
+
+            setTimeout(() => {
+                const inputEl = document.getElementById('quick-paste-input');
+                if (inputEl) inputEl.focus();
+            }, 100);
+        };
+
+        window.handleQuickPasteInput = () => {
+            const rawText = document.getElementById('quick-paste-input')?.value || '';
+            const parsed = parseWorkoutNotes(rawText, appState.exercises);
+            lastParsedResult = parsed;
+
+            const previewEl = document.getElementById('quick-paste-preview-list');
+            const statsBadge = document.getElementById('quick-paste-stats-badge');
+            const applyBtn = document.getElementById('btn-apply-quick-paste');
+
+            if (parsed.detectedDate && !document.getElementById('quick-paste-date').value) {
+                document.getElementById('quick-paste-date').value = parsed.detectedDate;
+            }
+            if (parsed.detectedTime && !document.getElementById('quick-paste-time').value) {
+                document.getElementById('quick-paste-time').value = parsed.detectedTime;
+            }
+
+            let totalSets = 0;
+            parsed.exercises.forEach(e => totalSets += e.sets.length);
+
+            if (parsed.exercises.length === 0) {
+                if (statsBadge) {
+                    statsBadge.textContent = '0 exercises detected';
+                    statsBadge.style.color = 'var(--text-muted)';
+                    statsBadge.style.borderColor = 'var(--border)';
+                }
+                if (previewEl) {
+                    previewEl.innerHTML = `<p class="text-muted" style="font-size: 0.85rem; text-align: center; margin: 1rem 0;">Type or paste notes above to preview parsed exercises & sets.</p>`;
+                }
+                if (applyBtn) {
+                    applyBtn.disabled = true;
+                    applyBtn.style.opacity = '0.5';
+                    applyBtn.style.cursor = 'not-allowed';
+                }
+                return;
+            }
+
+            if (statsBadge) {
+                statsBadge.textContent = `${parsed.exercises.length} exercise${parsed.exercises.length === 1 ? '' : 's'}, ${totalSets} set${totalSets === 1 ? '' : 's'}`;
+                statsBadge.style.color = 'var(--primary)';
+                statsBadge.style.borderColor = 'var(--primary)';
+            }
+
+            let html = '';
+            parsed.exercises.forEach((ex, idx) => {
+                html += `
+                    <div class="card" style="padding: 0.75rem 1rem; margin-bottom: 0.5rem; background: var(--surface); border: 1px solid var(--border);">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-primary" style="font-size: 0.9rem;">${idx + 1}. ${ex.name}</span>
+                            ${ex.isBodyweight ? '<span class="badge" style="background: rgba(20,184,166,0.15); color: var(--time-earlymorning); border: 1px solid var(--time-earlymorning); font-size: 0.65rem;">Bodyweight</span>' : ''}
+                        </div>
+                        <div class="set-chips" style="margin-top: 0.4rem;">
+                            ${ex.sets.map((s, sIdx) => `
+                                <span class="set-chip" style="font-size: 0.8rem; background: var(--surface-offset); border: 1px solid var(--border);">
+                                    Set ${sIdx + 1}: ${s.isBodyweight || s.weight === 0 || s.weight === '' ? `BW × ${s.reps}` : `${s.weight}${appState.unit} × ${s.reps}`}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (previewEl) previewEl.innerHTML = html;
+            if (applyBtn) {
+                applyBtn.disabled = false;
+                applyBtn.style.opacity = '1';
+                applyBtn.style.cursor = 'pointer';
+            }
+        };
+
+        window.loadQuickPasteSample = () => {
+            const inputEl = document.getElementById('quick-paste-input');
+            if (inputEl) {
+                inputEl.value = `Incline Chest Press\t175-7\t160-6\nPec fly\t190-7\t175-6\nShoulder press\t110-7\t95-6\nLateral raise machine\t110-6\t95-8\nTricep overhead\t57.5-6\t52.5-7\nDips\t22\nCrunches\t72.5-6\t67.5-7`;
+                handleQuickPasteInput();
+            }
+        };
+
+        window.clearQuickPaste = () => {
+            const inputEl = document.getElementById('quick-paste-input');
+            if (inputEl) {
+                inputEl.value = '';
+                handleQuickPasteInput();
+            }
+        };
+
+        window.applyQuickPasteToSession = () => {
+            if (!lastParsedResult || !lastParsedResult.exercises || lastParsedResult.exercises.length === 0) {
+                return alert('No exercises to apply. Please paste workout notes first.');
+            }
+
+            const dateStr = document.getElementById('quick-paste-date')?.value || new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+            const timeOfDay = document.getElementById('quick-paste-time')?.value || '';
+            const isAppend = document.getElementById('quick-paste-append')?.checked || false;
+
+            if (!isAppend) {
+                logSessionData = [];
+            }
+
+            lastParsedResult.exercises.forEach(pEx => {
+                const newEx = {
+                    id: logExCounter++,
+                    name: pEx.name,
+                    sets: pEx.sets.map(s => ({
+                        weight: (s.isBodyweight || s.weight === 0) ? '' : s.weight,
+                        reps: s.reps || ''
+                    })),
+                    isBodyweight: pEx.isBodyweight
+                };
+                logSessionData.push(newEx);
+            });
+
+            closeModal('modal-quick-paste');
+
+            // Open the log modal with date and populated exercises
+            document.getElementById('log-date').value = dateStr;
+            if (timeOfDay) {
+                document.getElementById('log-time').value = timeOfDay;
+            }
+            
+            renderLogExercises();
+            openModal('modal-log');
         };
 
         // Log Session Modal
