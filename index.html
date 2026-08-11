@@ -2340,20 +2340,40 @@
             lucide.createIcons();
         }
 
+        function isArmsAndDeltsExercise(name, category) {
+            const catLower = (category || '').toLowerCase();
+            if (catLower === 'arms & delts' || catLower === 'arms' || catLower === 'armsdelts') return true;
+
+            const n = (name || '').toLowerCase();
+            if (n.includes('overhead extension') || n.includes('tricep overhead') || (n.includes('tricep') && n.includes('overhead')) || (n.includes('overhead') && n.includes('tricep'))) return true;
+            if (n.includes('lateral raise') || n.includes('lateral raises') || n.includes('side raise') || n.includes('side lateral')) return true;
+            if (n.includes('tricep pushdown') || n.includes('triceps pushdown') || n.includes('pushdown')) return true;
+            if (n.includes('preacher curl') || n.includes('preacher curls')) return true;
+            if (n.includes('hammer curl') || n.includes('hammer curls')) return true;
+            if (n.includes('wrist curl') || n.includes('wrist curls')) return true;
+            if (n.includes('wrist extension') || n.includes('wrist extensions')) return true;
+            if (n.includes('rear delt') || n.includes('rear delt fly') || n.includes('rear delts') || n.includes('reverse fly') || n.includes('reverse pec fly')) return true;
+            if (n.includes('shoulder press') || n.includes('overhead press') || n.includes('military press')) return true;
+
+            return false;
+        }
+
         window.filterExercises = () => {
             const q = document.getElementById('search-ex').value.toLowerCase();
             const cat = document.getElementById('filter-cat').value;
             
             document.querySelectorAll('.exercise-item').forEach(el => {
-                const name = el.querySelector('.font-bold').innerText.toLowerCase();
+                const name = el.querySelector('.font-bold').innerText;
                 const itemCat = el.getAttribute('data-category') || '';
                 
-                const matchesSearch = name.includes(q);
+                const matchesSearch = name.toLowerCase().includes(q);
                 let matchesCat = cat === 'All';
                 if (!matchesCat) {
                     const itemCatLower = itemCat.toLowerCase();
-                    if (cat === 'Upper') {
-                        matchesCat = ['upper', 'push', 'pull', 'arms & delts', 'arms'].includes(itemCatLower);
+                    if (cat === 'Arms & Delts' || cat === 'Arms') {
+                        matchesCat = isArmsAndDeltsExercise(name, itemCat);
+                    } else if (cat === 'Upper') {
+                        matchesCat = ['upper', 'push', 'pull', 'arms & delts', 'arms'].includes(itemCatLower) || isArmsAndDeltsExercise(name, itemCat);
                     } else if (cat === 'Lower') {
                         matchesCat = ['lower', 'legs', 'abs'].includes(itemCatLower);
                     } else {
