@@ -677,11 +677,25 @@
                     <button class="icon-btn" onclick="closeModal('modal-log')"><i data-lucide="x"></i></button>
                 </div>
                 <div id="modal-log-body">
-                    <div class="form-row" style="margin-bottom: 1.5rem;">
+                    <div class="form-row" style="margin-bottom: 1.25rem;">
                         <span style="width: 100px;">Date:</span>
                         <input type="date" id="log-date">
                     </div>
-                    <div class="form-row" style="margin-bottom: 1.5rem;">
+                    <div class="form-row" style="margin-bottom: 1.25rem;">
+                        <span style="width: 100px;">Workout:</span>
+                        <select id="log-type">
+                            <option value="Push">Push</option>
+                            <option value="Pull">Pull</option>
+                            <option value="Legs">Legs</option>
+                            <option value="Upper">Upper</option>
+                            <option value="Lower">Lower</option>
+                            <option value="Arms & Delts">Arms & Delts</option>
+                            <option value="Abs">Abs</option>
+                            <option value="Cardio">Cardio</option>
+                            <option value="Rest">Rest</option>
+                        </select>
+                    </div>
+                    <div class="form-row" style="margin-bottom: 1.25rem;">
                         <span style="width: 100px;">Time:</span>
                         <select id="log-time">
                             <option value="">-- Optional --</option>
@@ -739,11 +753,24 @@
                     </p>
 
                     <div class="flex gap-3" style="margin-bottom: 1rem; flex-wrap: wrap;">
-                        <div style="flex: 1; min-width: 150px;">
+                        <div style="flex: 1; min-width: 130px;">
                             <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">Workout Date</label>
                             <input type="date" id="quick-paste-date">
                         </div>
-                        <div style="flex: 1; min-width: 150px;">
+                        <div style="flex: 1; min-width: 130px;">
+                            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">Workout Type</label>
+                            <select id="quick-paste-type">
+                                <option value="Push">Push</option>
+                                <option value="Pull">Pull</option>
+                                <option value="Legs">Legs</option>
+                                <option value="Upper">Upper</option>
+                                <option value="Lower">Lower</option>
+                                <option value="Arms & Delts">Arms & Delts</option>
+                                <option value="Abs">Abs</option>
+                                <option value="Cardio">Cardio</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1; min-width: 130px;">
                             <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">Time of Day</label>
                             <select id="quick-paste-time">
                                 <option value="">-- Optional --</option>
@@ -2348,7 +2375,11 @@
             const dateInput = document.getElementById('quick-paste-date');
             if (dateInput) dateInput.value = currentDate;
             
-            const existingTime = document.getElementById('log-time')?.value || '';
+            const existingType = appState.workoutLogs[currentDate]?.type || document.getElementById('log-type')?.value || 'Push';
+            const typeSelect = document.getElementById('quick-paste-type');
+            if (typeSelect) typeSelect.value = existingType;
+
+            const existingTime = appState.workoutLogs[currentDate]?.timeOfDay || document.getElementById('log-time')?.value || '';
             const timeSelect = document.getElementById('quick-paste-time');
             if (timeSelect) timeSelect.value = existingTime;
 
@@ -2376,6 +2407,10 @@
 
             if (parsed.detectedDate && !document.getElementById('quick-paste-date').value) {
                 document.getElementById('quick-paste-date').value = parsed.detectedDate;
+            }
+            if (parsed.detectedType) {
+                const typeEl = document.getElementById('quick-paste-type');
+                if (typeEl) typeEl.value = parsed.detectedType;
             }
             if (parsed.detectedTime && !document.getElementById('quick-paste-time').value) {
                 document.getElementById('quick-paste-time').value = parsed.detectedTime;
@@ -2456,6 +2491,7 @@
             }
 
             const dateStr = document.getElementById('quick-paste-date')?.value || new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+            const workoutType = document.getElementById('quick-paste-type')?.value || 'Push';
             const timeOfDay = document.getElementById('quick-paste-time')?.value || '';
             const isAppend = document.getElementById('quick-paste-append')?.checked || false;
 
@@ -2478,8 +2514,10 @@
 
             closeModal('modal-quick-paste');
 
-            // Open the log modal with date and populated exercises
+            // Open the log modal with date, workout type, and populated exercises
             document.getElementById('log-date').value = dateStr;
+            const logTypeEl = document.getElementById('log-type');
+            if (logTypeEl) logTypeEl.value = workoutType;
             if (timeOfDay) {
                 document.getElementById('log-time').value = timeOfDay;
             }
@@ -2501,6 +2539,11 @@
             let existingNotes = '';
             const existingLog = appState.workoutLogs[dateStr];
             
+            const logTypeEl = document.getElementById('log-type');
+            if (logTypeEl) {
+                logTypeEl.value = existingLog ? existingLog.type : 'Push';
+            }
+
             if (existingLog && existingLog.timeOfDay) {
                 document.getElementById('log-time').value = existingLog.timeOfDay;
             } else {
@@ -2668,6 +2711,7 @@
             saveCurrentInputs();
             
             const dateStr = document.getElementById('log-date').value;
+            const workoutType = document.getElementById('log-type')?.value || 'Push';
             const notes = document.getElementById('log-notes').value;
             const timeOfDay = document.getElementById('log-time').value;
             
@@ -2699,8 +2743,9 @@
             if(finalExercises.length === 0) return alert('At least one valid exercise with sets is required.');
             
             if(!appState.workoutLogs[dateStr]) {
-                appState.workoutLogs[dateStr] = { type: 'Push', timeOfDay: timeOfDay, exercises: [] }; 
+                appState.workoutLogs[dateStr] = { type: workoutType, timeOfDay: timeOfDay, exercises: [] }; 
             } else {
+                appState.workoutLogs[dateStr].type = workoutType;
                 appState.workoutLogs[dateStr].timeOfDay = timeOfDay;
             }
             
