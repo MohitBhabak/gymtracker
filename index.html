@@ -147,6 +147,10 @@
         }
         .icon-btn:hover { background-color: var(--surface-offset); color: var(--text); }
         .icon-btn.ex-delete-btn:hover { color: #ef4444 !important; }
+        .drag-handle { cursor: grab; padding: 0 0.2rem; display: flex; align-items: center; opacity: 0.4; transition: opacity 0.15s; }
+        .exercise-item:hover .drag-handle { opacity: 0.9; }
+        .drag-handle:active { cursor: grabbing; }
+        .exercise-item.drag-over-top { border-top: 2px solid var(--primary) !important; }
 
         /* Main Container */
         main {
@@ -2210,6 +2214,7 @@
         // Progress Render
         let isExerciseSelectMode = false;
         let selectedExerciseNames = new Set();
+        let draggedExerciseIndex = null;
 
         function renderProgressView() {
             const view = document.getElementById('view-progress');
@@ -2237,10 +2242,12 @@
                             </button>
                         </div>
                     ` : ''}
-                    <div class="flex gap-2">
+                    <div class="flex gap-2" style="margin-bottom:0.5rem;">
                         <input type="text" placeholder="Search..." id="search-ex" onkeyup="filterExercises()" style="flex:1;">
-                        <select id="filter-cat" onchange="filterExercises()" style="width:100px; padding:0.5rem;">
-                            <option value="All">All</option>
+                    </div>
+                    <div class="flex gap-2">
+                        <select id="filter-cat" onchange="filterExercises()" style="flex:1; padding:0.4rem 0.5rem; font-size:0.8rem;">
+                            <option value="All">All Categories</option>
                             <option value="Push">Push</option>
                             <option value="Pull">Pull</option>
                             <option value="Legs">Legs</option>
@@ -2248,16 +2255,28 @@
                             <option value="Lower">Lower</option>
                             <option value="Abs">Abs</option>
                         </select>
+                        <select id="sort-ex" onchange="sortExercises(this.value)" style="flex:1; padding:0.4rem 0.5rem; font-size:0.8rem;">
+                            <option value="" disabled selected>Sort by...</option>
+                            <option value="name-asc">Alphabetical (A-Z)</option>
+                            <option value="name-desc">Alphabetical (Z-A)</option>
+                            <option value="category">Category (Push-Pull-Legs)</option>
+                            <option value="most-logged">Most Logged</option>
+                        </select>
                     </div>
                 </div>
                 <div id="exercise-list">
             `;
             
-            appState.exercises.forEach(ex => {
+            appState.exercises.forEach((ex, idx) => {
                 const isSelected = selectedExerciseNames.has(ex.name);
                 listHTML += `
-                    <div class="exercise-item flex items-center justify-between" data-category="${ex.category}" onclick="handleExerciseItemClick('${ex.name.replace(/'/g, "\\'")}')" style="cursor:pointer;">
+                    <div class="exercise-item flex items-center justify-between" id="ex-item-${idx}" data-category="${ex.category}" draggable="${!isExerciseSelectMode}" ondragstart="onExerciseDragStart(event, ${idx})" ondragover="onExerciseDragOver(event, ${idx})" ondragleave="onExerciseDragLeave(event, ${idx})" ondrop="onExerciseDrop(event, ${idx})" ondragend="onExerciseDragEnd(event)" onclick="handleExerciseItemClick('${ex.name.replace(/'/g, "\\'")}')" style="cursor:pointer; transition:border-color 0.15s, opacity 0.15s;">
                         <div class="flex items-center gap-2" style="flex:1; overflow:hidden;">
+                            ${!isExerciseSelectMode ? `
+                                <div class="drag-handle text-muted" title="Drag to reorder" onclick="event.stopPropagation()">
+                                    <i data-lucide="grip-vertical" style="width:14px;height:14px;"></i>
+                                </div>
+                            ` : ''}
                             ${isExerciseSelectMode ? `
                                 <input type="checkbox" class="ex-select-checkbox" data-name="${ex.name.replace(/"/g, '&quot;')}" ${isSelected ? 'checked' : ''} onchange="onExerciseCheckboxChange(this.dataset.name, this.checked)" onclick="event.stopPropagation()" style="cursor:pointer; width:16px; height:16px; margin:0; flex-shrink:0;">
                             ` : ''}
@@ -2268,8 +2287,10 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2" style="flex-shrink:0;">
+                        <div class="flex items-center gap-1" style="flex-shrink:0;">
                             ${!isExerciseSelectMode ? `
+                                <button class="icon-btn" style="padding:0.2rem; color:var(--text-muted);" onclick="event.stopPropagation(); moveExercise(${idx}, -1)" title="Move Up" ${idx === 0 ? 'disabled style="opacity:0.2; cursor:not-allowed;"' : ''}><i data-lucide="chevron-up" style="width:14px;height:14px;"></i></button>
+                                <button class="icon-btn" style="padding:0.2rem; color:var(--text-muted);" onclick="event.stopPropagation(); moveExercise(${idx}, 1)" title="Move Down" ${idx === appState.exercises.length - 1 ? 'disabled style="opacity:0.2; cursor:not-allowed;"' : ''}><i data-lucide="chevron-down" style="width:14px;height:14px;"></i></button>
                                 <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${ex.name.replace(/"/g, '&quot;')}" onclick="event.stopPropagation(); deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
                                 <i data-lucide="chevron-right" class="text-muted"></i>
                             ` : ''}
@@ -2489,6 +2510,102 @@
 
             selectedExerciseNames.clear();
             isExerciseSelectMode = false;
+            saveState();
+            renderProgressView();
+        };
+
+        // --- EXERCISE REORDERING & SORTING HANDLERS ---
+        window.onExerciseDragStart = (e, index) => {
+            draggedExerciseIndex = index;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', index);
+            const row = document.getElementById(`ex-item-${index}`);
+            if (row) setTimeout(() => { row.style.opacity = '0.35'; }, 0);
+        };
+
+        window.onExerciseDragOver = (e, index) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (draggedExerciseIndex !== null && draggedExerciseIndex !== index) {
+                const row = document.getElementById(`ex-item-${index}`);
+                if (row && !row.classList.contains('drag-over-top')) {
+                    row.classList.add('drag-over-top');
+                }
+            }
+        };
+
+        window.onExerciseDragLeave = (e, index) => {
+            const row = document.getElementById(`ex-item-${index}`);
+            if (row) row.classList.remove('drag-over-top');
+        };
+
+        window.onExerciseDrop = (e, targetIndex) => {
+            e.preventDefault();
+            const row = document.getElementById(`ex-item-${targetIndex}`);
+            if (row) row.classList.remove('drag-over-top');
+
+            if (draggedExerciseIndex === null || draggedExerciseIndex === targetIndex) return;
+
+            const itemToMove = appState.exercises.splice(draggedExerciseIndex, 1)[0];
+            appState.exercises.splice(targetIndex, 0, itemToMove);
+
+            draggedExerciseIndex = null;
+            saveState();
+            renderProgressView();
+        };
+
+        window.onExerciseDragEnd = (e) => {
+            draggedExerciseIndex = null;
+            document.querySelectorAll('.exercise-item').forEach(el => {
+                el.style.opacity = '';
+                el.classList.remove('drag-over-top');
+            });
+        };
+
+        window.moveExercise = (index, direction) => {
+            const targetIndex = index + direction;
+            if (targetIndex < 0 || targetIndex >= appState.exercises.length) return;
+            
+            const item = appState.exercises.splice(index, 1)[0];
+            appState.exercises.splice(targetIndex, 0, item);
+            
+            saveState();
+            renderProgressView();
+        };
+
+        window.sortExercises = (sortType) => {
+            if (!sortType) return;
+            
+            if (sortType === 'name-asc') {
+                appState.exercises.sort((a, b) => a.name.localeCompare(b.name));
+            } else if (sortType === 'name-desc') {
+                appState.exercises.sort((a, b) => b.name.localeCompare(a.name));
+            } else if (sortType === 'category') {
+                const catOrder = { 'push': 1, 'pull': 2, 'legs': 3, 'upper': 4, 'lower': 5, 'abs': 6, 'rest': 7 };
+                appState.exercises.sort((a, b) => {
+                    const orderA = catOrder[a.category.toLowerCase()] || 99;
+                    const orderB = catOrder[b.category.toLowerCase()] || 99;
+                    if (orderA !== orderB) return orderA - orderB;
+                    return a.name.localeCompare(b.name);
+                });
+            } else if (sortType === 'most-logged') {
+                const counts = {};
+                Object.values(appState.workoutLogs).forEach(log => {
+                    if (log.exercises) {
+                        log.exercises.forEach(ex => {
+                            const k = ex.name.toLowerCase();
+                            counts[k] = (counts[k] || 0) + 1;
+                        });
+                    }
+                });
+                appState.exercises.sort((a, b) => {
+                    const countA = counts[a.name.toLowerCase()] || 0;
+                    const countB = counts[b.name.toLowerCase()] || 0;
+                    if (countB !== countA) return countB - countA;
+                    return a.name.localeCompare(b.name);
+                });
+            }
+            
             saveState();
             renderProgressView();
         };
