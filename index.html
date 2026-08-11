@@ -2208,16 +2208,35 @@
         };
 
         // Progress Render
+        let isExerciseSelectMode = false;
+        let selectedExerciseNames = new Set();
+
         function renderProgressView() {
             const view = document.getElementById('view-progress');
             
             // Generate list
             let listHTML = `<div class="card" style="padding:0; overflow-y:auto; max-height:calc(100vh - 10rem);">
                 <div style="padding:1rem; border-bottom:1px solid var(--border); position:sticky; top:0; background:var(--surface); z-index:10;">
-                    <div class="flex justify-between items-center" style="margin-bottom:1rem;">
+                    <div class="flex justify-between items-center" style="margin-bottom:0.75rem;">
                         <h3 style="margin:0;">Exercises</h3>
-                        <button class="icon-btn" onclick="openNewExerciseModal()"><i data-lucide="plus"></i></button>
+                        <div class="flex items-center gap-2">
+                            <button class="btn btn-sm" id="btn-toggle-select-mode" onclick="toggleExerciseSelectMode()" style="padding:0.25rem 0.6rem; font-size:0.75rem; border: 1px solid var(--border); background: ${isExerciseSelectMode ? 'var(--primary)' : 'var(--surface-offset)'}; color: ${isExerciseSelectMode ? '#000' : 'var(--text)'}; font-weight:600;">
+                                ${isExerciseSelectMode ? 'Done' : 'Select'}
+                            </button>
+                            <button class="icon-btn" onclick="openNewExerciseModal()" title="Add Exercise"><i data-lucide="plus"></i></button>
+                        </div>
                     </div>
+                    ${isExerciseSelectMode ? `
+                        <div id="exercise-bulk-bar" class="flex justify-between items-center" style="padding:0.5rem 0.75rem; background:var(--surface-offset); border-radius:var(--radius-tight); margin-bottom:0.75rem; font-size:0.8rem;">
+                            <div class="flex items-center gap-2">
+                                <input type="checkbox" id="bulk-select-all" onchange="toggleSelectAllExercises(this.checked)" style="cursor:pointer; width:16px; height:16px; margin:0;">
+                                <span id="bulk-selected-count" style="font-weight:600;">${selectedExerciseNames.size} selected</span>
+                            </div>
+                            <button class="btn" id="btn-bulk-delete" onclick="deleteSelectedExercises()" style="padding:0.25rem 0.6rem; font-size:0.75rem; background:#ef4444; color:#fff; border:none; display:${selectedExerciseNames.size > 0 ? 'inline-flex' : 'none'}; align-items:center;">
+                                <i data-lucide="trash-2" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:0.25rem;"></i> Delete Selected (${selectedExerciseNames.size})
+                            </button>
+                        </div>
+                    ` : ''}
                     <div class="flex gap-2">
                         <input type="text" placeholder="Search..." id="search-ex" onkeyup="filterExercises()" style="flex:1;">
                         <select id="filter-cat" onchange="filterExercises()" style="width:100px; padding:0.5rem;">
@@ -2235,17 +2254,25 @@
             `;
             
             appState.exercises.forEach(ex => {
+                const isSelected = selectedExerciseNames.has(ex.name);
                 listHTML += `
-                    <div class="exercise-item flex items-center justify-between" data-category="${ex.category}" onclick="showExerciseDetail('${ex.name.replace(/'/g, "\\'")}')">
-                        <div>
-                            <div class="font-bold">${ex.name}</div>
-                            <div class="text-muted" style="font-size:0.8rem;">
-                                <span class="dot bg-${ex.category.toLowerCase()}"></span> ${ex.category}
+                    <div class="exercise-item flex items-center justify-between" data-category="${ex.category}" onclick="handleExerciseItemClick('${ex.name.replace(/'/g, "\\'")}')" style="cursor:pointer;">
+                        <div class="flex items-center gap-2" style="flex:1; overflow:hidden;">
+                            ${isExerciseSelectMode ? `
+                                <input type="checkbox" class="ex-select-checkbox" data-name="${ex.name.replace(/"/g, '&quot;')}" ${isSelected ? 'checked' : ''} onchange="onExerciseCheckboxChange(this.dataset.name, this.checked)" onclick="event.stopPropagation()" style="cursor:pointer; width:16px; height:16px; margin:0; flex-shrink:0;">
+                            ` : ''}
+                            <div style="overflow:hidden; text-overflow:ellipsis;">
+                                <div class="font-bold">${ex.name}</div>
+                                <div class="text-muted" style="font-size:0.8rem;">
+                                    <span class="dot bg-${ex.category.toLowerCase()}"></span> ${ex.category}
+                                </div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${ex.name.replace(/"/g, '&quot;')}" onclick="event.stopPropagation(); deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
-                            <i data-lucide="chevron-right" class="text-muted"></i>
+                        <div class="flex items-center gap-2" style="flex-shrink:0;">
+                            ${!isExerciseSelectMode ? `
+                                <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${ex.name.replace(/"/g, '&quot;')}" onclick="event.stopPropagation(); deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+                                <i data-lucide="chevron-right" class="text-muted"></i>
+                            ` : ''}
                         </div>
                     </div>
                 `;
@@ -2296,6 +2323,7 @@
                 
                 el.style.display = (matchesSearch && matchesCat) ? 'flex' : 'none';
             });
+            if (isExerciseSelectMode) updateExerciseSelectionUI();
         };
 
         window.openNewExerciseModal = () => {
@@ -2359,6 +2387,108 @@
                 }
             });
 
+            selectedExerciseNames.delete(name);
+            saveState();
+            renderProgressView();
+        };
+
+        window.toggleExerciseSelectMode = () => {
+            isExerciseSelectMode = !isExerciseSelectMode;
+            if (!isExerciseSelectMode) {
+                selectedExerciseNames.clear();
+            }
+            renderProgressView();
+        };
+
+        window.toggleSelectAllExercises = (checked) => {
+            const checkboxes = document.querySelectorAll('.ex-select-checkbox');
+            checkboxes.forEach(cb => {
+                const item = cb.closest('.exercise-item');
+                if (item && item.style.display !== 'none') {
+                    cb.checked = checked;
+                    const name = cb.getAttribute('data-name');
+                    if (checked) {
+                        selectedExerciseNames.add(name);
+                    } else {
+                        selectedExerciseNames.delete(name);
+                    }
+                }
+            });
+            updateExerciseSelectionUI();
+        };
+
+        window.onExerciseCheckboxChange = (name, checked) => {
+            if (checked) {
+                selectedExerciseNames.add(name);
+            } else {
+                selectedExerciseNames.delete(name);
+            }
+            updateExerciseSelectionUI();
+        };
+
+        window.handleExerciseItemClick = (name) => {
+            if (isExerciseSelectMode) {
+                const cb = document.querySelector(`.ex-select-checkbox[data-name="${name.replace(/"/g, '\\"')}"]`);
+                if (cb) {
+                    cb.checked = !cb.checked;
+                    onExerciseCheckboxChange(name, cb.checked);
+                }
+            } else {
+                showExerciseDetail(name);
+            }
+        };
+
+        function updateExerciseSelectionUI() {
+            const countEl = document.getElementById('bulk-selected-count');
+            const deleteBtn = document.getElementById('btn-bulk-delete');
+            const selectAllCb = document.getElementById('bulk-select-all');
+
+            const count = selectedExerciseNames.size;
+            if (countEl) countEl.innerText = `${count} selected`;
+
+            if (deleteBtn) {
+                deleteBtn.style.display = count > 0 ? 'inline-flex' : 'none';
+                deleteBtn.innerHTML = `<i data-lucide="trash-2" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:0.25rem;"></i> Delete Selected (${count})`;
+                lucide.createIcons();
+            }
+
+            if (selectAllCb) {
+                const visibleCheckboxes = Array.from(document.querySelectorAll('.ex-select-checkbox')).filter(cb => {
+                    const item = cb.closest('.exercise-item');
+                    return item && item.style.display !== 'none';
+                });
+                if (visibleCheckboxes.length > 0) {
+                    selectAllCb.checked = visibleCheckboxes.every(cb => cb.checked);
+                    selectAllCb.indeterminate = !selectAllCb.checked && visibleCheckboxes.some(cb => cb.checked);
+                } else {
+                    selectAllCb.checked = false;
+                    selectAllCb.indeterminate = false;
+                }
+            }
+        }
+
+        window.deleteSelectedExercises = () => {
+            const count = selectedExerciseNames.size;
+            if (count === 0) return alert('No exercises selected.');
+
+            const selectedList = Array.from(selectedExerciseNames);
+            const previewStr = selectedList.slice(0, 4).join(', ') + (count > 4 ? ` and ${count - 4} more` : '');
+            if (!confirm(`Are you sure you want to delete ${count} exercise(s) (${previewStr}) from your library?`)) return;
+
+            const nameSet = new Set(selectedList.map(n => n.toLowerCase()));
+
+            // Remove from exercise library
+            appState.exercises = appState.exercises.filter(e => !nameSet.has(e.name.toLowerCase()));
+
+            // Remove from workout logs
+            Object.values(appState.workoutLogs).forEach(log => {
+                if (log.exercises) {
+                    log.exercises = log.exercises.filter(e => !nameSet.has(e.name.toLowerCase()));
+                }
+            });
+
+            selectedExerciseNames.clear();
+            isExerciseSelectMode = false;
             saveState();
             renderProgressView();
         };
