@@ -623,16 +623,13 @@
             <a href="#bench" class="nav-tab" id="tab-bench">Bench PR</a>
         </div>
         <div class="header-actions">
-            <button class="btn-sync" id="btn-sync-header" onclick="openModal('modal-settings')" title="Google Drive Cloud Sync">
+            <button class="btn-sync" id="btn-settings" onclick="openSettingsModal()" title="Settings & Backup">
                 <span id="sync-status-dot" class="sync-dot disconnected"></span>
-                <i data-lucide="cloud" style="width: 16px; height: 16px;"></i>
-                <span id="sync-status-text">Drive Sync</span>
+                <i data-lucide="settings" style="width: 16px; height: 16px;"></i>
+                <span id="sync-status-text">Settings</span>
             </button>
             <button class="icon-btn" id="btn-theme" aria-label="Toggle Theme">
                 <i data-lucide="moon"></i>
-            </button>
-            <button class="icon-btn" id="btn-settings" aria-label="Settings">
-                <i data-lucide="settings"></i>
             </button>
         </div>
     </header>
@@ -1087,16 +1084,16 @@
                 dot.className = 'sync-dot ' + status;
 
                 if (status === 'synced') {
-                    text.innerText = 'Synced';
+                    text.innerText = 'Settings';
                     if (badge) { badge.className = 'badge-synced'; badge.innerText = 'Synced'; }
                 } else if (status === 'syncing') {
                     text.innerText = 'Syncing...';
                     if (badge) { badge.className = 'badge-syncing'; badge.innerText = 'Syncing...'; }
                 } else if (status === 'error') {
-                    text.innerText = 'Sync Error';
+                    text.innerText = 'Settings';
                     if (badge) { badge.className = 'badge-error'; badge.innerText = message || 'Sync Error'; }
                 } else {
-                    text.innerText = 'Drive Sync';
+                    text.innerText = 'Settings';
                     if (badge) { badge.className = 'badge-disconnected'; badge.innerText = 'Disconnected'; }
                 }
             }
@@ -1422,11 +1419,18 @@
         function getBgTimeColorClass(time) { return `bg-time-${time.replace(/\s+/g, '').toLowerCase()}`; }
 
         // Settings & Backup
-        document.getElementById('btn-settings').onclick = () => {
-            document.getElementById('settings-unit').value = appState.unit;
-            document.getElementById('settings-email').value = appState.targetEmail || '';
+        window.openSettingsModal = () => {
+            const unitEl = document.getElementById('settings-unit');
+            if (unitEl) unitEl.value = appState.unit;
+            const emailEl = document.getElementById('settings-email');
+            if (emailEl) emailEl.value = appState.targetEmail || '';
             openModal('modal-settings');
         };
+
+        const btnSettingsEl = document.getElementById('btn-settings');
+        if (btnSettingsEl) {
+            btnSettingsEl.onclick = window.openSettingsModal;
+        }
 
         window.updateEmail = (newEmail) => {
             appState.targetEmail = newEmail;
