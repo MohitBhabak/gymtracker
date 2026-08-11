@@ -32,6 +32,7 @@
             --workout-upper: #fbbf24;
             --workout-lower: #2dd4bf;
             --workout-abs: #f472b6;
+            --workout-arms: #38bdf8;
             --workout-rest: #4b5563;
 
             --time-earlymorning: #14b8a6;
@@ -310,6 +311,7 @@
         .type-upper { background-color: rgba(251, 191, 36, 0.15); color: var(--workout-upper); border: 1px solid var(--workout-upper); }
         .type-lower { background-color: rgba(45, 212, 191, 0.15); color: var(--workout-lower); border: 1px solid var(--workout-lower); }
         .type-abs { background-color: rgba(244, 114, 182, 0.15); color: var(--workout-abs); border: 1px solid var(--workout-abs); }
+        .type-arms, .type-armsdelts, .type-arms-delts { background-color: rgba(56, 189, 248, 0.15); color: var(--workout-arms); border: 1px solid var(--workout-arms); }
         .type-rest { background-color: rgba(75, 85, 99, 0.15); color: var(--workout-rest); border: 1px solid var(--workout-rest); }
         
         .time-earlymorning { background-color: rgba(20, 184, 166, 0.15); color: var(--time-earlymorning); border: 1px solid var(--time-earlymorning); }
@@ -350,6 +352,7 @@
         .bg-upper { background-color: var(--workout-upper); }
         .bg-lower { background-color: var(--workout-lower); }
         .bg-abs { background-color: var(--workout-abs); }
+        .bg-arms, .bg-armsdelts, .bg-arms-delts { background-color: var(--workout-arms); }
         .bg-rest { background-color: var(--workout-rest); }
 
         .bg-time-earlymorning { background-color: var(--time-earlymorning); }
@@ -820,6 +823,7 @@
                         <option value="Legs">Legs</option>
                         <option value="Upper">Upper</option>
                         <option value="Lower">Lower</option>
+                        <option value="Arms & Delts">Arms & Delts</option>
                         <option value="Abs">Abs</option>
                     </select>
                 </div>
@@ -859,6 +863,7 @@
                         <button class="type-legs" style="padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius:var(--radius-tight); cursor:pointer; font-weight:600;" onclick="poAutofill('Legs')">Legs</button>
                         <button class="type-upper" style="padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius:var(--radius-tight); cursor:pointer; font-weight:600;" onclick="poAutofill('Upper')">Upper</button>
                         <button class="type-lower" style="padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius:var(--radius-tight); cursor:pointer; font-weight:600;" onclick="poAutofill('Lower')">Lower</button>
+                        <button class="type-armsdelts" style="padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius:var(--radius-tight); cursor:pointer; font-weight:600;" onclick="poAutofill('Arms & Delts')">Arms & Delts</button>
                     </div>
                 </div>
 
@@ -1408,7 +1413,11 @@
         // Utils
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
         function openModal(id) { document.getElementById(id).classList.add('open'); }
-        function getWorkoutColorClass(type) { return `type-${type.toLowerCase()}`; }
+        function getWorkoutColorClass(type) {
+            if (!type) return 'type-push';
+            const clean = type.toLowerCase().replace(/[^a-z0-9]/g, '');
+            return `type-${clean}`;
+        }
         function getTimeColorClass(time) { return `time-${time.replace(/\s+/g, '').toLowerCase()}`; }
         function getBgTimeColorClass(time) { return `bg-time-${time.replace(/\s+/g, '').toLowerCase()}`; }
 
@@ -1841,11 +1850,10 @@
             document.getElementById('modal-day-title').innerText = formattedDate;
             
             if(!log) {
-                const types = ['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Abs', 'Rest'];
+                const types = ['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Arms & Delts', 'Abs'];
                 let html = `<p style="margin-bottom:1rem;">What did you do today?</p><div class="flex" style="flex-wrap:wrap; gap:0.5rem;">`;
                 types.forEach(t => {
-                    const action = t === 'Rest' ? `quickLog('${dateStr}', '${t}')` : `selectTimeOfDay('${dateStr}', '${t}')`;
-                    html += `<button class="btn ${getWorkoutColorClass(t)}" onclick="${action}">${t}</button>`;
+                    html += `<button class="btn ${getWorkoutColorClass(t)}" onclick="selectTimeOfDay('${dateStr}', '${t}')">${t}</button>`;
                 });
                 html += `</div>`;
                 modalBody.innerHTML = html;
@@ -2253,6 +2261,7 @@
                             <option value="Legs">Legs</option>
                             <option value="Upper">Upper</option>
                             <option value="Lower">Lower</option>
+                            <option value="Arms & Delts">Arms & Delts</option>
                             <option value="Abs">Abs</option>
                         </select>
                         <select id="sort-ex" onchange="sortExercises(this.value)" style="flex:1; padding:0.4rem 0.5rem; font-size:0.8rem;">
@@ -2283,7 +2292,7 @@
                             <div style="overflow:hidden; text-overflow:ellipsis;">
                                 <div class="font-bold">${ex.name}</div>
                                 <div class="text-muted" style="font-size:0.8rem;">
-                                    <span class="dot bg-${ex.category.toLowerCase()}"></span> ${ex.category}
+                                    <span class="dot bg-${ex.category.toLowerCase().replace(/[^a-z0-9]/g, '')}"></span> ${ex.category}
                                 </div>
                             </div>
                         </div>
@@ -2590,7 +2599,7 @@
                         });
                     }
                 });
-                const catOrder = { 'push': 1, 'pull': 2, 'legs': 3, 'upper': 4, 'lower': 5, 'abs': 6, 'rest': 7 };
+                const catOrder = { 'push': 1, 'pull': 2, 'legs': 3, 'upper': 4, 'lower': 5, 'arms & delts': 6, 'arms': 6, 'armsdelts': 6, 'abs': 7 };
                 appState.exercises.sort((a, b) => {
                     const orderA = catOrder[a.category.toLowerCase()] || 99;
                     const orderB = catOrder[b.category.toLowerCase()] || 99;
