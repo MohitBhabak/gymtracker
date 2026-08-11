@@ -2581,11 +2581,23 @@
             } else if (sortType === 'name-desc') {
                 appState.exercises.sort((a, b) => b.name.localeCompare(a.name));
             } else if (sortType === 'category') {
+                const counts = {};
+                Object.values(appState.workoutLogs).forEach(log => {
+                    if (log.exercises) {
+                        log.exercises.forEach(ex => {
+                            const k = ex.name.toLowerCase();
+                            counts[k] = (counts[k] || 0) + 1;
+                        });
+                    }
+                });
                 const catOrder = { 'push': 1, 'pull': 2, 'legs': 3, 'upper': 4, 'lower': 5, 'abs': 6, 'rest': 7 };
                 appState.exercises.sort((a, b) => {
                     const orderA = catOrder[a.category.toLowerCase()] || 99;
                     const orderB = catOrder[b.category.toLowerCase()] || 99;
                     if (orderA !== orderB) return orderA - orderB;
+                    const countA = counts[a.name.toLowerCase()] || 0;
+                    const countB = counts[b.name.toLowerCase()] || 0;
+                    if (countB !== countA) return countB - countA;
                     return a.name.localeCompare(b.name);
                 });
             } else if (sortType === 'most-logged') {
