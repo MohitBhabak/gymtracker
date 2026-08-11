@@ -2346,10 +2346,20 @@
             
             document.querySelectorAll('.exercise-item').forEach(el => {
                 const name = el.querySelector('.font-bold').innerText.toLowerCase();
-                const itemCat = el.getAttribute('data-category');
+                const itemCat = el.getAttribute('data-category') || '';
                 
                 const matchesSearch = name.includes(q);
-                const matchesCat = cat === 'All' || itemCat === cat;
+                let matchesCat = cat === 'All';
+                if (!matchesCat) {
+                    const itemCatLower = itemCat.toLowerCase();
+                    if (cat === 'Upper') {
+                        matchesCat = ['upper', 'push', 'pull', 'arms & delts', 'arms'].includes(itemCatLower);
+                    } else if (cat === 'Lower') {
+                        matchesCat = ['lower', 'legs', 'abs'].includes(itemCatLower);
+                    } else {
+                        matchesCat = itemCatLower === cat.toLowerCase();
+                    }
+                }
                 
                 el.style.display = (matchesSearch && matchesCat) ? 'flex' : 'none';
             });
