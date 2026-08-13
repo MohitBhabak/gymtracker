@@ -160,6 +160,22 @@
             max-width: 1280px;
             margin: 0 auto;
             width: 100%;
+            transition: max-width 0.2s ease, padding 0.2s ease;
+        }
+
+        /* Progress Tab - Expanded Layout */
+        main:has(#view-progress:not(.hidden)),
+        body.route-progress main,
+        main.progress-active {
+            max-width: 1680px;
+            padding: 1.5rem 2rem;
+        }
+        @media (min-width: 1800px) {
+            main:has(#view-progress:not(.hidden)),
+            body.route-progress main,
+            main.progress-active {
+                max-width: 1840px;
+            }
         }
 
         /* Modals and Forms will be styled below */
@@ -177,8 +193,8 @@
             align-items: flex-start;
         }
         .progress-exercise-list {
-            flex: 0 0 280px;
-            min-width: 220px;
+            flex: 0 0 290px;
+            min-width: 230px;
             position: sticky;
             top: 0;
         }
@@ -5209,6 +5225,11 @@
         function handleRoute() {
             const hash = window.location.hash || '#calendar';
             
+            // Toggle route classes for page-specific widths
+            document.body.classList.toggle('route-progress', hash === '#progress');
+            const mainEl = document.querySelector('main');
+            if (mainEl) mainEl.classList.toggle('progress-active', hash === '#progress');
+
             // Hide all views and reset tabs
             document.getElementById('view-calendar').classList.add('hidden');
             document.getElementById('view-progress').classList.add('hidden');
