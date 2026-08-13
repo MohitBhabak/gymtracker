@@ -561,6 +561,69 @@
             height: 15px;
         }
 
+        /* Custom In-App Dialog & Toast System */
+        #toast-container {
+            position: fixed;
+            top: 1.25rem;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            pointer-events: none;
+            width: 90%;
+            max-width: 440px;
+        }
+        .app-toast {
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--radius-base);
+            background: rgba(24, 24, 27, 0.95);
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: var(--text);
+            font-size: 0.875rem;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(-12px) scale(0.96);
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .app-toast.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        .app-toast-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        .app-toast.toast-success .app-toast-icon { color: var(--primary); }
+        .app-toast.toast-error .app-toast-icon { color: #ef4444; }
+        .app-toast.toast-warning .app-toast-icon { color: #f59e0b; }
+        .app-toast.toast-info .app-toast-icon { color: #3b82f6; }
+
+        .custom-dialog-card {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-base);
+            padding: 1.75rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            transform: scale(0.95) translateY(8px);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .modal-overlay.open .custom-dialog-card {
+            transform: scale(1) translateY(0);
+        }
+
         /* Mobile Navigation & Responsiveness Overhaul */
         .mobile-nav-bar {
             display: flex;
@@ -1206,6 +1269,34 @@
         </div>
     </div>
 
+    <!-- Toast Notification Container -->
+    <div id="toast-container" aria-live="polite"></div>
+
+    <!-- Custom In-App Dialog (Alert / Confirm / Prompt) -->
+    <div id="modal-custom-dialog" class="modal-overlay" style="z-index: 300;">
+        <div class="modal-content custom-dialog-card" onclick="event.stopPropagation()">
+            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                <div id="custom-dialog-icon-wrap" style="width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: rgba(16, 185, 129, 0.12); color: var(--primary);">
+                    <i id="custom-dialog-icon" data-lucide="info" style="width: 22px; height: 22px;"></i>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <h3 id="custom-dialog-title" style="margin: 0 0 0.35rem 0; font-size: 1.15rem; font-weight: 700; color: var(--text);">Notice</h3>
+                    <div id="custom-dialog-message" style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.45; word-break: break-word;"></div>
+                    
+                    <div id="custom-dialog-input-wrap" style="margin-top: 1rem; display: none;">
+                        <input type="text" id="custom-dialog-input" class="form-input" style="width: 100%; font-size: 0.95rem; padding: 0.6rem 0.85rem; border-radius: var(--radius-tight); background: var(--surface-offset); border: 1px solid var(--border); color: var(--text);" autocomplete="off" />
+                        <div id="custom-dialog-input-error" style="color: #ef4444; font-size: 0.78rem; margin-top: 0.35rem; display: none;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 0.6rem; margin-top: 1.5rem;">
+                <button type="button" id="custom-dialog-btn-cancel" class="btn" style="padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 600; display: none; background: var(--surface-offset); border: 1px solid var(--border);">Cancel</button>
+                <button type="button" id="custom-dialog-btn-confirm" class="btn btn-primary" style="padding: 0.5rem 1.25rem; font-size: 0.85rem; font-weight: 600;">OK</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Progressive Overload Drawer -->
     <div class="po-drawer-overlay" id="po-drawer-overlay" onclick="poCloseDrawer(event)">
         <div class="po-drawer">
@@ -1245,6 +1336,251 @@
     </div>
 
     <script>
+        // In-App Toast Notification System
+        function showAppToast(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            
+            const iconMap = {
+                success: 'check-circle',
+                error: 'alert-circle',
+                warning: 'alert-triangle',
+                info: 'info'
+            };
+            const iconName = iconMap[type] || 'info';
+
+            const toast = document.createElement('div');
+            toast.className = `app-toast toast-${type}`;
+            toast.innerHTML = `
+                <i data-lucide="${iconName}" class="app-toast-icon"></i>
+                <div style="flex: 1; min-width: 0;">${escapeHtml(message)}</div>
+            `;
+            container.appendChild(toast);
+            lucide.createIcons({ root: toast });
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    toast.classList.add('show');
+                });
+            });
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    if (toast.parentNode) toast.parentNode.removeChild(toast);
+                }, 250);
+            }, duration);
+        }
+
+        // Helper to escape HTML strings safely
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Custom In-App Dialog System (Alert, Confirm, Prompt)
+        let customDialogResolver = null;
+
+        function showAppAlert(message, title = 'Notice', type = 'info') {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('modal-custom-dialog');
+                const titleEl = document.getElementById('custom-dialog-title');
+                const msgEl = document.getElementById('custom-dialog-message');
+                const iconWrap = document.getElementById('custom-dialog-icon-wrap');
+                const iconEl = document.getElementById('custom-dialog-icon');
+                const inputWrap = document.getElementById('custom-dialog-input-wrap');
+                const cancelBtn = document.getElementById('custom-dialog-btn-cancel');
+                const confirmBtn = document.getElementById('custom-dialog-btn-confirm');
+
+                if (!modal) return resolve();
+
+                customDialogResolver = resolve;
+
+                titleEl.textContent = title;
+                msgEl.textContent = message;
+                inputWrap.style.display = 'none';
+                cancelBtn.style.display = 'none';
+                confirmBtn.textContent = 'OK';
+                confirmBtn.className = 'btn btn-primary';
+                confirmBtn.style.background = '';
+                confirmBtn.style.color = '';
+                confirmBtn.style.border = '';
+
+                if (type === 'warning' || type === 'error') {
+                    iconWrap.style.background = type === 'error' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(245, 158, 11, 0.15)';
+                    iconWrap.style.color = type === 'error' ? '#ef4444' : '#f59e0b';
+                    iconEl.setAttribute('data-lucide', type === 'error' ? 'alert-octagon' : 'alert-triangle');
+                } else if (type === 'success') {
+                    iconWrap.style.background = 'rgba(16, 185, 129, 0.15)';
+                    iconWrap.style.color = 'var(--primary)';
+                    iconEl.setAttribute('data-lucide', 'check-circle');
+                } else {
+                    iconWrap.style.background = 'rgba(59, 130, 246, 0.15)';
+                    iconWrap.style.color = '#3b82f6';
+                    iconEl.setAttribute('data-lucide', 'info');
+                }
+                lucide.createIcons({ root: iconWrap });
+
+                confirmBtn.onclick = () => {
+                    closeModal('modal-custom-dialog');
+                    if (customDialogResolver) {
+                        const cb = customDialogResolver;
+                        customDialogResolver = null;
+                        cb();
+                    }
+                };
+
+                openModal('modal-custom-dialog');
+                confirmBtn.focus();
+            });
+        }
+
+        function showAppConfirm(message, title = 'Confirm', options = {}) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('modal-custom-dialog');
+                const titleEl = document.getElementById('custom-dialog-title');
+                const msgEl = document.getElementById('custom-dialog-message');
+                const iconWrap = document.getElementById('custom-dialog-icon-wrap');
+                const iconEl = document.getElementById('custom-dialog-icon');
+                const inputWrap = document.getElementById('custom-dialog-input-wrap');
+                const cancelBtn = document.getElementById('custom-dialog-btn-cancel');
+                const confirmBtn = document.getElementById('custom-dialog-btn-confirm');
+
+                if (!modal) return resolve(false);
+
+                customDialogResolver = resolve;
+
+                titleEl.textContent = title;
+                msgEl.textContent = message;
+                inputWrap.style.display = 'none';
+                cancelBtn.style.display = 'inline-flex';
+                cancelBtn.textContent = options.cancelText || 'Cancel';
+                confirmBtn.textContent = options.confirmText || 'Confirm';
+
+                if (options.danger) {
+                    confirmBtn.className = 'btn';
+                    confirmBtn.style.background = '#ef4444';
+                    confirmBtn.style.color = '#ffffff';
+                    confirmBtn.style.border = 'none';
+                    iconWrap.style.background = 'rgba(239, 68, 68, 0.15)';
+                    iconWrap.style.color = '#ef4444';
+                    iconEl.setAttribute('data-lucide', 'trash-2');
+                } else {
+                    confirmBtn.className = 'btn btn-primary';
+                    confirmBtn.style.background = '';
+                    confirmBtn.style.color = '';
+                    confirmBtn.style.border = '';
+                    iconWrap.style.background = 'rgba(59, 130, 246, 0.15)';
+                    iconWrap.style.color = '#3b82f6';
+                    iconEl.setAttribute('data-lucide', 'help-circle');
+                }
+                lucide.createIcons({ root: iconWrap });
+
+                cancelBtn.onclick = () => {
+                    closeModal('modal-custom-dialog');
+                    if (customDialogResolver) {
+                        const cb = customDialogResolver;
+                        customDialogResolver = null;
+                        cb(false);
+                    }
+                };
+
+                confirmBtn.onclick = () => {
+                    closeModal('modal-custom-dialog');
+                    if (customDialogResolver) {
+                        const cb = customDialogResolver;
+                        customDialogResolver = null;
+                        cb(true);
+                    }
+                };
+
+                openModal('modal-custom-dialog');
+                confirmBtn.focus();
+            });
+        }
+
+        function showAppPrompt(message, defaultValue = '', title = 'Input Required', options = {}) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('modal-custom-dialog');
+                const titleEl = document.getElementById('custom-dialog-title');
+                const msgEl = document.getElementById('custom-dialog-message');
+                const iconWrap = document.getElementById('custom-dialog-icon-wrap');
+                const iconEl = document.getElementById('custom-dialog-icon');
+                const inputWrap = document.getElementById('custom-dialog-input-wrap');
+                const inputEl = document.getElementById('custom-dialog-input');
+                const inputError = document.getElementById('custom-dialog-input-error');
+                const cancelBtn = document.getElementById('custom-dialog-btn-cancel');
+                const confirmBtn = document.getElementById('custom-dialog-btn-confirm');
+
+                if (!modal) return resolve(null);
+
+                customDialogResolver = resolve;
+
+                titleEl.textContent = title;
+                msgEl.textContent = message;
+                inputWrap.style.display = 'block';
+                inputError.style.display = 'none';
+                inputEl.value = defaultValue || '';
+                inputEl.placeholder = options.placeholder || '';
+                cancelBtn.style.display = 'inline-flex';
+                cancelBtn.textContent = options.cancelText || 'Cancel';
+                confirmBtn.textContent = options.confirmText || 'Save';
+                confirmBtn.className = 'btn btn-primary';
+                confirmBtn.style.background = '';
+                confirmBtn.style.color = '';
+                confirmBtn.style.border = '';
+
+                iconWrap.style.background = 'rgba(16, 185, 129, 0.15)';
+                iconWrap.style.color = 'var(--primary)';
+                iconEl.setAttribute('data-lucide', 'edit-3');
+                lucide.createIcons({ root: iconWrap });
+
+                const handleConfirm = () => {
+                    const val = inputEl.value;
+                    closeModal('modal-custom-dialog');
+                    if (customDialogResolver) {
+                        const cb = customDialogResolver;
+                        customDialogResolver = null;
+                        cb(val);
+                    }
+                };
+
+                cancelBtn.onclick = () => {
+                    closeModal('modal-custom-dialog');
+                    if (customDialogResolver) {
+                        const cb = customDialogResolver;
+                        customDialogResolver = null;
+                        cb(null);
+                    }
+                };
+
+                confirmBtn.onclick = handleConfirm;
+
+                inputEl.onkeydown = (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleConfirm();
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        cancelBtn.click();
+                    }
+                };
+
+                openModal('modal-custom-dialog');
+                setTimeout(() => {
+                    inputEl.focus();
+                    inputEl.select();
+                }, 50);
+            });
+        }
+
+        // Automatic safety override for window.alert
+        window.alert = function(msg) {
+            showAppAlert(String(msg || ''));
+        };
+
         // State
         const defaultExercises = [
             { name: 'Chest Press', category: 'Push' },
@@ -1554,19 +1890,20 @@
             }
             const clientId = getClientId();
             if (!clientId) {
-                alert('Please paste your Google OAuth 2.0 Client ID into the box before connecting.\n\nNeed help? Click "How to get a Client ID" below.');
+                showAppAlert('Please paste your Google OAuth 2.0 Client ID into the box before connecting.\n\nNeed help? Click "How to get a Client ID" below.', 'Google Client ID Required', 'warning');
                 return;
             }
             window.initGDriveGIS();
             if (!tokenClient) {
-                alert('Failed to initialize Google Auth with the provided Client ID. Please check the Client ID and try again.');
+                showAppAlert('Failed to initialize Google Auth with the provided Client ID. Please check the Client ID and try again.', 'Auth Error', 'error');
                 return;
             }
             tokenClient.requestAccessToken({ prompt: 'consent' });
         };
 
-        window.disconnectGDrive = function() {
-            if (confirm('Disconnect Google Drive sync? Your local data will remain safe in your browser.')) {
+        window.disconnectGDrive = async function() {
+            const confirmed = await showAppConfirm('Disconnect Google Drive sync? Your local data will remain safe in your browser.', 'Disconnect Google Drive', { danger: true, confirmText: 'Disconnect' });
+            if (confirmed) {
                 gdriveToken = null;
                 gdriveTokenExp = 0;
                 gdriveFileId = null;
@@ -1576,6 +1913,7 @@
                 localStorage.removeItem('gymlog_gdrive_file_id');
                 localStorage.removeItem('gymlog_gdrive_user_email');
                 updateSyncUI('disconnected');
+                showAppToast('Google Drive disconnected', 'info');
             }
         };
 
@@ -1905,26 +2243,27 @@
             const input = document.getElementById('settings-new-gym-name');
             if (!input) return;
             const name = input.value.trim();
-            if (!name) return alert('Please enter a gym name.');
+            if (!name) return showAppAlert('Please enter a gym name.', 'Gym Name Required', 'warning');
 
             if (!appState.gyms) appState.gyms = [];
             if (appState.gyms.some(g => g.toLowerCase() === name.toLowerCase())) {
-                return alert(`A gym named "${name}" already exists.`);
+                return showAppAlert(`A gym named "${name}" already exists.`, 'Duplicate Gym', 'warning');
             }
 
             appState.gyms.push(name);
             saveState();
             input.value = '';
             renderSettingsGyms();
+            showAppToast(`Added gym "${name}"`, 'success');
         };
 
-        window.editGym = (oldName) => {
-            const newName = prompt('Enter new gym name:', oldName);
+        window.editGym = async (oldName) => {
+            const newName = await showAppPrompt('Enter new gym name:', oldName, 'Rename Gym');
             if (!newName || !newName.trim() || newName.trim() === oldName) return;
             const trimmed = newName.trim();
 
             if (appState.gyms.some(g => g.toLowerCase() === trimmed.toLowerCase() && g.toLowerCase() !== oldName.toLowerCase())) {
-                return alert(`A gym named "${trimmed}" already exists.`);
+                return showAppAlert(`A gym named "${trimmed}" already exists.`, 'Duplicate Gym', 'warning');
             }
 
             const idx = appState.gyms.indexOf(oldName);
@@ -1956,10 +2295,12 @@
             saveState();
             renderSettingsGyms();
             if (window.location.hash === '#progress') renderProgressView();
+            showAppToast(`Gym renamed to "${trimmed}"`, 'success');
         };
 
-        window.deleteGym = (gymName) => {
-            if (!confirm(`Are you sure you want to remove "${gymName}"?`)) return;
+        window.deleteGym = async (gymName) => {
+            const confirmed = await showAppConfirm(`Are you sure you want to remove "${gymName}"?`, 'Remove Gym', { danger: true, confirmText: 'Remove' });
+            if (!confirmed) return;
 
             appState.gyms = (appState.gyms || []).filter(g => g !== gymName);
 
@@ -1979,6 +2320,7 @@
             saveState();
             renderSettingsGyms();
             if (window.location.hash === '#progress') renderProgressView();
+            showAppToast(`Removed "${gymName}"`, 'info');
         };
 
         window.populateGymSelect = (selectId, selectedValue = '') => {
@@ -1997,8 +2339,8 @@
             }
         };
 
-        window.promptAddGymInline = (targetSelectId) => {
-            const gymName = prompt('Enter new gym name:');
+        window.promptAddGymInline = async (targetSelectId) => {
+            const gymName = await showAppPrompt('Enter new gym name:', '', 'Add New Gym Location');
             if (!gymName || !gymName.trim()) return;
             const trimmed = gymName.trim();
 
@@ -2011,6 +2353,7 @@
             populateGymSelect(targetSelectId, trimmed);
             const selectEl = document.getElementById(targetSelectId);
             if (selectEl) selectEl.value = trimmed;
+            showAppToast(`Added gym "${trimmed}"`, 'success');
         };
 
         window.exportData = () => {
@@ -2051,12 +2394,12 @@
                         saveState();
                         closeModal('modal-settings');
                         handleRoute(); // re-render current view
-                        alert('Backup successfully restored!');
+                        showAppToast('Backup successfully restored!', 'success');
                     } else {
-                        alert('Invalid backup file format.');
+                        showAppAlert('Invalid backup file format.', 'Restore Failed', 'error');
                     }
                 } catch (err) {
-                    alert('Error reading backup file.');
+                    showAppAlert('Error reading backup file.', 'Restore Error', 'error');
                 }
             };
             reader.readAsText(file);
@@ -2206,7 +2549,7 @@
         window.poEmailTargets = () => {
             if (!lastPoEmailBody) return;
             if (!appState.targetEmail) {
-                alert('Please set a Target Email in Settings to email targets.');
+                showAppAlert('Please set a Target Email in Settings to email targets.', 'Target Email Missing', 'info');
                 document.getElementById('btn-settings').click();
                 return;
             }
@@ -2252,7 +2595,7 @@
                 if (resultsEl) resultsEl.innerHTML = '';
             } else {
                 const displayType = (typeLower === 'lower' || typeLower === 'legs') ? 'Lower or Legs' : type;
-                alert(`No recent ${displayType} session found with logged exercises.`);
+                showAppAlert(`No recent ${displayType} session found with logged exercises.`, 'No Recent Session', 'info');
             }
         };
 
@@ -2310,7 +2653,7 @@
             });
 
             const names = poRows.map(r => r.trim()).filter(r => r.length > 0);
-            if (names.length === 0) return alert('Please add at least one exercise.');
+            if (names.length === 0) return showAppAlert('Please add at least one exercise.', 'Add Exercises', 'warning');
 
             const resultsEl = document.getElementById('po-results');
             if (!resultsEl) return;
@@ -2540,20 +2883,21 @@
             if(type !== 'Rest') openLogSession(dateStr);
         };
         
-        window.swapLog = (dateStr) => {
-            const targetDate = prompt(`Enter the date to move/swap with ${dateStr} (Format: YYYY-MM-DD):`);
+        window.swapLog = async (dateStr) => {
+            const targetDate = await showAppPrompt(`Enter the date to move/swap with ${dateStr}:`, '', 'Move / Swap Workout Day', { placeholder: 'YYYY-MM-DD' });
             if (!targetDate) return;
+            const trimmedDate = targetDate.trim();
             
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)) {
-                return alert('Invalid date format. Please use YYYY-MM-DD.');
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmedDate)) {
+                return showAppAlert('Invalid date format. Please use YYYY-MM-DD.', 'Invalid Date', 'warning');
             }
             
-            if (targetDate === dateStr) {
-                return alert('Cannot swap a day with itself.');
+            if (trimmedDate === dateStr) {
+                return showAppAlert('Cannot swap a day with itself.', 'Invalid Target', 'warning');
             }
             
             const currentLog = appState.workoutLogs[dateStr];
-            const targetLog = appState.workoutLogs[targetDate];
+            const targetLog = appState.workoutLogs[trimmedDate];
             
             if (targetLog) {
                 appState.workoutLogs[dateStr] = targetLog;
@@ -2562,14 +2906,15 @@
             }
             
             if (currentLog) {
-                appState.workoutLogs[targetDate] = currentLog;
+                appState.workoutLogs[trimmedDate] = currentLog;
             } else {
-                delete appState.workoutLogs[targetDate];
+                delete appState.workoutLogs[trimmedDate];
             }
             
             saveState();
             renderCalendarView();
             closeModal('modal-day');
+            showAppToast(`Swapped ${dateStr} with ${trimmedDate}`, 'success');
         };
 
         window.clearLog = (dateStr) => {
@@ -2991,7 +3336,7 @@
 
         window.applyQuickPasteToSession = () => {
             if (!lastParsedResult || !lastParsedResult.exercises || lastParsedResult.exercises.length === 0) {
-                return alert('No exercises to apply. Please paste workout notes first.');
+                return showAppAlert('No exercises to apply. Please paste workout notes first.', 'No Exercises', 'warning');
             }
 
             const dateStr = document.getElementById('quick-paste-date')?.value || new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
@@ -3225,7 +3570,7 @@
             const notes = document.getElementById('log-notes').value;
             const timeOfDay = document.getElementById('log-time').value;
             
-            if(!dateStr) return alert('Date is required.');
+            if(!dateStr) return showAppAlert('Date is required.', 'Missing Date', 'warning');
             
             const finalExercises = [];
             
@@ -3250,7 +3595,7 @@
                 }
             });
             
-            if(finalExercises.length === 0) return alert('At least one valid exercise with sets is required.');
+            if(finalExercises.length === 0) return showAppAlert('At least one valid exercise with sets is required.', 'Workout Incomplete', 'warning');
             
             if(!appState.workoutLogs[dateStr]) {
                 appState.workoutLogs[dateStr] = { type: workoutType, gym: gym, timeOfDay: timeOfDay, exercises: [] }; 
@@ -3455,13 +3800,13 @@
             openModal('modal-new-ex');
         };
 
-        window.editExerciseName = (oldName) => {
-            const newName = prompt('Enter new exercise name:', oldName);
-            if (!newName || newName.trim() === '' || newName === oldName) return;
+        window.editExerciseName = async (oldName) => {
+            const newName = await showAppPrompt('Enter new exercise name:', oldName, 'Rename Exercise');
+            if (!newName || newName.trim() === '' || newName.trim() === oldName) return;
             const trimmedNewName = newName.trim();
             
-            if (appState.exercises.some(e => e.name.toLowerCase() === trimmedNewName.toLowerCase())) {
-                return alert('An exercise with this name already exists.');
+            if (appState.exercises.some(e => e.name.toLowerCase() === trimmedNewName.toLowerCase() && e.name.toLowerCase() !== oldName.toLowerCase())) {
+                return showAppAlert('An exercise with this name already exists.', 'Duplicate Exercise', 'warning');
             }
 
             const exIndex = appState.exercises.findIndex(e => e.name === oldName);
@@ -3480,24 +3825,27 @@
             saveState();
             renderProgressView();
             showExerciseDetail(trimmedNewName);
+            showAppToast(`Renamed to "${trimmedNewName}"`, 'success');
         };
 
-        window.editExerciseCategory = (name) => {
+        window.editExerciseCategory = async (name) => {
             const exIndex = appState.exercises.findIndex(e => e.name === name);
             if (exIndex < 0) return;
             const currentCat = appState.exercises[exIndex].category;
-            const newCat = prompt(`Enter new category for ${name} (e.g. Push, Pull, Legs, Upper, Lower, Abs, Rest):`, currentCat);
-            if (!newCat || newCat.trim() === '' || newCat === currentCat) return;
+            const newCat = await showAppPrompt(`Enter new category for "${name}" (e.g. Push, Pull, Legs, Upper, Lower, Abs, Arms, Rest):`, currentCat, 'Change Category');
+            if (!newCat || newCat.trim() === '' || newCat.trim().toLowerCase() === currentCat.toLowerCase()) return;
             
             const formattedCat = newCat.trim().charAt(0).toUpperCase() + newCat.trim().slice(1).toLowerCase();
             appState.exercises[exIndex].category = formattedCat;
             saveState();
             renderProgressView();
             showExerciseDetail(name);
+            showAppToast(`Category updated to "${formattedCat}"`, 'success');
         };
 
-        window.deleteExerciseFromLibrary = (name) => {
-            if (!confirm(`Are you sure you want to delete "${name}" from your exercise library?`)) return;
+        window.deleteExerciseFromLibrary = async (name) => {
+            const confirmed = await showAppConfirm(`Are you sure you want to delete "${name}" from your exercise library?`, 'Delete Exercise', { danger: true, confirmText: 'Delete' });
+            if (!confirmed) return;
             
             // Remove from exercise library
             appState.exercises = appState.exercises.filter(e => e.name.toLowerCase() !== name.toLowerCase());
@@ -3512,6 +3860,7 @@
             selectedExerciseNames.delete(name);
             saveState();
             renderProgressView();
+            showAppToast(`Deleted "${name}"`, 'info');
         };
 
         window.toggleExerciseSelectMode = () => {
@@ -3589,13 +3938,14 @@
             }
         }
 
-        window.deleteSelectedExercises = () => {
+        window.deleteSelectedExercises = async () => {
             const count = selectedExerciseNames.size;
-            if (count === 0) return alert('No exercises selected.');
+            if (count === 0) return showAppAlert('No exercises selected.', 'Selection Empty', 'info');
 
             const selectedList = Array.from(selectedExerciseNames);
             const previewStr = selectedList.slice(0, 4).join(', ') + (count > 4 ? ` and ${count - 4} more` : '');
-            if (!confirm(`Are you sure you want to delete ${count} exercise(s) (${previewStr}) from your library?`)) return;
+            const confirmed = await showAppConfirm(`Are you sure you want to delete ${count} exercise(s) (${previewStr}) from your library?`, 'Delete Selected Exercises', { danger: true, confirmText: 'Delete' });
+            if (!confirmed) return;
 
             const nameSet = new Set(selectedList.map(n => n.toLowerCase()));
 
@@ -3613,6 +3963,7 @@
             isExerciseSelectMode = false;
             saveState();
             renderProgressView();
+            showAppToast(`Deleted ${count} exercise(s)`, 'info');
         };
 
         // --- EXERCISE REORDERING & SORTING HANDLERS ---
@@ -3728,14 +4079,15 @@
             const cat = document.getElementById('new-ex-cat').value;
             const bwCheckbox = document.getElementById('new-ex-bw');
             const isBw = bwCheckbox ? bwCheckbox.checked : false;
-            if(!name) return alert('Name is required.');
+            if(!name) return showAppAlert('Name is required.', 'Exercise Name Required', 'warning');
             if(appState.exercises.find(e => e.name.toLowerCase() === name.toLowerCase())) {
-                return alert('This exercise already exists in your library.');
+                return showAppAlert('This exercise already exists in your library.', 'Duplicate Exercise', 'warning');
             }
             appState.exercises.push({ name, category: cat, isBodyweight: isBw });
             saveState();
             closeModal('modal-new-ex');
             if(window.location.hash === '#progress') renderProgressView();
+            showAppToast(`Created exercise "${name}"`, 'success');
         };
 
         let currentSelectedExerciseName = '';
@@ -3914,9 +4266,10 @@
             renderGymCheckboxesInEditor(targetView.gyms || []);
         };
 
-        window.deleteExerciseView = (viewId) => {
+        window.deleteExerciseView = async (viewId) => {
             if (viewId === 'default-all' || !currentSelectedExerciseName) return;
-            if (!confirm('Are you sure you want to delete this view?')) return;
+            const confirmed = await showAppConfirm('Are you sure you want to delete this view?', 'Delete View', { danger: true, confirmText: 'Delete' });
+            if (!confirmed) return;
 
             if (appState.exerciseViews && appState.exerciseViews[currentSelectedExerciseName]) {
                 appState.exerciseViews[currentSelectedExerciseName] = appState.exerciseViews[currentSelectedExerciseName].filter(v => v.id !== viewId);
@@ -3934,9 +4287,10 @@
             renderModalViewsList(currentSelectedExerciseName);
             resetViewEditor();
             showExerciseDetail(currentSelectedExerciseName);
+            showAppToast('View deleted', 'info');
         };
 
-        window.saveExerciseViewFromModal = () => {
+        window.saveExerciseViewFromModal = async () => {
             if (!currentSelectedExerciseName) return;
 
             const idInput = document.getElementById('view-editor-id');
@@ -3945,11 +4299,11 @@
             const viewId = idInput ? idInput.value.trim() : '';
             const viewName = nameInput ? nameInput.value.trim() : '';
 
-            if (!viewName) return alert('Please enter a view name.');
+            if (!viewName) return showAppAlert('Please enter a view name.', 'View Name Required', 'warning');
 
             const checkedGyms = Array.from(document.querySelectorAll('.view-gym-cb:checked')).map(cb => cb.value);
             if (checkedGyms.length === 0) {
-                return alert('Please select at least one gym for this view.');
+                return showAppAlert('Please select at least one gym for this view.', 'Gym Selection Required', 'warning');
             }
 
             if (!appState.exerciseViews) appState.exerciseViews = {};
@@ -3960,11 +4314,11 @@
             const existingList = appState.exerciseViews[currentSelectedExerciseName];
 
             if (existingList.some(v => v.name.toLowerCase() === viewName.toLowerCase() && v.id !== viewId)) {
-                return alert(`A view named "${viewName}" already exists for this exercise.`);
+                return showAppAlert(`A view named "${viewName}" already exists for this exercise.`, 'Duplicate View Name', 'warning');
             }
 
             if (viewName.toLowerCase() === 'all gyms') {
-                return alert('"All Gyms" is the default view name. Please choose a different name.');
+                return showAppAlert('"All Gyms" is the default view name. Please choose a different name.', 'Reserved Name', 'warning');
             }
 
             let savedId = viewId;
@@ -3989,6 +4343,7 @@
             resetViewEditor();
             showExerciseDetail(currentSelectedExerciseName, savedId);
             closeModal('modal-exercise-views');
+            showAppToast(`Saved view "${viewName}"`, 'success');
         };
 
         // --- Copy & Bulk Apply View Settings ---
@@ -4032,15 +4387,15 @@
             });
         }
 
-        window.copyViewsFromSelectedExercise = () => {
+        window.copyViewsFromSelectedExercise = async () => {
             const selectEl = document.getElementById('copy-views-from-select');
             const sourceName = selectEl ? selectEl.value : '';
-            if (!sourceName) return alert('Please select a source exercise to copy views from.');
+            if (!sourceName) return showAppAlert('Please select a source exercise to copy views from.', 'Select Source Exercise', 'warning');
             if (!currentSelectedExerciseName) return;
 
             const sourceViews = appState.exerciseViews?.[sourceName];
             if (!Array.isArray(sourceViews) || sourceViews.length === 0) {
-                return alert(`No custom views found on "${sourceName}".`);
+                return showAppAlert(`No custom views found on "${sourceName}".`, 'No Views Found', 'info');
             }
 
             if (!appState.exerciseViews) appState.exerciseViews = {};
@@ -4065,15 +4420,15 @@
             saveState();
             renderModalViewsList(currentSelectedExerciseName);
             showExerciseDetail(currentSelectedExerciseName);
-            alert(`Copied ${sourceViews.length} view(s) from "${sourceName}" to "${currentSelectedExerciseName}"!`);
+            showAppToast(`Copied ${sourceViews.length} view(s) from "${sourceName}"!`, 'success');
         };
 
-        window.bulkApplyViewsToCategory = (targetScope) => {
+        window.bulkApplyViewsToCategory = async (targetScope) => {
             if (!currentSelectedExerciseName) return;
 
             const currentViews = appState.exerciseViews?.[currentSelectedExerciseName] || [];
             if (currentViews.length === 0) {
-                return alert(`"${currentSelectedExerciseName}" has no custom views configured yet. Create a view first before copying to others.`);
+                return showAppAlert(`"${currentSelectedExerciseName}" has no custom views configured yet. Create a view first before copying to others.`, 'No Views Configured', 'info');
             }
 
             const currentEx = appState.exercises.find(e => e.name.toLowerCase() === currentSelectedExerciseName.toLowerCase());
@@ -4087,12 +4442,11 @@
             }
 
             if (targetExercises.length === 0) {
-                return alert('No target exercises found for this category.');
+                return showAppAlert('No target exercises found for this category.', 'No Target Exercises', 'info');
             }
 
-            if (!confirm(`Apply the ${currentViews.length} view(s) from "${currentSelectedExerciseName}" to ${targetExercises.length} ${targetScope === 'same' ? currentCat + ' ' : ''}exercises?`)) {
-                return;
-            }
+            const confirmed = await showAppConfirm(`Apply the ${currentViews.length} view(s) from "${currentSelectedExerciseName}" to ${targetExercises.length} ${targetScope === 'same' ? currentCat + ' ' : ''}exercises?`, 'Bulk Apply Views');
+            if (!confirmed) return;
 
             const currentDefaultId = appState.exerciseDefaultViews?.[currentSelectedExerciseName];
             const currentDefaultView = currentViews.find(v => v.id === currentDefaultId);
@@ -4116,14 +4470,14 @@
             });
 
             saveState();
-            alert(`Successfully applied view settings to ${targetExercises.length} exercises!`);
+            showAppToast(`Applied view settings to ${targetExercises.length} exercises!`, 'success');
         };
 
         window.openCustomApplyTargetsModal = () => {
             if (!currentSelectedExerciseName) return;
             const currentViews = appState.exerciseViews?.[currentSelectedExerciseName] || [];
             if (currentViews.length === 0) {
-                return alert(`"${currentSelectedExerciseName}" has no custom views configured yet. Create a view first before copying to others.`);
+                return showAppAlert(`"${currentSelectedExerciseName}" has no custom views configured yet. Create a view first before copying to others.`, 'No Views Configured', 'info');
             }
 
             const container = document.getElementById('apply-views-exercises-list');
@@ -4193,7 +4547,7 @@
             if (!currentSelectedExerciseName) return;
             const checkedCbs = Array.from(document.querySelectorAll('.apply-target-cb:checked'));
             if (checkedCbs.length === 0) {
-                return alert('Please select at least one exercise.');
+                return showAppAlert('Please select at least one exercise.', 'Select Exercises', 'warning');
             }
 
             const currentViews = appState.exerciseViews?.[currentSelectedExerciseName] || [];
@@ -4221,7 +4575,7 @@
 
             saveState();
             closeModal('modal-apply-views-targets');
-            alert(`Successfully applied views to ${checkedCbs.length} exercises!`);
+            showAppToast(`Applied views to ${checkedCbs.length} exercises!`, 'success');
         };
 
         window.showExerciseDetail = (name, requestedViewId = null) => {
@@ -4675,8 +5029,8 @@
             const dateStr = document.getElementById('weight-input-date').value;
             const weightVal = parseFloat(document.getElementById('weight-input-val').value);
             
-            if (!dateStr) return alert('Date is required.');
-            if (isNaN(weightVal) || weightVal <= 0) return alert('Valid weight is required.');
+            if (!dateStr) return showAppAlert('Date is required.', 'Missing Date', 'warning');
+            if (isNaN(weightVal) || weightVal <= 0) return showAppAlert('Valid weight is required.', 'Invalid Weight', 'warning');
             
             const existingIndex = appState.weightLogs.findIndex(l => l.date === dateStr);
             if (existingIndex >= 0) {
@@ -4687,13 +5041,16 @@
             
             saveState();
             renderWeightView();
+            showAppToast(`Logged body weight: ${weightVal} ${appState.unit}`, 'success');
         };
 
-        window.deleteWeightLog = (dateStr) => {
-            if(confirm('Delete weight log for ' + dateStr + '?')) {
+        window.deleteWeightLog = async (dateStr) => {
+            const confirmed = await showAppConfirm(`Delete weight log for ${dateStr}?`, 'Delete Weight Log', { danger: true, confirmText: 'Delete' });
+            if (confirmed) {
                 appState.weightLogs = appState.weightLogs.filter(l => l.date !== dateStr);
                 saveState();
                 renderWeightView();
+                showAppToast('Weight log deleted', 'info');
             }
         };
 
@@ -4822,8 +5179,8 @@
             const dateStr = document.getElementById('bench-input-date').value;
             const weightVal = parseFloat(document.getElementById('bench-input-val').value);
             
-            if (!dateStr) return alert('Date is required.');
-            if (isNaN(weightVal) || weightVal <= 0) return alert('Valid weight is required.');
+            if (!dateStr) return showAppAlert('Date is required.', 'Missing Date', 'warning');
+            if (isNaN(weightVal) || weightVal <= 0) return showAppAlert('Valid weight is required.', 'Invalid Weight', 'warning');
             
             if (!appState.benchLogs) appState.benchLogs = [];
             const existingIndex = appState.benchLogs.findIndex(l => l.date === dateStr);
@@ -4835,13 +5192,16 @@
             
             saveState();
             renderBenchView();
+            showAppToast(`Logged Bench PR: ${weightVal} ${appState.unit}`, 'success');
         };
 
-        window.deleteBenchLog = (dateStr) => {
-            if(confirm('Delete Bench PR log for ' + dateStr + '?')) {
+        window.deleteBenchLog = async (dateStr) => {
+            const confirmed = await showAppConfirm(`Delete Bench PR log for ${dateStr}?`, 'Delete Bench PR', { danger: true, confirmText: 'Delete' });
+            if (confirmed) {
                 appState.benchLogs = (appState.benchLogs || []).filter(l => l.date !== dateStr);
                 saveState();
                 renderBenchView();
+                showAppToast('Bench PR log deleted', 'info');
             }
         };
 
