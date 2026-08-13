@@ -422,6 +422,7 @@
             gap: 0.75rem;
             justify-content: flex-end;
             flex-shrink: 0;
+        }
         /* Cloud Sync Styles */
         .btn-sync {
             display: inline-flex;
@@ -463,6 +464,102 @@
         .badge-synced { background: rgba(34, 197, 94, 0.15); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
         .badge-syncing { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3); }
         .badge-error { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        /* Multi-Gym & Exercise Views Styles */
+        .gym-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: var(--radius-tight);
+            font-size: 0.75rem;
+            background: var(--surface-offset);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .view-pills-container {
+            display: inline-flex;
+            align-items: center;
+            background: var(--surface-offset);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-pill);
+            padding: 2px;
+            gap: 2px;
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .view-pill {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.22rem 0.55rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.72rem;
+            font-weight: 600;
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            user-select: none;
+            outline: none;
+            line-height: 1.15;
+        }
+        .view-pill:hover {
+            color: var(--text);
+            background: var(--surface-2);
+        }
+        .view-pill.active {
+            background: var(--primary) !important;
+            color: #09090b !important;
+            font-weight: 700 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        .view-pill.active i, .view-pill.active svg {
+            color: #09090b !important;
+            stroke: #09090b !important;
+        }
+        .view-pill .view-default-tag {
+            font-size: 0.55rem;
+            padding: 0.02rem 0.25rem;
+            border-radius: var(--radius-pill);
+            background: rgba(255, 255, 255, 0.14);
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-left: 0.15rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .view-pill.active .view-default-tag {
+            background: rgba(0, 0, 0, 0.22);
+            color: #09090b !important;
+        }
+        .gym-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 0.6rem;
+            border-radius: var(--radius-tight);
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.15s ease;
+            color: var(--text);
+        }
+        .gym-checkbox-label:hover {
+            background: var(--surface-offset);
+        }
+        .gym-checkbox-label input[type="checkbox"] {
+            cursor: pointer;
+            accent-color: var(--primary);
+            width: 15px;
+            height: 15px;
+        }
 
         /* Mobile Navigation & Responsiveness Overhaul */
         .mobile-nav-bar {
@@ -696,6 +793,15 @@
                         </select>
                     </div>
                     <div class="form-row" style="margin-bottom: 1.25rem;">
+                        <span style="width: 100px;">Gym:</span>
+                        <div style="flex: 1; display: flex; gap: 0.5rem;">
+                            <select id="log-gym" style="flex: 1;"></select>
+                            <button type="button" class="btn" onclick="promptAddGymInline('log-gym')" title="Add New Gym" style="padding: 0.5rem 0.75rem; font-size: 0.8rem; background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-tight); flex-shrink: 0;">
+                                <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-row" style="margin-bottom: 1.25rem;">
                         <span style="width: 100px;">Time:</span>
                         <select id="log-time">
                             <option value="">-- Optional --</option>
@@ -753,11 +859,11 @@
                     </p>
 
                     <div class="flex gap-3" style="margin-bottom: 1rem; flex-wrap: wrap;">
-                        <div style="flex: 1; min-width: 130px;">
+                        <div style="flex: 1; min-width: 120px;">
                             <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">Workout Date</label>
                             <input type="date" id="quick-paste-date">
                         </div>
-                        <div style="flex: 1; min-width: 130px;">
+                        <div style="flex: 1; min-width: 120px;">
                             <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">Workout Type</label>
                             <select id="quick-paste-type">
                                 <option value="Push">Push</option>
@@ -770,7 +876,11 @@
                                 <option value="Cardio">Cardio</option>
                             </select>
                         </div>
-                        <div style="flex: 1; min-width: 130px;">
+                        <div style="flex: 1; min-width: 120px;">
+                            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">Gym Location</label>
+                            <select id="quick-paste-gym"></select>
+                        </div>
+                        <div style="flex: 1; min-width: 120px;">
                             <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">Time of Day</label>
                             <select id="quick-paste-time">
                                 <option value="">-- Optional --</option>
@@ -835,6 +945,33 @@
                                 <option value="kg">kg</option>
                             </select>
                         </div>
+                    </div>
+
+                    <!-- Gym Locations Section -->
+                    <div style="margin-bottom: 2rem; padding: 1.25rem; background-color: var(--surface-offset); border-radius: var(--radius-base); border: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <h4 style="margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
+                                <i data-lucide="map-pin" style="width: 18px; height: 18px; color: var(--primary);"></i>
+                                Gym Locations
+                            </h4>
+                            <span id="settings-gym-count" class="badge" style="background: var(--surface-2); border: 1px solid var(--border); font-size: 0.75rem;">0 gyms</span>
+                        </div>
+                        <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.85rem; line-height: 1.4;">
+                            Customize your gyms to track equipment differences across locations and create specific exercise views.
+                        </p>
+                        
+                        <div id="settings-gyms-list" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; max-height: 180px; overflow-y: auto;">
+                            <!-- Injected by renderSettingsGyms -->
+                        </div>
+
+                        <div class="flex gap-2">
+                            <input type="text" id="settings-new-gym-name" placeholder="New gym name (e.g. Iron Works, Metro Gym)" style="flex: 1; font-size: 0.85rem; padding: 0.55rem 0.75rem;" onkeydown="if(event.key==='Enter') addGymFromSettings()">
+                            <button type="button" class="btn btn-primary" onclick="addGymFromSettings()" style="padding: 0.55rem 1rem; font-size: 0.85rem; font-weight: 600; flex-shrink: 0; display: flex; align-items: center; gap: 0.35rem;">
+                                <i data-lucide="plus" style="width: 14px; height: 14px;"></i> Add Gym
+                            </button>
+                        </div>
+                    </div>
+
                     <div style="margin-bottom: 2rem; padding: 1.25rem; background-color: var(--surface-offset); border-radius: var(--radius-base); border: 1px solid var(--border);">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
                             <h4 style="margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
@@ -941,6 +1078,132 @@
                 </div>
             </div>
         </div>
+
+        <!-- Exercise Views Modal (View Selection) -->
+        <div id="modal-exercise-views" class="modal-overlay">
+            <div class="modal-content" style="max-width: 540px;">
+                <div class="modal-header" style="margin-bottom: 1.25rem;">
+                    <div>
+                        <h2 id="modal-exercise-views-title" style="font-size: 1.3rem; margin-bottom: 0.25rem;">Exercise Views</h2>
+                        <div id="modal-exercise-views-subtitle" class="text-muted" style="font-size: 0.85rem;">Filter progress by specific gym locations</div>
+                    </div>
+                    <button class="icon-btn" onclick="closeModal('modal-exercise-views')"><i data-lucide="x"></i></button>
+                </div>
+                <div id="modal-exercise-views-body">
+                    <!-- Configured Views List -->
+                    <div style="margin-bottom: 1.5rem;">
+                        <div class="flex justify-between items-center" style="margin-bottom: 0.6rem;">
+                            <label style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Current Views</label>
+                            <span id="modal-views-count-badge" class="badge" style="background: var(--surface-offset); border: 1px solid var(--border); font-size: 0.75rem;">1 view</span>
+                        </div>
+                        <div id="exercise-views-list" style="display: flex; flex-direction: column; gap: 0.6rem; max-height: 220px; overflow-y: auto;">
+                            <!-- Injected by renderModalViewsList -->
+                        </div>
+                    </div>
+
+                    <!-- Create / Edit View Section -->
+                    <div style="padding: 1.2rem; background: var(--surface-offset); border-radius: var(--radius-base); border: 1px solid var(--border); margin-bottom: 1.25rem;">
+                        <h4 id="view-editor-title" style="margin-top: 0; margin-bottom: 0.75rem; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem;">
+                            <i data-lucide="plus-circle" style="width: 16px; height: 16px; color: var(--primary);"></i>
+                            <span id="view-editor-header-text">Create New View</span>
+                        </h4>
+                        <input type="hidden" id="view-editor-id" value="">
+                        <div style="margin-bottom: 0.85rem;">
+                            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">View Name</label>
+                            <input type="text" id="view-editor-name" placeholder="e.g. Main Gym Only, Cable Stack B, Downtown..." style="font-size: 0.85rem; padding: 0.55rem 0.75rem;">
+                        </div>
+                        <div style="margin-bottom: 0.85rem;">
+                            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.4rem; font-weight: 600;">Include Workouts from Gyms:</label>
+                            <div id="view-editor-gyms-checkboxes" style="display: flex; flex-direction: column; gap: 0.4rem; max-height: 140px; overflow-y: auto; padding: 0.6rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-tight);">
+                                <!-- Injected gym checkboxes -->
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem;">* If no gyms are selected, view will display logs from any gym.</div>
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text); cursor: pointer; user-select: none;">
+                                <input type="checkbox" id="view-editor-is-default" style="width: 15px; height: 15px; cursor: pointer; accent-color: var(--primary);">
+                                <span>Set as default view for this exercise</span>
+                            </label>
+                        </div>
+                        <div class="flex justify-between items-center" style="gap: 0.5rem;">
+                            <button type="button" class="btn" id="btn-cancel-edit-view" onclick="resetViewEditor()" style="display: none; padding: 0.45rem 0.85rem; font-size: 0.8rem;">Cancel</button>
+                            <button type="button" class="btn btn-primary" onclick="saveExerciseViewFromModal()" style="margin-left: auto; padding: 0.5rem 1.1rem; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                <i data-lucide="check" style="width: 15px; height: 15px;"></i> <span id="btn-save-view-text">Save View</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Copy & Apply Views Section -->
+                    <div style="padding: 1.1rem; background: var(--surface); border-radius: var(--radius-base); border: 1px solid var(--border);">
+                        <div class="flex justify-between items-center" style="cursor: pointer; user-select: none;" onclick="toggleCopyViewsAccordion()">
+                            <h4 style="margin: 0; font-size: 0.88rem; font-weight: 700; display: flex; align-items: center; gap: 0.45rem; color: var(--text);">
+                                <i data-lucide="copy" style="width: 15px; height: 15px; color: var(--primary);"></i>
+                                <span>Copy & Apply View Settings</span>
+                            </h4>
+                            <i id="copy-views-chevron" data-lucide="chevron-down" style="width: 16px; height: 16px; color: var(--text-muted); transition: transform 0.2s;"></i>
+                        </div>
+                        <div id="copy-views-content" style="display: none; margin-top: 0.85rem; padding-top: 0.85rem; border-top: 1px solid var(--border);">
+                            <!-- Option A: Import from another exercise -->
+                            <div style="margin-bottom: 1.1rem;">
+                                <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.4rem;">COPY VIEWS FROM ANOTHER EXERCISE:</label>
+                                <div class="flex gap-2">
+                                    <select id="copy-views-from-select" style="flex: 1; font-size: 0.8rem; padding: 0.45rem 0.6rem;">
+                                        <option value="">Select source exercise...</option>
+                                    </select>
+                                    <button type="button" class="btn btn-sm" onclick="copyViewsFromSelectedExercise()" style="font-size: 0.8rem; padding: 0.45rem 0.85rem; background: var(--surface-offset); border: 1px solid var(--border); font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
+                                        <i data-lucide="download" style="width: 13px; height: 13px;"></i> Copy
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Option B: Apply to other exercises -->
+                            <div>
+                                <label style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 0.4rem;">APPLY THESE VIEWS TO OTHER EXERCISES:</label>
+                                <div class="flex gap-2" style="flex-wrap: wrap;">
+                                    <button type="button" class="btn btn-sm" id="btn-apply-same-cat" onclick="bulkApplyViewsToCategory('same')" style="font-size: 0.78rem; padding: 0.4rem 0.7rem; background: var(--surface-offset); border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 0.3rem;">
+                                        <i data-lucide="folder" style="width: 13px; height: 13px; color: var(--primary);"></i> Same Category
+                                    </button>
+                                    <button type="button" class="btn btn-sm" onclick="bulkApplyViewsToCategory('all')" style="font-size: 0.78rem; padding: 0.4rem 0.7rem; background: var(--surface-offset); border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 0.3rem;">
+                                        <i data-lucide="globe" style="width: 13px; height: 13px; color: var(--primary);"></i> All Exercises
+                                    </button>
+                                    <button type="button" class="btn btn-sm" onclick="openCustomApplyTargetsModal()" style="font-size: 0.78rem; padding: 0.4rem 0.7rem; background: var(--surface-offset); border: 1px solid var(--border); display: inline-flex; align-items: center; gap: 0.3rem;">
+                                        <i data-lucide="check-square" style="width: 13px; height: 13px; color: var(--primary);"></i> Choose Specific...
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apply Views Target Selection Modal -->
+        <div id="modal-apply-views-targets" class="modal-overlay">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header" style="margin-bottom: 1rem;">
+                    <div>
+                        <h2 style="font-size: 1.25rem; margin-bottom: 0.25rem;">Apply Views to Exercises</h2>
+                        <div id="apply-views-target-subtitle" class="text-muted" style="font-size: 0.85rem;">Select which exercises will receive these views</div>
+                    </div>
+                    <button class="icon-btn" onclick="closeModal('modal-apply-views-targets')"><i data-lucide="x"></i></button>
+                </div>
+                <div style="margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+                    <label class="flex items-center gap-2" style="font-size: 0.8rem; font-weight: 600; cursor: pointer;">
+                        <input type="checkbox" id="apply-views-select-all" onchange="toggleSelectAllApplyTargets(this.checked)" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary);">
+                        <span>Select All (<span id="apply-targets-count-label">0 selected</span>)</span>
+                    </label>
+                </div>
+                <div id="apply-views-exercises-list" style="max-height: 280px; overflow-y: auto; padding: 0.5rem; background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-tight); margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                    <!-- Injected exercise checkboxes -->
+                </div>
+                <div class="flex justify-between items-center" style="gap: 0.5rem;">
+                    <button type="button" class="btn" onclick="closeModal('modal-apply-views-targets')" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="btn-confirm-apply-targets" onclick="confirmApplyViewsToTargets()" style="padding: 0.5rem 1.2rem; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <i data-lucide="check" style="width: 15px; height: 15px;"></i> Apply Views
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Progressive Overload Drawer -->
@@ -1016,11 +1279,17 @@
             { name: 'Plank', category: 'Abs', isBodyweight: true }
         ];
 
+        const defaultGyms = ['Main Gym', 'Secondary Gym'];
+
         let appState = {
             unit: 'lbs',
+            gyms: [...defaultGyms],
+            exerciseViews: {},
+            exerciseDefaultViews: {},
             workoutLogs: {
                 "2026-07-15": {
                     type: "Legs",
+                    gym: "Main Gym",
                     timeOfDay: "",
                     exercises: [
                         { name: "Leg curls", notes: "", sets: [ { weight: 135, reps: 5, isBodyweight: false }, { weight: 120, reps: 6, isBodyweight: false } ] },
@@ -1032,6 +1301,7 @@
                 },
                 "2026-07-16": {
                     type: "Push",
+                    gym: "Main Gym",
                     timeOfDay: "",
                     exercises: [
                         { name: "Incline press", notes: "", sets: [ { weight: 175, reps: 6, isBodyweight: false }, { weight: 150, reps: 6, isBodyweight: false } ] },
@@ -1044,6 +1314,7 @@
                 },
                 "2026-07-17": {
                     type: "Legs",
+                    gym: "Main Gym",
                     timeOfDay: "",
                     exercises: [
                         { name: "Leg curls", notes: "", sets: [ { weight: 135, reps: 6, isBodyweight: false }, { weight: 120, reps: 7, isBodyweight: false } ] },
@@ -1055,6 +1326,7 @@
                 },
                 "2026-07-18": {
                     type: "Pull",
+                    gym: "Main Gym",
                     timeOfDay: "",
                     exercises: [
                         { name: "Pull-ups", notes: "", sets: [ { weight: 160, reps: 9, isBodyweight: false }, { weight: 160, reps: 5, isBodyweight: false } ] },
@@ -1068,6 +1340,7 @@
                 },
                 "2026-07-20": {
                     type: "Push",
+                    gym: "Main Gym",
                     timeOfDay: "",
                     exercises: [
                         { name: "Incline press", notes: "", sets: [ { weight: 175, reps: 6, isBodyweight: false }, { weight: 160, reps: 7, isBodyweight: false } ] },
@@ -1080,6 +1353,7 @@
                 },
                 "2026-07-21": {
                     type: "Pull",
+                    gym: "Main Gym",
                     timeOfDay: "",
                     exercises: [
                         { name: "Pull-ups", notes: "", sets: [ { weight: 160, reps: 5, isBodyweight: false }, { weight: 140, reps: 6, isBodyweight: false } ] },
@@ -1104,6 +1378,9 @@
             try {
                 const parsed = JSON.parse(savedState);
                 appState.unit = parsed.unit || 'lbs';
+                appState.gyms = Array.isArray(parsed.gyms) && parsed.gyms.length > 0 ? parsed.gyms : [...defaultGyms];
+                appState.exerciseViews = (parsed.exerciseViews && typeof parsed.exerciseViews === 'object') ? parsed.exerciseViews : {};
+                appState.exerciseDefaultViews = (parsed.exerciseDefaultViews && typeof parsed.exerciseDefaultViews === 'object') ? parsed.exerciseDefaultViews : {};
                 appState.workoutLogs = { ...appState.workoutLogs, ...(parsed.workoutLogs || {}) };
                 delete appState.workoutLogs['2026-07-19'];
                 appState.exercises = parsed.exercises || defaultExercises;
@@ -1135,6 +1412,9 @@
         function saveStateLocalOnly() {
             localStorage.setItem('gymLogState', JSON.stringify({
                 unit: appState.unit,
+                gyms: appState.gyms,
+                exerciseViews: appState.exerciseViews,
+                exerciseDefaultViews: appState.exerciseDefaultViews,
                 workoutLogs: appState.workoutLogs,
                 exercises: appState.exercises,
                 weightLogs: appState.weightLogs,
@@ -1353,6 +1633,9 @@
         function getExportableState() {
             return {
                 unit: appState.unit,
+                gyms: appState.gyms,
+                exerciseViews: appState.exerciseViews,
+                exerciseDefaultViews: appState.exerciseDefaultViews,
                 workoutLogs: appState.workoutLogs,
                 exercises: appState.exercises,
                 weightLogs: appState.weightLogs,
@@ -1367,6 +1650,36 @@
 
             if (remoteData.unit) appState.unit = remoteData.unit;
             if (remoteData.targetEmail) appState.targetEmail = remoteData.targetEmail;
+
+            if (remoteData.gyms && Array.isArray(remoteData.gyms)) {
+                if (!appState.gyms) appState.gyms = [];
+                remoteData.gyms.forEach(g => {
+                    if (g && !appState.gyms.some(existing => existing.toLowerCase() === g.toLowerCase())) {
+                        appState.gyms.push(g);
+                    }
+                });
+            }
+
+            if (remoteData.exerciseViews && typeof remoteData.exerciseViews === 'object') {
+                if (!appState.exerciseViews) appState.exerciseViews = {};
+                Object.entries(remoteData.exerciseViews).forEach(([exName, views]) => {
+                    if (!appState.exerciseViews[exName]) {
+                        appState.exerciseViews[exName] = views;
+                    } else if (Array.isArray(views)) {
+                        const existingIds = new Set(appState.exerciseViews[exName].map(v => v.id));
+                        views.forEach(v => {
+                            if (!existingIds.has(v.id)) {
+                                appState.exerciseViews[exName].push(v);
+                            }
+                        });
+                    }
+                });
+            }
+
+            if (remoteData.exerciseDefaultViews && typeof remoteData.exerciseDefaultViews === 'object') {
+                if (!appState.exerciseDefaultViews) appState.exerciseDefaultViews = {};
+                Object.assign(appState.exerciseDefaultViews, remoteData.exerciseDefaultViews);
+            }
 
             if (remoteData.workoutLogs) {
                 Object.keys(remoteData.workoutLogs).forEach(dateKey => {
@@ -1387,6 +1700,7 @@
                         });
                         appState.workoutLogs[dateKey] = {
                             type: remoteLog.type || localLog.type,
+                            gym: remoteLog.gym || localLog.gym || '',
                             duration: remoteLog.duration || localLog.duration,
                             effort: remoteLog.effort || localLog.effort,
                             timeOfDay: remoteLog.timeOfDay || localLog.timeOfDay,
@@ -1525,11 +1839,13 @@
         function getBgTimeColorClass(time) { return `bg-time-${time.replace(/\s+/g, '').toLowerCase()}`; }
 
         // Settings & Backup
+        // Settings & Backup
         window.openSettingsModal = () => {
             const unitEl = document.getElementById('settings-unit');
             if (unitEl) unitEl.value = appState.unit;
             const emailEl = document.getElementById('settings-email');
             if (emailEl) emailEl.value = appState.targetEmail || '';
+            renderSettingsGyms();
             openModal('modal-settings');
         };
 
@@ -1549,9 +1865,160 @@
             handleRoute(); // re-render charts and logs with new unit
         };
 
+        // Gym Locations Management
+        window.renderSettingsGyms = () => {
+            const listEl = document.getElementById('settings-gyms-list');
+            const countEl = document.getElementById('settings-gym-count');
+            if (!listEl) return;
+
+            const gyms = appState.gyms || [];
+            if (countEl) {
+                countEl.innerText = `${gyms.length} gym${gyms.length === 1 ? '' : 's'}`;
+            }
+
+            if (gyms.length === 0) {
+                listEl.innerHTML = `<p class="text-muted" style="font-size: 0.85rem; text-align: center; margin: 0.5rem 0;">No gym locations added yet.</p>`;
+                return;
+            }
+
+            let html = '';
+            gyms.forEach(gym => {
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; background: var(--surface-2); border-radius: var(--radius-tight); border: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden;">
+                            <i data-lucide="map-pin" style="width: 14px; height: 14px; color: var(--primary); flex-shrink: 0;"></i>
+                            <span style="font-weight: 600; font-size: 0.85rem; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${gym}</span>
+                        </div>
+                        <div style="display: flex; gap: 0.25rem; flex-shrink: 0;">
+                            <button class="icon-btn" onclick="editGym('${gym.replace(/'/g, "\\'")}')" title="Rename Gym" style="padding: 0.25rem; color: var(--text-muted);"><i data-lucide="edit-2" style="width: 14px; height: 14px;"></i></button>
+                            <button class="icon-btn" onclick="deleteGym('${gym.replace(/'/g, "\\'")}')" title="Delete Gym" style="padding: 0.25rem; color: var(--text-muted);"><i data-lucide="trash-2" style="width: 14px; height: 14px;"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            listEl.innerHTML = html;
+            lucide.createIcons();
+        };
+
+        window.addGymFromSettings = () => {
+            const input = document.getElementById('settings-new-gym-name');
+            if (!input) return;
+            const name = input.value.trim();
+            if (!name) return alert('Please enter a gym name.');
+
+            if (!appState.gyms) appState.gyms = [];
+            if (appState.gyms.some(g => g.toLowerCase() === name.toLowerCase())) {
+                return alert(`A gym named "${name}" already exists.`);
+            }
+
+            appState.gyms.push(name);
+            saveState();
+            input.value = '';
+            renderSettingsGyms();
+        };
+
+        window.editGym = (oldName) => {
+            const newName = prompt('Enter new gym name:', oldName);
+            if (!newName || !newName.trim() || newName.trim() === oldName) return;
+            const trimmed = newName.trim();
+
+            if (appState.gyms.some(g => g.toLowerCase() === trimmed.toLowerCase() && g.toLowerCase() !== oldName.toLowerCase())) {
+                return alert(`A gym named "${trimmed}" already exists.`);
+            }
+
+            const idx = appState.gyms.indexOf(oldName);
+            if (idx !== -1) {
+                appState.gyms[idx] = trimmed;
+            }
+
+            // Update workouts with this gym
+            Object.values(appState.workoutLogs).forEach(log => {
+                if (log.gym === oldName) {
+                    log.gym = trimmed;
+                }
+            });
+
+            // Update exercise views referencing this gym
+            if (appState.exerciseViews) {
+                Object.values(appState.exerciseViews).forEach(views => {
+                    if (Array.isArray(views)) {
+                        views.forEach(v => {
+                            if (Array.isArray(v.gyms)) {
+                                const gIdx = v.gyms.indexOf(oldName);
+                                if (gIdx !== -1) v.gyms[gIdx] = trimmed;
+                            }
+                        });
+                    }
+                });
+            }
+
+            saveState();
+            renderSettingsGyms();
+            if (window.location.hash === '#progress') renderProgressView();
+        };
+
+        window.deleteGym = (gymName) => {
+            if (!confirm(`Are you sure you want to remove "${gymName}"?`)) return;
+
+            appState.gyms = (appState.gyms || []).filter(g => g !== gymName);
+
+            // Remove gym from exercise views
+            if (appState.exerciseViews) {
+                Object.values(appState.exerciseViews).forEach(views => {
+                    if (Array.isArray(views)) {
+                        views.forEach(v => {
+                            if (Array.isArray(v.gyms)) {
+                                v.gyms = v.gyms.filter(g => g !== gymName);
+                            }
+                        });
+                    }
+                });
+            }
+
+            saveState();
+            renderSettingsGyms();
+            if (window.location.hash === '#progress') renderProgressView();
+        };
+
+        window.populateGymSelect = (selectId, selectedValue = '') => {
+            const selectEl = document.getElementById(selectId);
+            if (!selectEl) return;
+
+            const gyms = appState.gyms || [];
+            let html = `<option value="">-- Not Specified / Any Gym --</option>`;
+            gyms.forEach(g => {
+                const isSelected = (g === selectedValue) ? 'selected' : '';
+                html += `<option value="${g.replace(/"/g, '&quot;')}" ${isSelected}>${g}</option>`;
+            });
+            selectEl.innerHTML = html;
+            if (selectedValue) {
+                selectEl.value = selectedValue;
+            }
+        };
+
+        window.promptAddGymInline = (targetSelectId) => {
+            const gymName = prompt('Enter new gym name:');
+            if (!gymName || !gymName.trim()) return;
+            const trimmed = gymName.trim();
+
+            if (!appState.gyms) appState.gyms = [];
+            if (!appState.gyms.some(g => g.toLowerCase() === trimmed.toLowerCase())) {
+                appState.gyms.push(trimmed);
+                saveState();
+            }
+
+            populateGymSelect(targetSelectId, trimmed);
+            const selectEl = document.getElementById(targetSelectId);
+            if (selectEl) selectEl.value = trimmed;
+        };
+
         window.exportData = () => {
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
                 unit: appState.unit,
+                gyms: appState.gyms,
+                exerciseViews: appState.exerciseViews,
+                exerciseDefaultViews: appState.exerciseDefaultViews,
                 workoutLogs: appState.workoutLogs,
                 exercises: appState.exercises,
                 weightLogs: appState.weightLogs,
@@ -1573,7 +2040,10 @@
                 try {
                     const parsed = JSON.parse(e.target.result);
                     if (parsed.workoutLogs && parsed.exercises) {
-                        appState.unit = parsed.unit || 'kg';
+                        appState.unit = parsed.unit || 'lbs';
+                        appState.gyms = Array.isArray(parsed.gyms) && parsed.gyms.length > 0 ? parsed.gyms : [...defaultGyms];
+                        appState.exerciseViews = (parsed.exerciseViews && typeof parsed.exerciseViews === 'object') ? parsed.exerciseViews : {};
+                        appState.exerciseDefaultViews = (parsed.exerciseDefaultViews && typeof parsed.exerciseDefaultViews === 'object') ? parsed.exerciseDefaultViews : {};
                         appState.workoutLogs = parsed.workoutLogs;
                         appState.exercises = parsed.exercises;
                         appState.weightLogs = parsed.weightLogs || [];
@@ -1977,9 +2447,10 @@
             } else {
                 let html = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                        <div>
+                        <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
                             <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:1rem;">${log.type} Day</span>
-                            ${log.timeOfDay ? `<span class="badge ${getTimeColorClass(log.timeOfDay)}" style="font-size:0.8rem; margin-left:0.5rem; vertical-align:middle;">${log.timeOfDay}</span>` : ''}
+                            ${log.gym ? `<span class="badge" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: var(--text); font-size:0.8rem; vertical-align:middle;"><i data-lucide="map-pin" style="width:12px;height:12px;margin-right:4px;display:inline-block;vertical-align:middle;"></i>${log.gym}</span>` : ''}
+                            ${log.timeOfDay ? `<span class="badge ${getTimeColorClass(log.timeOfDay)}" style="font-size:0.8rem; vertical-align:middle;">${log.timeOfDay}</span>` : ''}
                         </div>
                         <div style="display:flex; gap:0.5rem;">
                             <button class="btn" style="padding:0.25rem 0.5rem;" onclick="swapLog('${dateStr}')" title="Move / Swap to another day"><i data-lucide="arrow-left-right" style="width:16px;"></i></button>
@@ -2037,11 +2508,13 @@
 
         window.quickLog = (dateStr, type, timeOfDay = '') => {
             let autofillExercises = [];
+            let autofillGym = '';
             const previousSessions = Object.entries(appState.workoutLogs)
                 .filter(([d, s]) => s.type === type && d < dateStr)
                 .sort((a, b) => b[0].localeCompare(a[0]));
             if (previousSessions.length > 0) {
                 const session = previousSessions[0][1];
+                if (session.gym) autofillGym = session.gym;
                 if (session.exercises && session.exercises.length > 0) {
                     autofillExercises = session.exercises.map(ex => {
                         return {
@@ -2055,7 +2528,12 @@
                     });
                 }
             }
-            appState.workoutLogs[dateStr] = { type: type, timeOfDay: timeOfDay, exercises: autofillExercises };
+            appState.workoutLogs[dateStr] = {
+                type: type,
+                gym: autofillGym || (appState.gyms && appState.gyms[0]) || '',
+                timeOfDay: timeOfDay,
+                exercises: autofillExercises
+            };
             saveState();
             renderCalendarView();
             closeModal('modal-day');
@@ -2105,7 +2583,7 @@
         // Smart Workout Notes Parser & Quick Paste
         // ==========================================
         window.parseWorkoutNotes = (text, exerciseLibrary = (window.appState ? window.appState.exercises : [])) => {
-            if (!text || !text.trim()) return { exercises: [], detectedDate: null, detectedTime: null, detectedType: null };
+            if (!text || !text.trim()) return { exercises: [], detectedDate: null, detectedTime: null, detectedType: null, detectedGym: null };
 
             const lines = text.split(/\r?\n/);
             const exercises = [];
@@ -2113,9 +2591,11 @@
             let detectedDate = null;
             let detectedTime = null;
             let detectedType = null;
+            let detectedGym = null;
 
             const workoutTypes = ['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Arms & Delts', 'Arms', 'Abs', 'Cardio', 'Rest'];
             const timesOfDay = ['Early Morning', 'Morning', 'Afternoon', 'Evening'];
+            const availableGyms = (window.appState && window.appState.gyms) ? window.appState.gyms : [];
 
             function cleanExName(rawName) {
                 return rawName.replace(/^[\d+.\-•*#>\s]+/, '').replace(/[:\-–—]+$/, '').trim();
@@ -2249,6 +2729,21 @@
                     }
                 }
 
+                // Check gym location
+                const gymMatch = line.match(/^(?:gym|location):\s*(.+)$/i);
+                if (gymMatch && !detectedGym) {
+                    const candidate = gymMatch[1].trim();
+                    const matchedGym = availableGyms.find(g => g.toLowerCase() === candidate.toLowerCase());
+                    detectedGym = matchedGym || candidate;
+                    return;
+                }
+                for (const gym of availableGyms) {
+                    if (new RegExp(`^(?:at\\s+)?${gym.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i').test(line)) {
+                        detectedGym = gym;
+                        return;
+                    }
+                }
+
                 // Case 1: Tab-separated (e.g., "Incline Chest Press \t 175-7 \t 160-6" or "Dips \t 22")
                 if (rawLine.includes('\t')) {
                     const parts = rawLine.split('\t').map(p => p.trim()).filter(Boolean);
@@ -2364,7 +2859,8 @@
                 exercises: finalExercises,
                 detectedDate,
                 detectedTime,
-                detectedType
+                detectedType,
+                detectedGym
             };
         };
 
@@ -2375,11 +2871,15 @@
             const dateInput = document.getElementById('quick-paste-date');
             if (dateInput) dateInput.value = currentDate;
             
-            const existingType = appState.workoutLogs[currentDate]?.type || document.getElementById('log-type')?.value || 'Push';
+            const existingLog = appState.workoutLogs[currentDate];
+            const existingType = existingLog?.type || document.getElementById('log-type')?.value || 'Push';
             const typeSelect = document.getElementById('quick-paste-type');
             if (typeSelect) typeSelect.value = existingType;
 
-            const existingTime = appState.workoutLogs[currentDate]?.timeOfDay || document.getElementById('log-time')?.value || '';
+            const existingGym = existingLog?.gym || document.getElementById('log-gym')?.value || '';
+            populateGymSelect('quick-paste-gym', existingGym || (appState.gyms && appState.gyms[0]) || '');
+
+            const existingTime = existingLog?.timeOfDay || document.getElementById('log-time')?.value || '';
             const timeSelect = document.getElementById('quick-paste-time');
             if (timeSelect) timeSelect.value = existingTime;
 
@@ -2411,6 +2911,10 @@
             if (parsed.detectedType) {
                 const typeEl = document.getElementById('quick-paste-type');
                 if (typeEl) typeEl.value = parsed.detectedType;
+            }
+            if (parsed.detectedGym) {
+                const gymEl = document.getElementById('quick-paste-gym');
+                if (gymEl) gymEl.value = parsed.detectedGym;
             }
             if (parsed.detectedTime && !document.getElementById('quick-paste-time').value) {
                 document.getElementById('quick-paste-time').value = parsed.detectedTime;
@@ -2492,6 +2996,7 @@
 
             const dateStr = document.getElementById('quick-paste-date')?.value || new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
             const workoutType = document.getElementById('quick-paste-type')?.value || 'Push';
+            const selectedGym = document.getElementById('quick-paste-gym')?.value || '';
             const timeOfDay = document.getElementById('quick-paste-time')?.value || '';
             const isAppend = document.getElementById('quick-paste-append')?.checked || false;
 
@@ -2514,10 +3019,11 @@
 
             closeModal('modal-quick-paste');
 
-            // Open the log modal with date, workout type, and populated exercises
+            // Open the log modal with date, workout type, gym, and populated exercises
             document.getElementById('log-date').value = dateStr;
             const logTypeEl = document.getElementById('log-type');
             if (logTypeEl) logTypeEl.value = workoutType;
+            populateGymSelect('log-gym', selectedGym);
             if (timeOfDay) {
                 document.getElementById('log-time').value = timeOfDay;
             }
@@ -2543,6 +3049,9 @@
             if (logTypeEl) {
                 logTypeEl.value = existingLog ? existingLog.type : 'Push';
             }
+
+            const currentGym = existingLog ? (existingLog.gym || '') : (appState.gyms && appState.gyms[0] ? appState.gyms[0] : '');
+            populateGymSelect('log-gym', currentGym);
 
             if (existingLog && existingLog.timeOfDay) {
                 document.getElementById('log-time').value = existingLog.timeOfDay;
@@ -2712,6 +3221,7 @@
             
             const dateStr = document.getElementById('log-date').value;
             const workoutType = document.getElementById('log-type')?.value || 'Push';
+            const gym = document.getElementById('log-gym')?.value || '';
             const notes = document.getElementById('log-notes').value;
             const timeOfDay = document.getElementById('log-time').value;
             
@@ -2743,9 +3253,10 @@
             if(finalExercises.length === 0) return alert('At least one valid exercise with sets is required.');
             
             if(!appState.workoutLogs[dateStr]) {
-                appState.workoutLogs[dateStr] = { type: workoutType, timeOfDay: timeOfDay, exercises: [] }; 
+                appState.workoutLogs[dateStr] = { type: workoutType, gym: gym, timeOfDay: timeOfDay, exercises: [] }; 
             } else {
                 appState.workoutLogs[dateStr].type = workoutType;
+                appState.workoutLogs[dateStr].gym = gym;
                 appState.workoutLogs[dateStr].timeOfDay = timeOfDay;
             }
             
@@ -2864,7 +3375,7 @@
                 <div class="progress-layout">
                     <div class="progress-exercise-list">${listHTML}</div>
                     <div class="progress-right-col">
-                        <div id="exercise-info" class="card flex items-center justify-center text-muted" style="min-height:120px;">
+                        <div id="exercise-info" class="card flex items-center justify-center text-muted" style="min-height:120px; margin-bottom:1.5rem;">
                             <div style="text-align:center;">
                                 <i data-lucide="dumbbell" style="width:36px;height:36px;margin-bottom:0.75rem;opacity:0.5;"></i>
                                 <p>Select an exercise to see your progress</p>
@@ -3227,154 +3738,772 @@
             if(window.location.hash === '#progress') renderProgressView();
         };
 
-        window.showExerciseDetail = (name) => {
+        let currentSelectedExerciseName = '';
+        let activeExerciseViewMap = {};
+
+        function getExerciseViews(exerciseName) {
+            const defaultView = { id: 'default-all', name: 'All Gyms', gyms: [] };
+            const customViews = (appState.exerciseViews && Array.isArray(appState.exerciseViews[exerciseName])) 
+                ? appState.exerciseViews[exerciseName] 
+                : [];
+            return [defaultView, ...customViews];
+        }
+
+        window.switchExerciseView = (viewId) => {
+            if (!currentSelectedExerciseName) return;
+            activeExerciseViewMap[currentSelectedExerciseName] = viewId;
+            showExerciseDetail(currentSelectedExerciseName, viewId);
+        };
+
+        window.setDefaultExerciseView = (viewId) => {
+            if (!currentSelectedExerciseName) return;
+            if (!appState.exerciseDefaultViews) appState.exerciseDefaultViews = {};
+            if (viewId === 'default-all') {
+                delete appState.exerciseDefaultViews[currentSelectedExerciseName];
+            } else {
+                appState.exerciseDefaultViews[currentSelectedExerciseName] = viewId;
+            }
+            activeExerciseViewMap[currentSelectedExerciseName] = viewId;
+            saveState();
+            renderModalViewsList(currentSelectedExerciseName);
+            showExerciseDetail(currentSelectedExerciseName, viewId);
+        };
+
+        window.openExerciseViewsModal = (exerciseName) => {
+            const targetName = exerciseName || currentSelectedExerciseName;
+            if (!targetName) return;
+            currentSelectedExerciseName = targetName;
+
+            const titleEl = document.getElementById('modal-exercise-views-title');
+            if (titleEl) titleEl.innerText = `Views for ${targetName}`;
+
+            const currentEx = appState.exercises.find(e => e.name.toLowerCase() === targetName.toLowerCase());
+            const sameCatBtn = document.getElementById('btn-apply-same-cat');
+            if (sameCatBtn && currentEx) {
+                sameCatBtn.innerHTML = `<i data-lucide="folder" style="width: 13px; height: 13px; color: var(--primary);"></i> Same Category (${currentEx.category})`;
+            }
+
+            renderModalViewsList(targetName);
+            resetViewEditor();
+            openModal('modal-exercise-views');
+        };
+
+        function renderModalViewsList(exerciseName) {
+            const listEl = document.getElementById('exercise-views-list');
+            const badgeEl = document.getElementById('modal-views-count-badge');
+            if (!listEl) return;
+
+            const views = getExerciseViews(exerciseName);
+            if (badgeEl) {
+                badgeEl.innerText = `${views.length} view${views.length === 1 ? '' : 's'}`;
+            }
+
+            const defaultViewId = appState.exerciseDefaultViews?.[exerciseName] || 'default-all';
+            const activeViewId = activeExerciseViewMap[exerciseName] || defaultViewId;
+
+            let html = '';
+            views.forEach(v => {
+                const isDefault = v.id === defaultViewId;
+                const isActive = v.id === activeViewId;
+                const gymsDisplay = (v.gyms && v.gyms.length > 0) ? v.gyms.join(', ') : 'All gym locations';
+
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.65rem 0.85rem; background: var(--surface); border-radius: var(--radius-tight); border: 1px solid ${isActive ? 'var(--primary)' : 'var(--border)'};">
+                        <div style="flex: 1; overflow: hidden; margin-right: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem; flex-wrap: wrap;">
+                                <span style="font-weight: 700; font-size: 0.85rem;">${v.name}</span>
+                                ${isDefault ? `
+                                    <span class="badge" style="background: rgba(74, 222, 128, 0.18); color: var(--primary); font-size: 0.68rem; padding: 0.1rem 0.4rem; display: inline-flex; align-items: center; gap: 0.2rem;">
+                                        <i data-lucide="star" style="width: 10px; height: 10px; fill: currentColor;"></i> Default
+                                    </span>
+                                ` : ''}
+                                ${isActive ? `
+                                    <span class="badge" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; font-size: 0.68rem; padding: 0.1rem 0.4rem;">
+                                        Active
+                                    </span>
+                                ` : ''}
+                            </div>
+                            <div class="text-muted" style="font-size: 0.75rem; display: flex; align-items: center; gap: 0.25rem;">
+                                <i data-lucide="${v.id === 'default-all' ? 'globe' : 'map-pin'}" style="width: 11px; height: 11px; flex-shrink: 0;"></i>
+                                <span style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${gymsDisplay}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.35rem; flex-shrink: 0;">
+                            ${!isDefault ? `
+                                <button type="button" class="btn btn-sm" onclick="setDefaultExerciseView('${v.id}')" title="Set as default view for this exercise" style="font-size: 0.72rem; padding: 0.25rem 0.55rem; background: var(--surface-offset); border: 1px solid var(--border); color: var(--text-muted); display: inline-flex; align-items: center; gap: 0.25rem;">
+                                    <i data-lucide="star" style="width: 11px; height: 11px; color: var(--primary);"></i> Set Default
+                                </button>
+                            ` : ''}
+                            ${v.id !== 'default-all' ? `
+                                <button type="button" class="icon-btn" onclick="editExerciseView('${v.id}')" title="Edit View" style="padding: 0.3rem; color: var(--text-muted);"><i data-lucide="edit-2" style="width: 14px; height: 14px;"></i></button>
+                                <button type="button" class="icon-btn" onclick="deleteExerciseView('${v.id}')" title="Delete View" style="padding: 0.3rem; color: var(--text-muted);"><i data-lucide="trash-2" style="width: 14px; height: 14px;"></i></button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            listEl.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function renderGymCheckboxesInEditor(selectedGyms = []) {
+            const container = document.getElementById('view-editor-gyms-checkboxes');
+            if (!container) return;
+
+            const gyms = appState.gyms || [];
+            if (gyms.length === 0) {
+                container.innerHTML = `<p class="text-muted" style="font-size: 0.8rem; margin: 0.25rem 0; text-align: center;">No gym locations found. Add them in Settings or click "+ Add Gym" in the session logger.</p>`;
+                return;
+            }
+
+            let html = '';
+            gyms.forEach(gym => {
+                const isChecked = selectedGyms.includes(gym);
+                html += `
+                    <label class="gym-checkbox-label">
+                        <input type="checkbox" class="view-gym-cb" value="${gym.replace(/"/g, '&quot;')}" ${isChecked ? 'checked' : ''}>
+                        <span>${gym}</span>
+                    </label>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        window.resetViewEditor = () => {
+            const idInput = document.getElementById('view-editor-id');
+            const nameInput = document.getElementById('view-editor-name');
+            const headerText = document.getElementById('view-editor-header-text');
+            const saveText = document.getElementById('btn-save-view-text');
+            const cancelBtn = document.getElementById('btn-cancel-edit-view');
+            const isDefaultCb = document.getElementById('view-editor-is-default');
+
+            if (idInput) idInput.value = '';
+            if (nameInput) nameInput.value = '';
+            if (headerText) headerText.innerText = 'Create New View';
+            if (saveText) saveText.innerText = 'Save View';
+            if (cancelBtn) cancelBtn.style.display = 'none';
+            if (isDefaultCb) isDefaultCb.checked = false;
+
+            renderGymCheckboxesInEditor([]);
+        };
+
+        window.editExerciseView = (viewId) => {
+            if (viewId === 'default-all' || !currentSelectedExerciseName) return;
+
+            const customViews = (appState.exerciseViews && appState.exerciseViews[currentSelectedExerciseName]) || [];
+            const targetView = customViews.find(v => v.id === viewId);
+            if (!targetView) return;
+
+            const idInput = document.getElementById('view-editor-id');
+            const nameInput = document.getElementById('view-editor-name');
+            const headerText = document.getElementById('view-editor-header-text');
+            const saveText = document.getElementById('btn-save-view-text');
+            const cancelBtn = document.getElementById('btn-cancel-edit-view');
+            const isDefaultCb = document.getElementById('view-editor-is-default');
+
+            if (idInput) idInput.value = targetView.id;
+            if (nameInput) nameInput.value = targetView.name;
+            if (headerText) headerText.innerText = 'Edit View';
+            if (saveText) saveText.innerText = 'Update View';
+            if (cancelBtn) cancelBtn.style.display = 'inline-block';
+            if (isDefaultCb) {
+                isDefaultCb.checked = (appState.exerciseDefaultViews?.[currentSelectedExerciseName] === targetView.id);
+            }
+
+            renderGymCheckboxesInEditor(targetView.gyms || []);
+        };
+
+        window.deleteExerciseView = (viewId) => {
+            if (viewId === 'default-all' || !currentSelectedExerciseName) return;
+            if (!confirm('Are you sure you want to delete this view?')) return;
+
+            if (appState.exerciseViews && appState.exerciseViews[currentSelectedExerciseName]) {
+                appState.exerciseViews[currentSelectedExerciseName] = appState.exerciseViews[currentSelectedExerciseName].filter(v => v.id !== viewId);
+            }
+
+            if (appState.exerciseDefaultViews && appState.exerciseDefaultViews[currentSelectedExerciseName] === viewId) {
+                delete appState.exerciseDefaultViews[currentSelectedExerciseName];
+            }
+
+            if (activeExerciseViewMap[currentSelectedExerciseName] === viewId) {
+                activeExerciseViewMap[currentSelectedExerciseName] = appState.exerciseDefaultViews?.[currentSelectedExerciseName] || 'default-all';
+            }
+
+            saveState();
+            renderModalViewsList(currentSelectedExerciseName);
+            resetViewEditor();
+            showExerciseDetail(currentSelectedExerciseName);
+        };
+
+        window.saveExerciseViewFromModal = () => {
+            if (!currentSelectedExerciseName) return;
+
+            const idInput = document.getElementById('view-editor-id');
+            const nameInput = document.getElementById('view-editor-name');
+            const isDefaultCb = document.getElementById('view-editor-is-default');
+            const viewId = idInput ? idInput.value.trim() : '';
+            const viewName = nameInput ? nameInput.value.trim() : '';
+
+            if (!viewName) return alert('Please enter a view name.');
+
+            const checkedGyms = Array.from(document.querySelectorAll('.view-gym-cb:checked')).map(cb => cb.value);
+            if (checkedGyms.length === 0) {
+                return alert('Please select at least one gym for this view.');
+            }
+
+            if (!appState.exerciseViews) appState.exerciseViews = {};
+            if (!appState.exerciseViews[currentSelectedExerciseName]) {
+                appState.exerciseViews[currentSelectedExerciseName] = [];
+            }
+
+            const existingList = appState.exerciseViews[currentSelectedExerciseName];
+
+            if (existingList.some(v => v.name.toLowerCase() === viewName.toLowerCase() && v.id !== viewId)) {
+                return alert(`A view named "${viewName}" already exists for this exercise.`);
+            }
+
+            if (viewName.toLowerCase() === 'all gyms') {
+                return alert('"All Gyms" is the default view name. Please choose a different name.');
+            }
+
+            let savedId = viewId;
+            if (viewId) {
+                const idx = existingList.findIndex(v => v.id === viewId);
+                if (idx !== -1) {
+                    existingList[idx] = { id: viewId, name: viewName, gyms: checkedGyms };
+                }
+            } else {
+                savedId = 'view_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                existingList.push({ id: savedId, name: viewName, gyms: checkedGyms });
+            }
+
+            if (isDefaultCb && isDefaultCb.checked) {
+                if (!appState.exerciseDefaultViews) appState.exerciseDefaultViews = {};
+                appState.exerciseDefaultViews[currentSelectedExerciseName] = savedId;
+            }
+
+            activeExerciseViewMap[currentSelectedExerciseName] = savedId;
+            saveState();
+            renderModalViewsList(currentSelectedExerciseName);
+            resetViewEditor();
+            showExerciseDetail(currentSelectedExerciseName, savedId);
+            closeModal('modal-exercise-views');
+        };
+
+        // --- Copy & Bulk Apply View Settings ---
+        window.toggleCopyViewsAccordion = () => {
+            const content = document.getElementById('copy-views-content');
+            const chevron = document.getElementById('copy-views-chevron');
+            if (!content) return;
+
+            const isOpen = content.style.display === 'block';
+            content.style.display = isOpen ? 'none' : 'block';
+            if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+
+            if (!isOpen) {
+                populateCopyViewsFromSelect();
+            }
+        };
+
+        function populateCopyViewsFromSelect() {
+            const selectEl = document.getElementById('copy-views-from-select');
+            if (!selectEl) return;
+
+            selectEl.innerHTML = '<option value="">Select source exercise...</option>';
+
+            const exercisesWithViews = (appState.exercises || []).filter(ex => {
+                if (ex.name.toLowerCase() === currentSelectedExerciseName.toLowerCase()) return false;
+                const views = appState.exerciseViews?.[ex.name];
+                return Array.isArray(views) && views.length > 0;
+            });
+
+            if (exercisesWithViews.length === 0) {
+                selectEl.innerHTML = '<option value="">No other exercises have custom views yet</option>';
+                return;
+            }
+
+            exercisesWithViews.forEach(ex => {
+                const count = appState.exerciseViews[ex.name].length;
+                const opt = document.createElement('option');
+                opt.value = ex.name;
+                opt.textContent = `${ex.name} (${count} view${count === 1 ? '' : 's'})`;
+                selectEl.appendChild(opt);
+            });
+        }
+
+        window.copyViewsFromSelectedExercise = () => {
+            const selectEl = document.getElementById('copy-views-from-select');
+            const sourceName = selectEl ? selectEl.value : '';
+            if (!sourceName) return alert('Please select a source exercise to copy views from.');
+            if (!currentSelectedExerciseName) return;
+
+            const sourceViews = appState.exerciseViews?.[sourceName];
+            if (!Array.isArray(sourceViews) || sourceViews.length === 0) {
+                return alert(`No custom views found on "${sourceName}".`);
+            }
+
+            if (!appState.exerciseViews) appState.exerciseViews = {};
+            appState.exerciseViews[currentSelectedExerciseName] = sourceViews.map(v => ({
+                id: 'view_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                name: v.name,
+                gyms: [...(v.gyms || [])]
+            }));
+
+            const sourceDefaultId = appState.exerciseDefaultViews?.[sourceName];
+            if (sourceDefaultId) {
+                const sourceDefaultView = sourceViews.find(v => v.id === sourceDefaultId);
+                if (sourceDefaultView) {
+                    const matchedNewView = appState.exerciseViews[currentSelectedExerciseName].find(v => v.name === sourceDefaultView.name);
+                    if (matchedNewView) {
+                        if (!appState.exerciseDefaultViews) appState.exerciseDefaultViews = {};
+                        appState.exerciseDefaultViews[currentSelectedExerciseName] = matchedNewView.id;
+                    }
+                }
+            }
+
+            saveState();
+            renderModalViewsList(currentSelectedExerciseName);
+            showExerciseDetail(currentSelectedExerciseName);
+            alert(`Copied ${sourceViews.length} view(s) from "${sourceName}" to "${currentSelectedExerciseName}"!`);
+        };
+
+        window.bulkApplyViewsToCategory = (targetScope) => {
+            if (!currentSelectedExerciseName) return;
+
+            const currentViews = appState.exerciseViews?.[currentSelectedExerciseName] || [];
+            if (currentViews.length === 0) {
+                return alert(`"${currentSelectedExerciseName}" has no custom views configured yet. Create a view first before copying to others.`);
+            }
+
+            const currentEx = appState.exercises.find(e => e.name.toLowerCase() === currentSelectedExerciseName.toLowerCase());
+            const currentCat = currentEx ? currentEx.category : '';
+
+            let targetExercises = [];
+            if (targetScope === 'same') {
+                targetExercises = appState.exercises.filter(e => e.category === currentCat && e.name.toLowerCase() !== currentSelectedExerciseName.toLowerCase());
+            } else if (targetScope === 'all') {
+                targetExercises = appState.exercises.filter(e => e.name.toLowerCase() !== currentSelectedExerciseName.toLowerCase());
+            }
+
+            if (targetExercises.length === 0) {
+                return alert('No target exercises found for this category.');
+            }
+
+            if (!confirm(`Apply the ${currentViews.length} view(s) from "${currentSelectedExerciseName}" to ${targetExercises.length} ${targetScope === 'same' ? currentCat + ' ' : ''}exercises?`)) {
+                return;
+            }
+
+            const currentDefaultId = appState.exerciseDefaultViews?.[currentSelectedExerciseName];
+            const currentDefaultView = currentViews.find(v => v.id === currentDefaultId);
+
+            targetExercises.forEach(target => {
+                if (!appState.exerciseViews) appState.exerciseViews = {};
+                const clonedViews = currentViews.map(v => ({
+                    id: 'view_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                    name: v.name,
+                    gyms: [...(v.gyms || [])]
+                }));
+                appState.exerciseViews[target.name] = clonedViews;
+
+                if (currentDefaultView) {
+                    const matchedDefault = clonedViews.find(v => v.name === currentDefaultView.name);
+                    if (matchedDefault) {
+                        if (!appState.exerciseDefaultViews) appState.exerciseDefaultViews = {};
+                        appState.exerciseDefaultViews[target.name] = matchedDefault.id;
+                    }
+                }
+            });
+
+            saveState();
+            alert(`Successfully applied view settings to ${targetExercises.length} exercises!`);
+        };
+
+        window.openCustomApplyTargetsModal = () => {
+            if (!currentSelectedExerciseName) return;
+            const currentViews = appState.exerciseViews?.[currentSelectedExerciseName] || [];
+            if (currentViews.length === 0) {
+                return alert(`"${currentSelectedExerciseName}" has no custom views configured yet. Create a view first before copying to others.`);
+            }
+
+            const container = document.getElementById('apply-views-exercises-list');
+            const selectAllCb = document.getElementById('apply-views-select-all');
+            const countLabel = document.getElementById('apply-targets-count-label');
+            if (!container) return;
+
+            if (selectAllCb) selectAllCb.checked = false;
+            if (countLabel) countLabel.innerText = '0 selected';
+
+            const grouped = {};
+            appState.exercises.forEach(ex => {
+                if (ex.name.toLowerCase() === currentSelectedExerciseName.toLowerCase()) return;
+                const cat = ex.category || 'Other';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push(ex);
+            });
+
+            let html = '';
+            Object.entries(grouped).forEach(([cat, exs]) => {
+                html += `
+                    <div style="margin-bottom: 0.5rem;">
+                        <div style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin: 0.3rem 0; padding: 0.15rem 0.35rem; background: var(--surface); border-radius: var(--radius-tight); display: flex; justify-content: space-between;">
+                            <span>${cat}</span>
+                            <span style="font-weight: 400; opacity: 0.8;">${exs.length}</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                `;
+                exs.forEach(ex => {
+                    const viewsCount = appState.exerciseViews?.[ex.name]?.length || 0;
+                    html += `
+                        <label class="gym-checkbox-label" style="padding: 0.25rem 0.4rem; font-size: 0.8rem; background: var(--surface);">
+                            <input type="checkbox" class="apply-target-cb" value="${ex.name.replace(/"/g, '&quot;')}" onchange="updateApplyTargetsCount()">
+                            <span style="flex: 1;">${ex.name}</span>
+                            ${viewsCount > 0 ? `<span class="text-muted" style="font-size: 0.7rem;">(${viewsCount} views)</span>` : ''}
+                        </label>
+                    `;
+                });
+                html += `</div></div>`;
+            });
+
+            container.innerHTML = html;
+            openModal('modal-apply-views-targets');
+        };
+
+        window.toggleSelectAllApplyTargets = (checked) => {
+            document.querySelectorAll('.apply-target-cb').forEach(cb => {
+                cb.checked = checked;
+            });
+            updateApplyTargetsCount();
+        };
+
+        window.updateApplyTargetsCount = () => {
+            const checked = document.querySelectorAll('.apply-target-cb:checked');
+            const total = document.querySelectorAll('.apply-target-cb');
+            const countLabel = document.getElementById('apply-targets-count-label');
+            const selectAllCb = document.getElementById('apply-views-select-all');
+            const confirmBtn = document.getElementById('btn-confirm-apply-targets');
+
+            if (countLabel) countLabel.innerText = `${checked.length} selected`;
+            if (selectAllCb) selectAllCb.checked = (checked.length > 0 && checked.length === total.length);
+            if (confirmBtn) confirmBtn.innerHTML = `<i data-lucide="check" style="width: 15px; height: 15px;"></i> Apply to ${checked.length} Exercise${checked.length === 1 ? '' : 's'}`;
+            lucide.createIcons();
+        };
+
+        window.confirmApplyViewsToTargets = () => {
+            if (!currentSelectedExerciseName) return;
+            const checkedCbs = Array.from(document.querySelectorAll('.apply-target-cb:checked'));
+            if (checkedCbs.length === 0) {
+                return alert('Please select at least one exercise.');
+            }
+
+            const currentViews = appState.exerciseViews?.[currentSelectedExerciseName] || [];
+            const currentDefaultId = appState.exerciseDefaultViews?.[currentSelectedExerciseName];
+            const currentDefaultView = currentViews.find(v => v.id === currentDefaultId);
+
+            checkedCbs.forEach(cb => {
+                const targetName = cb.value;
+                if (!appState.exerciseViews) appState.exerciseViews = {};
+                const clonedViews = currentViews.map(v => ({
+                    id: 'view_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                    name: v.name,
+                    gyms: [...(v.gyms || [])]
+                }));
+                appState.exerciseViews[targetName] = clonedViews;
+
+                if (currentDefaultView) {
+                    const matchedDefault = clonedViews.find(v => v.name === currentDefaultView.name);
+                    if (matchedDefault) {
+                        if (!appState.exerciseDefaultViews) appState.exerciseDefaultViews = {};
+                        appState.exerciseDefaultViews[targetName] = matchedDefault.id;
+                    }
+                }
+            });
+
+            saveState();
+            closeModal('modal-apply-views-targets');
+            alert(`Successfully applied views to ${checkedCbs.length} exercises!`);
+        };
+
+        window.showExerciseDetail = (name, requestedViewId = null) => {
+            currentSelectedExerciseName = name;
             const infoPanel = document.getElementById('exercise-info');
             const chartSection = document.getElementById('exercise-chart-section');
             const historySection = document.getElementById('exercise-history-section');
             const historyTable = document.getElementById('exercise-history-table');
-            const exInfo = appState.exercises.find(e => e.name === name);
+            const exInfo = appState.exercises.find(e => e.name.toLowerCase() === name.toLowerCase()) || { name, category: 'Push' };
 
             // Highlight selected exercise
             document.querySelectorAll('.exercise-item').forEach(el => el.classList.remove('selected-exercise'));
-            const selectedEl = [...document.querySelectorAll('.exercise-item')].find(el => el.querySelector('.font-bold')?.innerText === name);
+            const selectedEl = [...document.querySelectorAll('.exercise-item')].find(el => el.querySelector('.font-bold')?.innerText.toLowerCase() === name.toLowerCase());
             if (selectedEl) selectedEl.classList.add('selected-exercise');
-            
-            // Gather session data for this exercise
-            const sessions = [];
+
+            // Determine active view
+            const views = getExerciseViews(name);
+            const defaultViewId = appState.exerciseDefaultViews?.[name] || 'default-all';
+            if (requestedViewId) {
+                activeExerciseViewMap[name] = requestedViewId;
+            } else if (!activeExerciseViewMap[name]) {
+                activeExerciseViewMap[name] = defaultViewId;
+            }
+            let activeViewId = activeExerciseViewMap[name] || defaultViewId;
+            let activeView = views.find(v => v.id === activeViewId) || views[0];
+            activeExerciseViewMap[name] = activeView.id;
+
+            // Generate View Selection Pills and Button HTML to be embedded inside the exercise info card
+            let pillsHtml = '';
+            views.forEach(v => {
+                const isActive = v.id === activeView.id;
+                const isDefault = v.id === defaultViewId;
+                const gymHint = (v.gyms && v.gyms.length > 0) ? ` (${v.gyms.join(', ')})` : '';
+                pillsHtml += `
+                    <button type="button" class="view-pill ${isActive ? 'active' : ''}" onclick="switchExerciseView('${v.id}')" title="${v.name}${gymHint}">
+                        <i data-lucide="${v.id === 'default-all' ? 'globe' : 'map-pin'}" style="width: 11px; height: 11px;"></i>
+                        <span>${v.name}</span>
+                        ${isDefault ? `<span class="view-default-tag">Def</span>` : ''}
+                    </button>
+                `;
+            });
+
+            const viewsControlHtml = `
+                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; flex-shrink: 0;">
+                    <button type="button" class="btn btn-sm" onclick="openExerciseViewsModal('${name.replace(/'/g, "\\'")}')" title="Configure Views" style="padding: 0.28rem 0.7rem; font-size: 0.75rem; background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-pill); display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600; color: var(--text); cursor: pointer; white-space: nowrap; transition: all 0.2s;">
+                        <i data-lucide="layers" style="width: 12px; height: 12px; color: var(--primary);"></i>
+                        <span>View Selection</span>
+                    </button>
+                    <div class="view-pills-container" id="exercise-views-pills">
+                        ${pillsHtml}
+                    </div>
+                </div>
+            `;
+
+            // Gather all session data for this exercise
+            const allSessions = [];
             Object.keys(appState.workoutLogs).sort().forEach(date => {
                 const log = appState.workoutLogs[date];
-                const exs = log.exercises.filter(e => e.name === name);
+                const exs = (log.exercises || []).filter(e => e.name.toLowerCase() === name.toLowerCase());
                 exs.forEach(e => {
-                    const isBw = e.sets[0].isBodyweight || e.sets[0].weight === 0;
-                    let bestSet;
+                    const isBw = e.sets[0] ? (e.sets[0].isBodyweight || e.sets[0].weight === 0) : false;
+                    let bestSet = e.sets[0];
                     if (isBw) {
                         bestSet = e.sets.reduce((max, s) => s.reps > max.reps ? s : max, e.sets[0]);
                     } else {
-                        bestSet = e.sets.reduce((max, s) => s.weight > max.weight ? s : max, e.sets[0]);
+                        bestSet = e.sets.reduce((max, s) => (s.weight > max.weight || (s.weight === max.weight && s.reps > max.reps)) ? s : max, e.sets[0]);
                     }
-                    const vol = e.sets.reduce((sum, s) => sum + ((isBw ? 1 : s.weight) * s.reps), 0);
-                    sessions.push({ date, bestSet, vol, notes: e.notes, setsCount: e.sets.length, isBodyweight: isBw });
+                    const vol = e.sets.reduce((sum, s) => sum + ((isBw ? 1 : (s.weight || 0)) * (s.reps || 0)), 0);
+                    allSessions.push({
+                        date,
+                        gym: log.gym || '',
+                        bestSet,
+                        vol,
+                        notes: e.notes || '',
+                        setsCount: e.sets.length,
+                        isBodyweight: isBw
+                    });
                 });
             });
-            
-            if(sessions.length === 0) {
+
+            // Filter sessions by active view's gyms
+            let filteredSessions = allSessions;
+            if (activeView.gyms && activeView.gyms.length > 0) {
+                filteredSessions = allSessions.filter(s => s.gym && activeView.gyms.includes(s.gym));
+            }
+
+            // Case 1: Exercise has no sessions at all in the system
+            if (allSessions.length === 0) {
                 infoPanel.classList.remove('items-center', 'justify-center', 'text-muted');
                 infoPanel.style.display = 'block';
                 infoPanel.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.25rem;">
                         <div style="display:flex; align-items:center; gap:0.75rem;">
                             <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
                             <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
                             <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${name.replace(/"/g, '&quot;')}" onclick="deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:18px;height:18px;"></i></button>
-                            <span class="badge type-${exInfo.category.toLowerCase()}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
+                            <span class="badge type-${exInfo.category.toLowerCase().replace(/[^a-z0-9]/g, '')}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
                         </div>
                         <div class="text-muted" style="font-size:0.875rem;">No sessions logged yet.</div>
+                        <div>${viewsControlHtml}</div>
                     </div>
                 `;
                 chartSection.classList.add('hidden');
                 historySection.classList.add('hidden');
+                lucide.createIcons();
                 return;
             }
-            
-            const lastSession = sessions[sessions.length-1];
-            
-            // Calculate all-time best set
-            let allTimeBestSet = sessions[0].bestSet;
-            let isAllTimeBw = sessions[0].isBodyweight;
-            sessions.forEach(s => {
+
+            // Case 2: Filtered sessions is empty for the current view
+            if (filteredSessions.length === 0) {
+                const gymNamesStr = (activeView.gyms && activeView.gyms.length > 0) ? activeView.gyms.join(', ') : 'selected gym';
+                infoPanel.classList.remove('items-center', 'justify-center', 'text-muted');
+                infoPanel.style.display = 'block';
+                infoPanel.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:1.25rem; flex-wrap:wrap;">
+                        <div style="min-width: 200px; flex: 1;">
+                            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.4rem;">
+                                <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
+                                <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
+                                <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${name.replace(/"/g, '&quot;')}" onclick="deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:18px;height:18px;"></i></button>
+                                <span class="badge type-${exInfo.category.toLowerCase().replace(/[^a-z0-9]/g, '')}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
+                            </div>
+                            <div class="text-muted" style="font-size:0.875rem;">
+                                No sessions logged at <strong>${gymNamesStr}</strong> yet (${allSessions.length} total logged in other views).
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:1.5rem; align-items:center; flex-shrink:0;">
+                            <div style="text-align:center;">
+                                <div style="font-size:2rem; font-weight:800; color:var(--text-muted); line-height:1;">0</div>
+                                <div class="text-muted" style="font-size:0.7rem; letter-spacing:0.05em; margin-top:0.3rem;">SESSIONS</div>
+                            </div>
+                            <div style="width:1px; height:36px; background:var(--border);"></div>
+                            <div style="text-align:center;">
+                                <div style="font-size:2rem; font-weight:800; color:var(--text-muted); line-height:1;">—</div>
+                                <div class="text-muted" style="font-size:0.7rem; letter-spacing:0.05em; margin-top:0.3rem;">VIEW BEST</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; align-items:center; flex-shrink:0;">
+                            ${viewsControlHtml}
+                        </div>
+                    </div>
+                `;
+
+                chartSection.classList.remove('hidden');
+                chartSection.innerHTML = `
+                    <div class="card flex items-center justify-center text-muted" style="min-height: 220px; text-align: center;">
+                        <div>
+                            <i data-lucide="map-pin-off" style="width: 32px; height: 32px; margin-bottom: 0.5rem; opacity: 0.4;"></i>
+                            <p style="margin: 0; font-size: 0.9rem;">No workouts recorded at <strong>${gymNamesStr}</strong>.</p>
+                            <p style="margin: 0.25rem 0 0 0; font-size: 0.8rem; opacity: 0.7;">Switch views above or log a workout at this location.</p>
+                        </div>
+                    </div>
+                `;
+
+                historySection.classList.add('hidden');
+                lucide.createIcons();
+                return;
+            }
+
+            // Ensure chart canvas container exists
+            chartSection.innerHTML = `
+                <div class="card">
+                    <div style="height:320px; width:100%;">
+                        <canvas id="progressChart"></canvas>
+                    </div>
+                </div>
+            `;
+
+            const lastSession = filteredSessions[filteredSessions.length - 1];
+
+            // Calculate all-time best set for this view
+            let allTimeBestSet = filteredSessions[0].bestSet;
+            let isAllTimeBw = filteredSessions[0].isBodyweight;
+            filteredSessions.forEach(s => {
                 if (s.isBodyweight) {
                     if (s.bestSet.reps > allTimeBestSet.reps) allTimeBestSet = s.bestSet;
                 } else {
-                    if (s.bestSet.weight > allTimeBestSet.weight) allTimeBestSet = s.bestSet;
+                    if (s.bestSet.weight > allTimeBestSet.weight || (s.bestSet.weight === allTimeBestSet.weight && s.bestSet.reps > allTimeBestSet.reps)) {
+                        allTimeBestSet = s.bestSet;
+                    }
                 }
             });
-            
-            // Update info panel (name, badge, last session)
+
+            // Update info panel
             infoPanel.classList.remove('items-center', 'justify-center', 'text-muted');
             infoPanel.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:1.5rem; flex-wrap:wrap;">
-                    <div>
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:1.25rem; flex-wrap:wrap;">
+                    <div style="min-width: 200px; flex: 1;">
                         <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.4rem;">
                             <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
                             <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
                             <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${name.replace(/"/g, '&quot;')}" onclick="deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:18px;height:18px;"></i></button>
-                            <span class="badge type-${exInfo.category.toLowerCase()}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
+                            <span class="badge type-${exInfo.category.toLowerCase().replace(/[^a-z0-9]/g, '')}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
                         </div>
-                        <div class="text-muted" style="font-size:0.875rem;">
-                            Last session: <strong style="color:var(--text);">${lastSession.date}</strong>
-                            &mdash; ${lastSession.isBodyweight ? `BW &times; ${lastSession.bestSet.reps}` : `${lastSession.bestSet.weight}${appState.unit} &times; ${lastSession.bestSet.reps}`}
-                            <span style="opacity:0.6;">(best set)</span>
+                        <div class="text-muted" style="font-size:0.875rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                            <span>
+                                Last session: <strong style="color:var(--text);">${lastSession.date}</strong>
+                                &mdash; ${lastSession.isBodyweight ? `BW &times; ${lastSession.bestSet.reps}` : `${lastSession.bestSet.weight}${appState.unit} &times; ${lastSession.bestSet.reps}`}
+                                <span style="opacity:0.6;">(best set)</span>
+                            </span>
                         </div>
                     </div>
-                    <div style="display:flex; gap:2rem; flex-shrink:0;">
+                    <div style="display:flex; gap:1.5rem; align-items:center; flex-shrink:0;">
                         <div style="text-align:center;">
-                            <div style="font-size:2rem; font-weight:800; color:var(--primary); line-height:1;">${sessions.length}</div>
+                            <div style="font-size:2rem; font-weight:800; color:var(--primary); line-height:1;">${filteredSessions.length}</div>
                             <div class="text-muted" style="font-size:0.7rem; letter-spacing:0.05em; margin-top:0.3rem;">SESSIONS</div>
                         </div>
-                        <div style="width:1px; background:var(--border);"></div>
+                        <div style="width:1px; height:36px; background:var(--border);"></div>
                         <div style="text-align:center;">
                             <div style="font-size:2rem; font-weight:800; color:var(--primary); line-height:1;">${isAllTimeBw ? allTimeBestSet.reps + ' reps' : allTimeBestSet.weight + appState.unit}</div>
-                            <div class="text-muted" style="font-size:0.7rem; letter-spacing:0.05em; margin-top:0.3rem;">ALL-TIME BEST</div>
+                            <div class="text-muted" style="font-size:0.7rem; letter-spacing:0.05em; margin-top:0.3rem;">VIEW BEST</div>
                         </div>
+                    </div>
+                    <div style="display:flex; align-items:center; flex-shrink:0;">
+                        ${viewsControlHtml}
                     </div>
                 </div>
             `;
 
             // Show chart section
             chartSection.classList.remove('hidden');
-            
+
             // Render Chart
-            const ctx = document.getElementById('progressChart').getContext('2d');
-            if(window.myChart) window.myChart.destroy();
-            
-            const chartData = sessions.slice(-12); // Last 12 sessions
-            
-            window.myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: chartData.map(s => s.date.substring(5)), // MM-DD
-                    datasets: [{
-                        label: sessions[0] && sessions[0].isBodyweight ? `Max Reps` : `Max Weight (${appState.unit})`,
-                        data: chartData.map(s => s.isBodyweight ? s.bestSet.reps : s.bestSet.weight),
-                        borderColor: '#4ade80',
-                        backgroundColor: 'rgba(74, 222, 128, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#161616',
-                        pointBorderColor: '#4ade80',
-                        pointRadius: 4,
-                        pointHoverRadius: 6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' } },
-                        y: { 
-                            grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
-                            beginAtZero: false 
+            const chartCanvas = document.getElementById('progressChart');
+            if (chartCanvas) {
+                const ctx = chartCanvas.getContext('2d');
+                if (window.myChart) window.myChart.destroy();
+
+                const chartData = filteredSessions.slice(-12); // Last 12 sessions for this view
+
+                window.myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: chartData.map(s => s.date.substring(5)), // MM-DD
+                        datasets: [{
+                            label: filteredSessions[0] && filteredSessions[0].isBodyweight ? `Max Reps` : `Max Weight (${appState.unit})`,
+                            data: chartData.map(s => s.isBodyweight ? s.bestSet.reps : s.bestSet.weight),
+                            borderColor: '#4ade80',
+                            backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#161616',
+                            pointBorderColor: '#4ade80',
+                            pointRadius: 4,
+                            pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' } },
+                            y: { 
+                                grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                                beginAtZero: false 
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
 
-            // Build history table
+            // Build history table with Gym column
             let tableHTML = `
                 <table>
                     <thead>
-                        <tr><th>Date</th><th>Sets</th><th>Best Set</th><th>Volume</th><th>Notes</th></tr>
+                        <tr><th>Date</th><th>Gym</th><th>Sets</th><th>Best Set</th><th>Volume</th><th>Notes</th></tr>
                     </thead>
                     <tbody>
             `;
-            [...sessions].reverse().forEach(s => {
+            [...filteredSessions].reverse().forEach(s => {
                 const bestSetStr = s.isBodyweight ? `BW × ${s.bestSet.reps}` : `${s.bestSet.weight}${appState.unit} × ${s.bestSet.reps}`;
                 const volStr = s.isBodyweight ? `${s.vol} reps` : `${s.vol} ${appState.unit}`;
+                const gymBadge = s.gym 
+                    ? `<span class="badge" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border); font-size: 0.75rem;"><i data-lucide="map-pin" style="width: 10px; height: 10px; margin-right: 3px; display: inline-block; vertical-align: middle;"></i>${s.gym}</span>`
+                    : '<span class="text-muted">—</span>';
+
                 tableHTML += `
-                    <tr onclick="window.location.hash='#calendar'; setTimeout(()=>openDayDetail('${s.date}'), 100);">
+                    <tr onclick="window.location.hash='#calendar'; setTimeout(()=>openDayDetail('${s.date}'), 100);" style="cursor: pointer;">
                         <td>${s.date}</td>
+                        <td>${gymBadge}</td>
                         <td>${s.setsCount}</td>
                         <td>${bestSetStr}</td>
                         <td>${volStr}</td>
