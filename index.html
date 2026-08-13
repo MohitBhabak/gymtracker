@@ -163,18 +163,18 @@
             transition: max-width 0.2s ease, padding 0.2s ease;
         }
 
-        /* Progress Tab - Expanded Layout */
+        /* Progress Tab - Proportionally Expanded Layout */
         main:has(#view-progress:not(.hidden)),
         body.route-progress main,
         main.progress-active {
-            max-width: 1680px;
+            max-width: 1480px;
             padding: 1.5rem 2rem;
         }
         @media (min-width: 1800px) {
             main:has(#view-progress:not(.hidden)),
             body.route-progress main,
             main.progress-active {
-                max-width: 1840px;
+                max-width: 1540px;
             }
         }
 
@@ -193,8 +193,8 @@
             align-items: flex-start;
         }
         .progress-exercise-list {
-            flex: 0 0 290px;
-            min-width: 230px;
+            flex: 0 0 340px;
+            min-width: 280px;
             position: sticky;
             top: 0;
         }
