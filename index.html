@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GymLog</title>
     <!-- Fonts -->
-    <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500,400&f[]=satoshi@700,500,400&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500,400&f[]=satoshi@700,500,400&f[]=clash-display@700,600,500&f[]=general-sans@700,600,500,400&f[]=syne@800,700,600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Lucide Icons -->
@@ -1289,11 +1292,29 @@
                 <div id="modal-settings-body">
                     <div style="margin-bottom: 2rem;">
                         <h4 style="margin-bottom: 0.5rem;">Preferences</h4>
-                        <div class="flex items-center justify-between" style="padding: 0.5rem 0; border-bottom: 1px solid var(--border);">
+                        <div class="flex items-center justify-between" style="padding: 0.6rem 0; border-bottom: 1px solid var(--border);">
                             <span>Weight Unit</span>
                             <select id="settings-unit" style="width: 100px;" onchange="updateUnit(this.value)">
                                 <option value="lbs">lbs</option>
                                 <option value="kg">kg</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center justify-between" style="padding: 0.6rem 0; border-bottom: 1px solid var(--border);">
+                            <div>
+                                <div style="font-weight: 500;">App Font / Typography</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">Select font styling across the app</div>
+                            </div>
+                            <select id="settings-font" style="width: 185px; font-size: 0.85rem;" onchange="updateFontTheme(this.value)">
+                                <option value="cabinet-satoshi">Modern Grotesk (Default)</option>
+                                <option value="plus-jakarta-inter">Clean Tech (Jakarta / Inter)</option>
+                                <option value="clash-satoshi">Heavyweight (Clash Display)</option>
+                                <option value="bebas-inter">Athletic Power (Bebas Neue)</option>
+                                <option value="outfit">Rounded Clean (Outfit)</option>
+                                <option value="space-grotesk">Neo-Industrial (Space Grotesk)</option>
+                                <option value="general-sans">Swiss Minimal (General Sans)</option>
+                                <option value="syne-satoshi">Bold Editorial (Syne)</option>
+                                <option value="oswald-inter">Strong Condensed (Oswald)</option>
+                                <option value="system">Native System (SF / Segoe)</option>
                             </select>
                         </div>
                     </div>
@@ -2052,8 +2073,10 @@
             weightLogs: [],
             benchLogs: [],
             currentMonth: new Date(),
-            targetEmail: ''
+            targetEmail: '',
+            fontTheme: 'cabinet-satoshi'
         };
+        window.appState = appState;
 
         const savedState = localStorage.getItem('gymLogState');
         if (savedState) {
@@ -2069,6 +2092,7 @@
                 appState.weightLogs = parsed.weightLogs || [];
                 appState.benchLogs = parsed.benchLogs || [];
                 appState.targetEmail = parsed.targetEmail || '';
+                appState.fontTheme = parsed.fontTheme || 'cabinet-satoshi';
             } catch (e) {
                 console.error('Failed to parse saved state', e);
             }
@@ -2101,7 +2125,8 @@
                 exercises: appState.exercises,
                 weightLogs: appState.weightLogs,
                 benchLogs: appState.benchLogs,
-                targetEmail: appState.targetEmail
+                targetEmail: appState.targetEmail,
+                fontTheme: appState.fontTheme || 'cabinet-satoshi'
             }));
         }
 
@@ -2325,6 +2350,7 @@
                 weightLogs: appState.weightLogs,
                 benchLogs: appState.benchLogs,
                 targetEmail: appState.targetEmail,
+                fontTheme: appState.fontTheme || 'cabinet-satoshi',
                 updatedAt: Date.now()
             };
         }
@@ -2334,6 +2360,10 @@
 
             if (remoteData.unit) appState.unit = remoteData.unit;
             if (remoteData.targetEmail) appState.targetEmail = remoteData.targetEmail;
+            if (remoteData.fontTheme && typeof remoteData.fontTheme === 'string') {
+                appState.fontTheme = remoteData.fontTheme;
+                applyFontTheme(appState.fontTheme, false);
+            }
 
             if (remoteData.gyms && Array.isArray(remoteData.gyms)) {
                 if (!appState.gyms) appState.gyms = [];
@@ -2521,6 +2551,84 @@
         }
         function getTimeColorClass(time) { return `time-${time.replace(/\s+/g, '').toLowerCase()}`; }
         function getBgTimeColorClass(time) { return `bg-time-${time.replace(/\s+/g, '').toLowerCase()}`; }
+
+        // ==========================================
+        // TYPOGRAPHY & FONT PRESET ENGINE
+        // ==========================================
+        const FONT_PRESETS = {
+            'cabinet-satoshi': {
+                name: 'Modern Grotesk (Default)',
+                heading: "'Cabinet Grotesk', sans-serif",
+                body: "'Satoshi', sans-serif"
+            },
+            'plus-jakarta-inter': {
+                name: 'Clean Tech (Jakarta / Inter)',
+                heading: "'Plus Jakarta Sans', sans-serif",
+                body: "'Inter', sans-serif"
+            },
+            'clash-satoshi': {
+                name: 'Heavyweight (Clash Display)',
+                heading: "'Clash Display', sans-serif",
+                body: "'Satoshi', sans-serif"
+            },
+            'bebas-inter': {
+                name: 'Athletic Power (Bebas Neue)',
+                heading: "'Bebas Neue', sans-serif",
+                body: "'Inter', sans-serif"
+            },
+            'outfit': {
+                name: 'Rounded Clean (Outfit)',
+                heading: "'Outfit', sans-serif",
+                body: "'Outfit', sans-serif"
+            },
+            'space-grotesk': {
+                name: 'Neo-Industrial (Space Grotesk)',
+                heading: "'Space Grotesk', sans-serif",
+                body: "'Space Grotesk', sans-serif"
+            },
+            'general-sans': {
+                name: 'Swiss Minimal (General Sans)',
+                heading: "'General Sans', sans-serif",
+                body: "'General Sans', sans-serif"
+            },
+            'syne-satoshi': {
+                name: 'Bold Editorial (Syne)',
+                heading: "'Syne', sans-serif",
+                body: "'Satoshi', sans-serif"
+            },
+            'oswald-inter': {
+                name: 'Strong Condensed (Oswald)',
+                heading: "'Oswald', sans-serif",
+                body: "'Inter', sans-serif"
+            },
+            'system': {
+                name: 'Native System (SF / Segoe)',
+                heading: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                body: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+            }
+        };
+        window.FONT_PRESETS = FONT_PRESETS;
+
+        function applyFontTheme(fontKey, save = false) {
+            const preset = FONT_PRESETS[fontKey] || FONT_PRESETS['cabinet-satoshi'];
+            document.documentElement.style.setProperty('--font-heading', preset.heading);
+            document.documentElement.style.setProperty('--font-body', preset.body);
+            appState.fontTheme = fontKey;
+            
+            const fontSelect = document.getElementById('settings-font');
+            if (fontSelect) fontSelect.value = fontKey;
+
+            if (save) {
+                saveState();
+            }
+        }
+        window.applyFontTheme = applyFontTheme;
+
+        window.updateFontTheme = (fontKey) => {
+            applyFontTheme(fontKey, true);
+            const fontName = FONT_PRESETS[fontKey]?.name || fontKey;
+            showAppToast(`Typography set to "${fontName}"`, 'success');
+        };
 
         // ==========================================
         // IN-APP SEARCH & QUICK PRESETS PALETTE
@@ -3494,12 +3602,18 @@
                 }
             });
 
-            if (matchedExercises.length === 0 && matchedWorkouts.length === 0) {
+            // 3. Matched Fonts & Typography
+            const matchedFonts = Object.keys(FONT_PRESETS).filter(key => {
+                const p = FONT_PRESETS[key];
+                return q.includes('font') || q.includes('typo') || q.includes('theme') || key.includes(q) || p.name.toLowerCase().includes(q);
+            });
+
+            if (matchedExercises.length === 0 && matchedWorkouts.length === 0 && matchedFonts.length === 0) {
                 body.innerHTML = `
                     <div style="text-align:center; padding:2.5rem 1rem; color:var(--text-muted);">
                         <i data-lucide="search-x" style="width:36px;height:36px;opacity:0.4;margin-bottom:0.6rem;"></i>
                         <h4 style="margin:0 0 0.25rem 0; color:var(--text);">No results found for "${escapeHtml(rawQuery)}"</h4>
-                        <p style="font-size:0.8rem; margin:0 0 1rem 0;">Try searching for an exercise name (e.g. "Pull-up"), a split (e.g. "Push"), or a date.</p>
+                        <p style="font-size:0.8rem; margin:0 0 1rem 0;">Try searching for an exercise name (e.g. "Pull-up"), a split (e.g. "Push"), a date, or a font style.</p>
                         <button class="btn btn-sm" onclick="clearSearchInput()">Clear Search</button>
                     </div>
                 `;
@@ -3508,6 +3622,38 @@
             }
 
             let resultsHTML = '';
+
+            // Render Font Options Section
+            if (matchedFonts.length > 0) {
+                resultsHTML += `
+                    <div class="search-section-title">
+                        <span>Typography Styles (${matchedFonts.length})</span>
+                        <span style="font-weight:400; font-size:0.7rem;">Click to apply</span>
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                `;
+                matchedFonts.slice(0, 4).forEach(fKey => {
+                    const preset = FONT_PRESETS[fKey];
+                    const isCurrent = (appState.fontTheme || 'cabinet-satoshi') === fKey;
+                    resultsHTML += `
+                        <div class="search-result-item" onclick="updateFontTheme('${fKey}')">
+                            <div class="flex items-center gap-2" style="overflow:hidden;">
+                                <div style="width:26px; height:26px; border-radius:4px; background:rgba(74, 222, 128, 0.12); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                    <i data-lucide="type" style="width:14px;height:14px;color:var(--primary);"></i>
+                                </div>
+                                <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                    <div style="font-weight:700; font-size:0.88rem;">${preset.name} ${isCurrent ? '<span class="badge" style="background:rgba(74,222,128,0.15);color:var(--primary);font-size:0.65rem;margin-left:0.25rem;">Active</span>' : ''}</div>
+                                    <div class="text-muted" style="font-size:0.72rem;">${preset.heading.split(',')[0].replace(/'/g,'')} & ${preset.body.split(',')[0].replace(/'/g,'')}</div>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm ${isCurrent ? 'btn-primary' : ''}" style="padding:0.25rem 0.6rem; font-size:0.72rem; flex-shrink:0;">
+                                ${isCurrent ? 'Current' : 'Apply'}
+                            </button>
+                        </div>
+                    `;
+                });
+                resultsHTML += `</div>`;
+            }
 
             // Render Exercises Section
             if (matchedExercises.length > 0) {
@@ -3616,6 +3762,8 @@
         window.openSettingsModal = () => {
             const unitEl = document.getElementById('settings-unit');
             if (unitEl) unitEl.value = appState.unit;
+            const fontEl = document.getElementById('settings-font');
+            if (fontEl) fontEl.value = appState.fontTheme || 'cabinet-satoshi';
             const emailEl = document.getElementById('settings-email');
             if (emailEl) emailEl.value = appState.targetEmail || '';
             renderSettingsGyms();
@@ -6692,6 +6840,7 @@
         }
         window.addEventListener('hashchange', handleRoute);
         
+        applyFontTheme(appState.fontTheme || 'cabinet-satoshi', false);
         handleRoute();
     </script>
 
