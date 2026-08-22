@@ -8,6 +8,7 @@ A clean, intuitive, privacy-first single-page web application designed for track
 
 - 📅 **Interactive Workout Calendar:** Log workout types (Push, Pull, Legs, Upper, Lower, Abs, Rest), duration, effort intensity, time of day, and track monthly consistency streaks.
 - 📋 **Smart Quick Paste & Note Parser:** Copy raw workout notes from Apple Notes, Google Keep, Notion, or text messages and paste them directly into GymLog. Automatically detects exercises, weights, reps, decimal values, and bodyweight sets with zero API keys or external tokens.
+- 🔍 **Instant Search & Quick Presets (`Ctrl+K` / `⌘K`):** Global command palette and search bar for instant non-AI lookups. Features fast preset calculators for all-time Exercise PRs (with estimated 1RM and lifetime volume), monthly workout volume/breakdown tallies, workout split filters, and notes search.
 - ⚡ **Rapid Keyboard Set Logging:** Type weight, press `Tab`, type reps, and press `Tab` to automatically create and focus the next set for high-speed logging without touching the mouse.
 - 📊 **Progress Tracker & Analytics:** Inspect exercise performance history with interactive Chart.js graphs (Estimated 1RM, Max Weight, Total Reps, and Volume).
 - ⚖️ **Bodyweight Tracker with Trendline:** Log bodyweight entries over time with an automated linear regression trendline overlay to visualize long-term weight trends through daily fluctuations.

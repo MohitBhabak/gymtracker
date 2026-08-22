@@ -699,6 +699,251 @@
             transform: translateY(-2px);
         }
 
+        /* Search Trigger Button */
+        .btn-search-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.45rem 0.75rem;
+            font-size: 0.82rem;
+            border-radius: var(--radius-tight);
+            background: var(--surface-offset);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+        .btn-search-trigger:hover {
+            border-color: var(--primary);
+            background: var(--surface-2);
+            color: var(--text);
+        }
+        .search-kbd {
+            font-family: inherit;
+            font-size: 0.7rem;
+            padding: 0.12rem 0.4rem;
+            border-radius: 4px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* Search Modal & Command Palette Styles */
+        .search-modal-overlay {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            background-color: rgba(0, 0, 0, 0.75);
+            align-items: flex-start !important;
+            padding-top: 10vh !important;
+        }
+        .search-modal-card {
+            max-width: 640px !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            display: flex !important;
+            flex-direction: column !important;
+            max-height: 80vh !important;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--border);
+            border-radius: 12px !important;
+        }
+        .search-modal-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.85rem 1.25rem;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+        .search-input-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+        #search-palette-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            color: var(--text);
+            padding: 0.2rem 0;
+            font-weight: 500;
+            box-shadow: none;
+        }
+        #search-palette-input::placeholder {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        .search-clear-btn {
+            background: var(--surface-offset);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .search-clear-btn:hover {
+            color: var(--text);
+            border-color: var(--primary);
+        }
+        .search-esc-badge {
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: var(--surface-offset);
+            border: 1px solid var(--border);
+            padding: 0.2rem 0.45rem;
+            border-radius: 4px;
+            cursor: pointer;
+            user-select: none;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+        .search-esc-badge:hover {
+            color: var(--text);
+            border-color: var(--primary);
+        }
+        .search-presets-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.25rem;
+            background: var(--surface-2);
+            border-bottom: 1px solid var(--border);
+            overflow-x: auto;
+            scrollbar-width: none;
+            flex-shrink: 0;
+        }
+        .search-presets-bar::-webkit-scrollbar {
+            display: none;
+        }
+        .search-preset-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.32rem 0.7rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.78rem;
+            font-weight: 600;
+            background: var(--surface-offset);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+        .search-preset-chip:hover {
+            color: var(--text);
+            border-color: var(--text-muted);
+        }
+        .search-preset-chip.active {
+            background: rgba(74, 222, 128, 0.15);
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .search-modal-body {
+            padding: 1.25rem;
+            overflow-y: auto;
+            max-height: 480px;
+            min-height: 240px;
+            flex: 1;
+        }
+        .search-modal-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.65rem 1.25rem;
+            background: var(--surface-2);
+            border-top: 1px solid var(--border);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+        .search-hint {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .search-key-hint kbd {
+            background: var(--surface-offset);
+            border: 1px solid var(--border);
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-size: 0.68rem;
+            font-family: inherit;
+            margin-right: 0.25rem;
+        }
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 0.9rem;
+            border-radius: var(--radius-tight);
+            background: var(--surface-offset);
+            border: 1px solid var(--border);
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .search-result-item:hover, .search-result-item.selected {
+            background: var(--surface-2);
+            border-color: var(--primary);
+            transform: translateX(2px);
+        }
+        .search-result-item:last-child {
+            margin-bottom: 0;
+        }
+        .search-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            margin: 1.25rem 0 0.5rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .search-section-title:first-child {
+            margin-top: 0;
+        }
+        .search-preset-card {
+            background: var(--surface-offset);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-base);
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.85rem;
+        }
+        .search-preset-card:hover {
+            border-color: var(--primary);
+            background: var(--surface-2);
+            transform: translateY(-2px);
+        }
+        .search-preset-icon-wrap {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-tight);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
         @media (max-width: 767px) {
             header {
                 padding: 0.75rem 1rem;
@@ -715,8 +960,20 @@
             #sync-status-text {
                 display: none;
             }
-            .btn-sync {
+            .search-label, .search-kbd {
+                display: none;
+            }
+            .btn-sync, .btn-search-trigger {
                 padding: 0.45rem 0.6rem;
+            }
+            .search-modal-overlay {
+                padding-top: 0 !important;
+                align-items: flex-end !important;
+            }
+            .search-modal-card {
+                max-width: 100% !important;
+                border-radius: 20px 20px 0 0 !important;
+                max-height: 85vh !important;
             }
             main {
                 padding: 1rem 0.75rem;
@@ -809,6 +1066,11 @@
             <a href="#bench" class="nav-tab" id="tab-bench">Bench PR</a>
         </div>
         <div class="header-actions">
+            <button class="btn-search-trigger" id="btn-search-trigger" onclick="openSearchModal()" title="Search & Quick Presets (Ctrl+K / ⌘K)">
+                <i data-lucide="search" style="width: 15px; height: 15px;"></i>
+                <span class="search-label">Search</span>
+                <span class="search-kbd" id="search-shortcut-badge">⌘K</span>
+            </button>
             <button class="btn-sync" id="btn-settings" onclick="openSettingsModal()" title="Settings & Backup">
                 <span id="sync-status-dot" class="sync-dot disconnected"></span>
                 <i data-lucide="settings" style="width: 16px; height: 16px;"></i>
@@ -1294,6 +1556,60 @@
                     <button type="button" class="btn btn-primary" id="btn-confirm-apply-targets" onclick="confirmApplyViewsToTargets()" style="padding: 0.5rem 1.2rem; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
                         <i data-lucide="check" style="width: 15px; height: 15px;"></i> Apply Views
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search & Quick Presets Modal (Spotlight / Command Palette) -->
+        <div id="modal-search" class="modal-overlay search-modal-overlay" onclick="if(event.target===this) closeSearchModal()">
+            <div class="modal-content search-modal-card" onclick="event.stopPropagation()">
+                <!-- Search Input Bar -->
+                <div class="search-modal-header">
+                    <i data-lucide="search" class="search-input-icon"></i>
+                    <input type="text" id="search-palette-input" placeholder="Search exercises, workout notes, dates, or choose a preset below..." autocomplete="off" spellcheck="false" oninput="handleSearchQueryInput(this.value)" onkeydown="handleSearchInputKeydown(event)">
+                    <button type="button" class="search-clear-btn hidden" id="search-clear-btn" onclick="clearSearchInput()" title="Clear search">
+                        <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                    </button>
+                    <div class="search-esc-badge" onclick="closeSearchModal()" title="Close (Esc)">ESC</div>
+                </div>
+
+                <!-- Presets Carousel / Quick Filter Chips -->
+                <div class="search-presets-bar" id="search-presets-bar">
+                    <button type="button" class="search-preset-chip active" data-preset="all" onclick="selectSearchPreset('all')">
+                        <i data-lucide="sparkles" style="width: 13px; height: 13px;"></i> All & Presets
+                    </button>
+                    <button type="button" class="search-preset-chip" data-preset="pr" onclick="selectSearchPreset('pr')">
+                        <i data-lucide="trophy" style="width: 13px; height: 13px; color: #f59e0b;"></i> Exercise PR
+                    </button>
+                    <button type="button" class="search-preset-chip" data-preset="month" onclick="selectSearchPreset('month')">
+                        <i data-lucide="calendar" style="width: 13px; height: 13px; color: #3b82f6;"></i> Monthly Workouts
+                    </button>
+                    <button type="button" class="search-preset-chip" data-preset="split" onclick="selectSearchPreset('split')">
+                        <i data-lucide="dumbbell" style="width: 13px; height: 13px; color: var(--primary);"></i> By Split
+                    </button>
+                    <button type="button" class="search-preset-chip" data-preset="notes" onclick="selectSearchPreset('notes')">
+                        <i data-lucide="file-text" style="width: 13px; height: 13px; color: #ec4899;"></i> Notes Search
+                    </button>
+                    <button type="button" class="search-preset-chip" data-preset="stats" onclick="selectSearchPreset('stats')">
+                        <i data-lucide="flame" style="width: 13px; height: 13px; color: #f97316;"></i> Consistency
+                    </button>
+                </div>
+
+                <!-- Search Body / Results / Presets Display -->
+                <div class="search-modal-body" id="search-modal-body">
+                    <!-- Dynamically injected view content -->
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="search-modal-footer">
+                    <div class="search-hint">
+                        <span class="search-key-hint"><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+                        <span class="search-key-hint"><kbd>↵</kbd> select</span>
+                        <span class="search-key-hint"><kbd>esc</kbd> close</span>
+                    </div>
+                    <div class="search-stats-hint" id="search-footer-stats">
+                        Data-driven instant lookup
+                    </div>
                 </div>
             </div>
         </div>
@@ -2206,7 +2522,1096 @@
         function getTimeColorClass(time) { return `time-${time.replace(/\s+/g, '').toLowerCase()}`; }
         function getBgTimeColorClass(time) { return `bg-time-${time.replace(/\s+/g, '').toLowerCase()}`; }
 
-        // Settings & Backup
+        // ==========================================
+        // IN-APP SEARCH & QUICK PRESETS PALETTE
+        // ==========================================
+        let currentSearchPreset = 'all';
+        let currentSearchParam = null;
+
+        // Detect OS for keyboard shortcut display
+        const isMacPlatform = (navigator.platform || navigator.userAgent || '').toUpperCase().indexOf('MAC') >= 0;
+        const searchShortcutText = isMacPlatform ? '⌘K' : 'Ctrl+K';
+
+        function updateSearchShortcutBadges() {
+            const badge = document.getElementById('search-shortcut-badge');
+            if (badge) badge.innerText = searchShortcutText;
+        }
+
+        window.openSearchModal = (presetName = 'all', param = null) => {
+            currentSearchPreset = presetName || 'all';
+            currentSearchParam = param;
+            
+            openModal('modal-search');
+            updateSearchShortcutBadges();
+            
+            const input = document.getElementById('search-palette-input');
+            const clearBtn = document.getElementById('search-clear-btn');
+            if (input) {
+                input.value = '';
+                if (clearBtn) clearBtn.classList.add('hidden');
+                setTimeout(() => input.focus(), 50);
+            }
+            
+            updatePresetChipsUI(currentSearchPreset);
+            renderSearchBody();
+        };
+
+        window.closeSearchModal = () => {
+            closeModal('modal-search');
+        };
+
+        window.toggleSearchModal = () => {
+            const modal = document.getElementById('modal-search');
+            if (modal && modal.classList.contains('open')) {
+                closeSearchModal();
+            } else {
+                openSearchModal();
+            }
+        };
+
+        window.clearSearchInput = () => {
+            const input = document.getElementById('search-palette-input');
+            const clearBtn = document.getElementById('search-clear-btn');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+            if (clearBtn) clearBtn.classList.add('hidden');
+            renderSearchBody();
+        };
+
+        window.selectSearchPreset = (presetType, param = null) => {
+            currentSearchPreset = presetType;
+            currentSearchParam = param;
+            updatePresetChipsUI(presetType);
+            
+            const input = document.getElementById('search-palette-input');
+            if (input && presetType !== 'all') {
+                input.value = '';
+                const clearBtn = document.getElementById('search-clear-btn');
+                if (clearBtn) clearBtn.classList.add('hidden');
+            }
+            
+            renderSearchBody();
+        };
+
+        function updatePresetChipsUI(activePreset) {
+            document.querySelectorAll('.search-preset-chip').forEach(chip => {
+                const preset = chip.getAttribute('data-preset');
+                if (preset === activePreset) {
+                    chip.classList.add('active');
+                } else {
+                    chip.classList.remove('active');
+                }
+            });
+        }
+
+        window.handleSearchQueryInput = (query) => {
+            const clearBtn = document.getElementById('search-clear-btn');
+            if (clearBtn) {
+                if (query && query.trim().length > 0) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+            }
+            
+            if (query && query.trim().length > 0) {
+                updatePresetChipsUI('all');
+                renderLiveSearchResults(query.trim());
+            } else {
+                renderSearchBody();
+            }
+        };
+
+        window.handleSearchInputKeydown = (e) => {
+            if (e.key === 'Escape') {
+                closeSearchModal();
+                e.preventDefault();
+            }
+        };
+
+        // Navigation actions from search
+        window.navigateToExerciseFromSearch = (exerciseName) => {
+            closeSearchModal();
+            window.location.hash = '#progress';
+            setTimeout(() => {
+                if (typeof showExerciseDetail === 'function') {
+                    showExerciseDetail(exerciseName);
+                }
+            }, 60);
+        };
+
+        window.navigateToDayFromSearch = (dateStr) => {
+            closeSearchModal();
+            window.location.hash = '#calendar';
+            setTimeout(() => {
+                if (typeof openDayDetail === 'function') {
+                    openDayDetail(dateStr);
+                }
+            }, 60);
+        };
+
+        // Render Search Modal Body based on active preset or state
+        function renderSearchBody() {
+            const body = document.getElementById('search-modal-body');
+            if (!body) return;
+
+            if (currentSearchPreset === 'pr') {
+                renderPresetExercisePR(currentSearchParam);
+            } else if (currentSearchPreset === 'month') {
+                renderPresetMonthlyWorkouts(currentSearchParam);
+            } else if (currentSearchPreset === 'split') {
+                renderPresetSplitFilter(currentSearchParam);
+            } else if (currentSearchPreset === 'notes') {
+                renderPresetNotesSearch();
+            } else if (currentSearchPreset === 'stats') {
+                renderPresetStats();
+            } else {
+                renderSearchDefaultView();
+            }
+            lucide.createIcons({ root: body });
+        }
+
+        // Helper to calculate PR stats for any exercise across all workoutLogs
+        function calculateExercisePRStats(exerciseName) {
+            if (!exerciseName) return null;
+            const exNameLower = exerciseName.toLowerCase();
+            const exInfo = (appState.exercises || []).find(e => e.name.toLowerCase() === exNameLower) || { name: exerciseName, category: 'Push', isBodyweight: false };
+            
+            const sessions = [];
+            const logs = appState.workoutLogs || {};
+            
+            Object.keys(logs).sort().forEach(date => {
+                const log = logs[date];
+                if (!log || !log.exercises) return;
+                const matches = log.exercises.filter(e => e.name.toLowerCase() === exNameLower);
+                matches.forEach(m => {
+                    if (!m.sets || m.sets.length === 0) return;
+                    const isBw = m.sets[0] ? (m.sets[0].isBodyweight || m.sets[0].weight === 0) : false;
+                    let bestSet = m.sets[0];
+                    if (isBw) {
+                        bestSet = m.sets.reduce((max, s) => (s.reps || 0) > (max.reps || 0) ? s : max, m.sets[0]);
+                    } else {
+                        bestSet = m.sets.reduce((max, s) => {
+                            const w = s.weight || 0;
+                            const maxW = max.weight || 0;
+                            const r = s.reps || 0;
+                            const maxR = max.reps || 0;
+                            return (w > maxW || (w === maxW && r > maxR)) ? s : max;
+                        }, m.sets[0]);
+                    }
+                    const volume = m.sets.reduce((sum, s) => sum + ((isBw ? 1 : (s.weight || 0)) * (s.reps || 0)), 0);
+                    sessions.push({
+                        date,
+                        gym: log.gym || '',
+                        type: log.type || '',
+                        bestSet,
+                        volume,
+                        isBodyweight: isBw,
+                        sets: m.sets,
+                        notes: m.notes || ''
+                    });
+                });
+            });
+
+            if (sessions.length === 0) {
+                return {
+                    name: exInfo.name,
+                    category: exInfo.category || 'General',
+                    isBodyweight: exInfo.isBodyweight || false,
+                    hasData: false,
+                    sessionsCount: 0
+                };
+            }
+
+            let allTimeBest = sessions[0].bestSet;
+            let bestSession = sessions[0];
+            let totalVolume = 0;
+            let isBw = sessions[0].isBodyweight;
+
+            sessions.forEach(s => {
+                totalVolume += s.volume;
+                if (s.isBodyweight) {
+                    if ((s.bestSet.reps || 0) > (allTimeBest.reps || 0)) {
+                        allTimeBest = s.bestSet;
+                        bestSession = s;
+                    }
+                } else {
+                    const w = s.bestSet.weight || 0;
+                    const bestW = allTimeBest.weight || 0;
+                    const r = s.bestSet.reps || 0;
+                    const bestR = allTimeBest.reps || 0;
+                    if (w > bestW || (w === bestW && r > bestR)) {
+                        allTimeBest = s.bestSet;
+                        bestSession = s;
+                    }
+                }
+            });
+
+            // Est 1RM using Brzycki formula
+            let est1RM = null;
+            if (!isBw && allTimeBest.weight > 0 && allTimeBest.reps >= 1) {
+                est1RM = Math.round(allTimeBest.weight * (36 / (37 - Math.min(allTimeBest.reps, 36))));
+            }
+
+            const latestSession = sessions[sessions.length - 1];
+
+            return {
+                name: exInfo.name,
+                category: exInfo.category || 'General',
+                isBodyweight: isBw,
+                hasData: true,
+                sessionsCount: sessions.length,
+                allTimeBest,
+                est1RM,
+                bestDate: bestSession.date,
+                bestGym: bestSession.gym,
+                totalVolume,
+                latestSession,
+                recentSessions: sessions.slice(-5).reverse()
+            };
+        }
+
+        // 1. Default View
+        function renderSearchDefaultView() {
+            const body = document.getElementById('search-modal-body');
+            const totalWorkouts = Object.keys(appState.workoutLogs || {}).length;
+            const now = new Date();
+            const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            const thisMonthWorkouts = Object.keys(appState.workoutLogs || {}).filter(d => d.startsWith(currentMonthPrefix)).length;
+            const totalExercises = (appState.exercises || []).length;
+            const monthName = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(now);
+
+            // Recent 3 workouts
+            const recentDates = Object.keys(appState.workoutLogs || {}).sort().reverse().slice(0, 3);
+            let recentHTML = '';
+            if (recentDates.length > 0) {
+                recentHTML = `
+                    <div class="search-section-title">
+                        <span>Recent Sessions</span>
+                        <span style="font-weight:400; font-size:0.7rem;">Click to view day</span>
+                    </div>
+                    <div>
+                `;
+                recentDates.forEach(dateStr => {
+                    const log = appState.workoutLogs[dateStr];
+                    const [y, m, d] = dateStr.split('-').map(Number);
+                    const formattedDate = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date(y, m - 1, d));
+                    const exCount = (log.exercises || []).length;
+                    const exNames = (log.exercises || []).slice(0, 2).map(e => e.name).join(', ') + (exCount > 2 ? ` +${exCount - 2} more` : '');
+                    recentHTML += `
+                        <div class="search-result-item" onclick="navigateToDayFromSearch('${dateStr}')">
+                            <div class="flex items-center gap-2" style="overflow:hidden;">
+                                <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:0.72rem; flex-shrink:0;">${log.type}</span>
+                                <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                    <div style="font-weight:600; font-size:0.85rem;">${formattedDate}</div>
+                                    <div class="text-muted" style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(exNames) || 'No exercises listed'}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2" style="flex-shrink:0;">
+                                ${log.gym ? `<span class="badge" style="background:rgba(255,255,255,0.06); border:1px solid var(--border); font-size:0.7rem; color:var(--text-muted);"><i data-lucide="map-pin" style="width:10px;height:10px;margin-right:2px;display:inline-block;vertical-align:middle;"></i>${escapeHtml(log.gym)}</span>` : ''}
+                                <i data-lucide="chevron-right" class="text-muted" style="width:14px;height:14px;"></i>
+                            </div>
+                        </div>
+                    `;
+                });
+                recentHTML += `</div>`;
+            }
+
+            body.innerHTML = `
+                <!-- Quick Stats Strip -->
+                <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.6rem; margin-bottom:1.25rem;">
+                    <div style="background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-tight); padding:0.65rem; text-align:center;">
+                        <div style="font-size:1.35rem; font-weight:800; color:var(--primary); line-height:1;">${totalWorkouts}</div>
+                        <div class="text-muted" style="font-size:0.68rem; letter-spacing:0.04em; margin-top:0.25rem;">TOTAL LOGS</div>
+                    </div>
+                    <div style="background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-tight); padding:0.65rem; text-align:center;">
+                        <div style="font-size:1.35rem; font-weight:800; color:#3b82f6; line-height:1;">${thisMonthWorkouts}</div>
+                        <div class="text-muted" style="font-size:0.68rem; letter-spacing:0.04em; margin-top:0.25rem;">IN ${monthName.toUpperCase()}</div>
+                    </div>
+                    <div style="background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-tight); padding:0.65rem; text-align:center;">
+                        <div style="font-size:1.35rem; font-weight:800; color:#f59e0b; line-height:1;">${totalExercises}</div>
+                        <div class="text-muted" style="font-size:0.68rem; letter-spacing:0.04em; margin-top:0.25rem;">EXERCISES</div>
+                    </div>
+                </div>
+
+                <!-- Presets Grid -->
+                <div class="search-section-title">Quick Lookup Presets</div>
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(240px, 1fr)); gap:0.65rem;">
+                    <div class="search-preset-card" onclick="selectSearchPreset('pr')">
+                        <div class="search-preset-icon-wrap" style="background:rgba(245, 158, 11, 0.15); color:#f59e0b;">
+                            <i data-lucide="trophy" style="width:18px;height:18px;"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-weight:700; font-size:0.88rem; color:var(--text); margin-bottom:0.15rem;">Show PR for Exercise</div>
+                            <div class="text-muted" style="font-size:0.75rem; line-height:1.35;">Check all-time personal records, max weights, and 1RMs.</div>
+                        </div>
+                    </div>
+
+                    <div class="search-preset-card" onclick="selectSearchPreset('month')">
+                        <div class="search-preset-icon-wrap" style="background:rgba(59, 130, 246, 0.15); color:#3b82f6;">
+                            <i data-lucide="calendar" style="width:18px;height:18px;"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-weight:700; font-size:0.88rem; color:var(--text); margin-bottom:0.15rem;">Workouts in a Month</div>
+                            <div class="text-muted" style="font-size:0.75rem; line-height:1.35;">Inspect monthly workout counts, split breakdown & volume.</div>
+                        </div>
+                    </div>
+
+                    <div class="search-preset-card" onclick="selectSearchPreset('split')">
+                        <div class="search-preset-icon-wrap" style="background:rgba(74, 222, 128, 0.15); color:var(--primary);">
+                            <i data-lucide="dumbbell" style="width:18px;height:18px;"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-weight:700; font-size:0.88rem; color:var(--text); margin-bottom:0.15rem;">Workouts by Split</div>
+                            <div class="text-muted" style="font-size:0.75rem; line-height:1.35;">Filter and view past Push, Pull, Legs, Upper, Lower logs.</div>
+                        </div>
+                    </div>
+
+                    <div class="search-preset-card" onclick="selectSearchPreset('notes')">
+                        <div class="search-preset-icon-wrap" style="background:rgba(236, 72, 153, 0.15); color:#ec4899;">
+                            <i data-lucide="file-text" style="width:18px;height:18px;"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-weight:700; font-size:0.88rem; color:var(--text); margin-bottom:0.15rem;">Search in Notes</div>
+                            <div class="text-muted" style="font-size:0.75rem; line-height:1.35;">Find notes about injuries, machine seatings, or reflections.</div>
+                        </div>
+                    </div>
+
+                    <div class="search-preset-card" onclick="selectSearchPreset('stats')">
+                        <div class="search-preset-icon-wrap" style="background:rgba(249, 115, 22, 0.15); color:#f97316;">
+                            <i data-lucide="flame" style="width:18px;height:18px;"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-weight:700; font-size:0.88rem; color:var(--text); margin-bottom:0.15rem;">Streaks & Consistency</div>
+                            <div class="text-muted" style="font-size:0.75rem; line-height:1.35;">Track weekly frequency, streaks, and training volume.</div>
+                        </div>
+                    </div>
+
+                    <div class="search-preset-card" onclick="closeSearchModal(); window.location.hash='#bench';">
+                        <div class="search-preset-icon-wrap" style="background:rgba(168, 85, 247, 0.15); color:#a855f7;">
+                            <i data-lucide="medal" style="width:18px;height:18px;"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-weight:700; font-size:0.88rem; color:var(--text); margin-bottom:0.15rem;">Bench PR Tracker</div>
+                            <div class="text-muted" style="font-size:0.75rem; line-height:1.35;">Jump directly to dedicated Bench Press tracking view.</div>
+                        </div>
+                    </div>
+                </div>
+
+                ${recentHTML}
+            `;
+        }
+
+        // 2. Exercise PR Preset
+        function renderPresetExercisePR(selectedExerciseName = null) {
+            const body = document.getElementById('search-modal-body');
+            const exercises = [...(appState.exercises || [])].sort((a, b) => a.name.localeCompare(b.name));
+
+            if (exercises.length === 0) {
+                body.innerHTML = `
+                    <div style="text-align:center; padding:2rem 1rem; color:var(--text-muted);">
+                        <i data-lucide="dumbbell" style="width:36px;height:36px;opacity:0.4;margin-bottom:0.5rem;"></i>
+                        <p>No exercises found in your library yet.</p>
+                        <button class="btn btn-sm" onclick="selectSearchPreset('all')" style="margin-top:1rem;">← Back to Presets</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Determine active exercise
+            let targetExName = selectedExerciseName;
+            if (!targetExName) {
+                // Find first exercise that has logged data, or default to first
+                const withData = exercises.find(e => {
+                    const stats = calculateExercisePRStats(e.name);
+                    return stats && stats.hasData;
+                });
+                targetExName = withData ? withData.name : exercises[0].name;
+            }
+
+            const prStats = calculateExercisePRStats(targetExName);
+
+            // Exercise dropdown options
+            let optionsHTML = '';
+            exercises.forEach(ex => {
+                const isSelected = ex.name.toLowerCase() === targetExName.toLowerCase();
+                optionsHTML += `<option value="${escapeHtml(ex.name)}" ${isSelected ? 'selected' : ''}>${escapeHtml(ex.name)} (${ex.category})</option>`;
+            });
+
+            let prContentHTML = '';
+            if (!prStats || !prStats.hasData) {
+                prContentHTML = `
+                    <div class="card" style="background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-base); padding:1.5rem; text-align:center; margin-top:1rem;">
+                        <i data-lucide="alert-circle" style="width:32px;height:32px;color:var(--text-muted);margin-bottom:0.5rem;opacity:0.6;"></i>
+                        <h4 style="margin:0 0 0.25rem 0;">No sessions logged yet for "${escapeHtml(targetExName)}"</h4>
+                        <p class="text-muted" style="font-size:0.8rem; margin:0 0 1rem 0;">Log a workout in your calendar to establish your personal record.</p>
+                        <button class="btn btn-primary btn-sm" onclick="navigateToExerciseFromSearch('${escapeHtml(targetExName).replace(/'/g, "\\'")}')">View in Progress Tab</button>
+                    </div>
+                `;
+            } else {
+                const bestScoreStr = prStats.isBodyweight 
+                    ? `BW &times; ${prStats.allTimeBest.reps} reps`
+                    : `${prStats.allTimeBest.weight} <span style="font-size:1.1rem;font-weight:600;">${appState.unit}</span> &times; ${prStats.allTimeBest.reps}`;
+                
+                const [y, m, d] = prStats.bestDate.split('-').map(Number);
+                const formattedBestDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(y, m - 1, d));
+
+                const [ly, lm, ld] = prStats.latestSession.date.split('-').map(Number);
+                const formattedLatestDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(ly, lm - 1, ld));
+                const latestScoreStr = prStats.latestSession.isBodyweight
+                    ? `BW &times; ${prStats.latestSession.bestSet.reps}`
+                    : `${prStats.latestSession.bestSet.weight}${appState.unit} &times; ${prStats.latestSession.bestSet.reps}`;
+
+                prContentHTML = `
+                    <div style="margin-top:1rem;">
+                        <!-- Main PR Trophy Card -->
+                        <div style="background:linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(22, 22, 22, 0.95) 100%); border:1px solid rgba(245, 158, 11, 0.3); border-radius:var(--radius-base); padding:1.25rem; margin-bottom:1rem; position:relative; overflow:hidden;">
+                            <div style="position:absolute; right:-10px; top:-10px; opacity:0.06; font-size:6rem; pointer-events:none;">🏆</div>
+                            
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem; flex-wrap:wrap; gap:0.5rem;">
+                                <div style="display:flex; align-items:center; gap:0.5rem;">
+                                    <span class="badge ${getWorkoutColorClass(prStats.category)}" style="font-size:0.75rem;">${prStats.category}</span>
+                                    ${prStats.isBodyweight ? `<span class="badge" style="background:rgba(255,255,255,0.08); border:1px solid var(--border); font-size:0.75rem;">Bodyweight</span>` : ''}
+                                </div>
+                                <div style="display:flex; align-items:center; gap:0.35rem; color:#f59e0b; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">
+                                    <i data-lucide="trophy" style="width:14px;height:14px;"></i> All-Time PR
+                                </div>
+                            </div>
+
+                            <div style="display:flex; align-items:baseline; gap:0.5rem; margin-bottom:0.35rem;">
+                                <div style="font-size:2.2rem; font-weight:800; color:var(--text); line-height:1.1;">
+                                    ${bestScoreStr}
+                                </div>
+                            </div>
+
+                            <div class="text-muted" style="font-size:0.82rem; display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+                                <span><i data-lucide="calendar" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:3px;"></i> Achieved: <strong style="color:var(--text);">${formattedBestDate}</strong></span>
+                                ${prStats.bestGym ? `<span><i data-lucide="map-pin" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:3px;"></i> Location: <strong style="color:var(--text);">${escapeHtml(prStats.bestGym)}</strong></span>` : ''}
+                            </div>
+                        </div>
+
+                        <!-- Secondary Metrics Grid -->
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:0.6rem; margin-bottom:1rem;">
+                            ${prStats.est1RM ? `
+                                <div style="background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-tight); padding:0.65rem; text-align:center;">
+                                    <div style="font-size:1.25rem; font-weight:800; color:var(--primary); line-height:1;">${prStats.est1RM} <span style="font-size:0.8rem; font-weight:500;">${appState.unit}</span></div>
+                                    <div class="text-muted" style="font-size:0.68rem; letter-spacing:0.04em; margin-top:0.25rem;">ESTIMATED 1RM</div>
+                                </div>
+                            ` : ''}
+                            <div style="background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-tight); padding:0.65rem; text-align:center;">
+                                <div style="font-size:1.25rem; font-weight:800; color:#3b82f6; line-height:1;">${prStats.sessionsCount}</div>
+                                <div class="text-muted" style="font-size:0.68rem; letter-spacing:0.04em; margin-top:0.25rem;">SESSIONS LOGGED</div>
+                            </div>
+                            <div style="background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-tight); padding:0.65rem; text-align:center;">
+                                <div style="font-size:1.25rem; font-weight:800; color:#a855f7; line-height:1;">${prStats.totalVolume.toLocaleString()} <span style="font-size:0.8rem; font-weight:500;">${appState.unit}</span></div>
+                                <div class="text-muted" style="font-size:0.68rem; letter-spacing:0.04em; margin-top:0.25rem;">TOTAL VOLUME</div>
+                            </div>
+                        </div>
+
+                        <!-- Most Recent Session Banner -->
+                        <div style="background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-tight); padding:0.75rem 0.9rem; margin-bottom:1.25rem; display:flex; justify-content:space-between; align-items:center; font-size:0.82rem;">
+                            <div>
+                                <span class="text-muted">Most Recent Session:</span>
+                                <strong style="margin-left:0.25rem;">${formattedLatestDate}</strong>
+                                <span style="margin-left:0.4rem; color:var(--primary); font-weight:600;">(${latestScoreStr})</span>
+                            </div>
+                            <button class="btn btn-sm" onclick="navigateToDayFromSearch('${prStats.latestSession.date}')" style="padding:0.2rem 0.5rem; font-size:0.75rem;">View Day</button>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:0.6rem;">
+                            <button type="button" class="btn" onclick="selectSearchPreset('all')" style="font-size:0.82rem; padding:0.5rem 0.9rem;">
+                                ← Back
+                            </button>
+                            <button type="button" class="btn btn-primary" onclick="navigateToExerciseFromSearch('${escapeHtml(targetExName).replace(/'/g, "\\'")}')" style="font-size:0.82rem; padding:0.5rem 1.1rem; display:inline-flex; align-items:center; gap:0.4rem;">
+                                <i data-lucide="trending-up" style="width:14px;height:14px;"></i> Open Full Progress Chart
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            body.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <div style="font-weight:700; font-size:0.88rem; display:flex; align-items:center; gap:0.4rem;">
+                        <i data-lucide="trophy" style="width:16px;height:16px;color:#f59e0b;"></i> Exercise PR Lookup
+                    </div>
+                    <button class="btn btn-sm" onclick="selectSearchPreset('all')" style="padding:0.2rem 0.6rem; font-size:0.75rem;">← Presets</button>
+                </div>
+                
+                <div style="margin-bottom:0.5rem;">
+                    <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.35rem; display:block;">Select Exercise:</label>
+                    <select id="preset-pr-exercise-select" onchange="renderPresetExercisePR(this.value)" style="padding:0.6rem 0.75rem; font-size:0.9rem; font-weight:600;">
+                        ${optionsHTML}
+                    </select>
+                </div>
+
+                ${prContentHTML}
+            `;
+        }
+
+        // 3. Monthly Workouts Preset
+        function renderPresetMonthlyWorkouts(selectedMonthStr = null) {
+            const body = document.getElementById('search-modal-body');
+            const logs = appState.workoutLogs || {};
+            
+            // Gather all available months from logs
+            const monthSet = new Set();
+            Object.keys(logs).forEach(date => {
+                if (date.length >= 7) monthSet.add(date.substring(0, 7));
+            });
+            const now = new Date();
+            const currentMonthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            monthSet.add(currentMonthPrefix);
+
+            const sortedMonths = Array.from(monthSet).sort().reverse();
+            let targetMonth = selectedMonthStr;
+            if (!targetMonth || !sortedMonths.includes(targetMonth)) {
+                targetMonth = sortedMonths[0];
+            }
+
+            // Month Select Options
+            let optionsHTML = '';
+            sortedMonths.forEach(mStr => {
+                const [y, m] = mStr.split('-').map(Number);
+                const label = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date(y, m - 1, 1));
+                const isSelected = mStr === targetMonth;
+                optionsHTML += `<option value="${mStr}" ${isSelected ? 'selected' : ''}>${label}</option>`;
+            });
+
+            // Calculate stats for targetMonth
+            const monthLogs = [];
+            const splitCounts = {};
+            let totalMonthVolume = 0;
+
+            Object.keys(logs).sort().forEach(date => {
+                if (date.startsWith(targetMonth)) {
+                    const log = logs[date];
+                    monthLogs.push({ date, ...log });
+                    const t = log.type || 'Workout';
+                    splitCounts[t] = (splitCounts[t] || 0) + 1;
+
+                    if (log.exercises) {
+                        log.exercises.forEach(ex => {
+                            if (ex.sets) {
+                                ex.sets.forEach(s => {
+                                    totalMonthVolume += ((s.weight || 0) * (s.reps || 0));
+                                });
+                            }
+                        });
+                    }
+                }
+            });
+
+            const [ty, tm] = targetMonth.split('-').map(Number);
+            const targetMonthFormatted = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date(ty, tm - 1, 1));
+
+            // Split breakdown badges
+            let splitBadgesHTML = '';
+            Object.keys(splitCounts).sort((a, b) => splitCounts[b] - splitCounts[a]).forEach(s => {
+                splitBadgesHTML += `
+                    <span class="badge ${getWorkoutColorClass(s)}" style="font-size:0.75rem; padding:0.25rem 0.55rem;">
+                        ${s}: <strong>${splitCounts[s]}</strong>
+                    </span>
+                `;
+            });
+
+            // List of workouts in that month
+            let sessionListHTML = '';
+            if (monthLogs.length === 0) {
+                sessionListHTML = `
+                    <div style="text-align:center; padding:1.5rem 1rem; color:var(--text-muted); font-size:0.85rem;">
+                        No workouts recorded in ${targetMonthFormatted}.
+                    </div>
+                `;
+            } else {
+                monthLogs.reverse().forEach(log => {
+                    const [y, m, d] = log.date.split('-').map(Number);
+                    const formattedDate = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(new Date(y, m - 1, d));
+                    const exCount = (log.exercises || []).length;
+                    const exPreview = (log.exercises || []).slice(0, 2).map(e => e.name).join(', ') + (exCount > 2 ? ` +${exCount - 2} more` : '');
+
+                    sessionListHTML += `
+                        <div class="search-result-item" onclick="navigateToDayFromSearch('${log.date}')">
+                            <div class="flex items-center gap-2" style="overflow:hidden;">
+                                <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:0.72rem; flex-shrink:0;">${log.type}</span>
+                                <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                    <div style="font-weight:600; font-size:0.85rem;">${formattedDate}</div>
+                                    <div class="text-muted" style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(exPreview) || 'No exercises logged'}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2" style="flex-shrink:0;">
+                                ${log.gym ? `<span class="badge" style="background:rgba(255,255,255,0.06); border:1px solid var(--border); font-size:0.7rem; color:var(--text-muted);">${escapeHtml(log.gym)}</span>` : ''}
+                                <i data-lucide="chevron-right" class="text-muted" style="width:14px;height:14px;"></i>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            body.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <div style="font-weight:700; font-size:0.88rem; display:flex; align-items:center; gap:0.4rem;">
+                        <i data-lucide="calendar" style="width:16px;height:16px;color:#3b82f6;"></i> Monthly Workout Summary
+                    </div>
+                    <button class="btn btn-sm" onclick="selectSearchPreset('all')" style="padding:0.2rem 0.6rem; font-size:0.75rem;">← Presets</button>
+                </div>
+
+                <div style="margin-bottom:1rem;">
+                    <label style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.35rem; display:block;">Select Month:</label>
+                    <select id="preset-month-select" onchange="renderPresetMonthlyWorkouts(this.value)" style="padding:0.6rem 0.75rem; font-size:0.9rem; font-weight:600;">
+                        ${optionsHTML}
+                    </select>
+                </div>
+
+                <!-- Highlight Card -->
+                <div style="background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-base); padding:1.1rem; margin-bottom:1rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem; margin-bottom:0.85rem;">
+                        <div>
+                            <div style="font-size:1.8rem; font-weight:800; color:var(--primary); line-height:1;">${monthLogs.length} Workouts</div>
+                            <div class="text-muted" style="font-size:0.75rem; margin-top:0.25rem;">Logged in <strong>${targetMonthFormatted}</strong></div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:1.2rem; font-weight:700; color:#3b82f6; line-height:1;">${totalMonthVolume.toLocaleString()} ${appState.unit}</div>
+                            <div class="text-muted" style="font-size:0.7rem; margin-top:0.25rem;">TOTAL VOLUME</div>
+                        </div>
+                    </div>
+
+                    ${splitBadgesHTML ? `
+                        <div style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:0.4rem; letter-spacing:0.04em;">Split Distribution</div>
+                        <div class="flex" style="flex-wrap:wrap; gap:0.35rem;">
+                            ${splitBadgesHTML}
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="search-section-title">
+                    <span>Sessions in ${targetMonthFormatted} (${monthLogs.length})</span>
+                    <span style="font-weight:400; font-size:0.7rem;">Click to open</span>
+                </div>
+                <div style="max-height:220px; overflow-y:auto;">
+                    ${sessionListHTML}
+                </div>
+            `;
+        }
+
+        // 4. Split Filter Preset
+        function renderPresetSplitFilter(selectedSplit = 'Push') {
+            const body = document.getElementById('search-modal-body');
+            const splits = ['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Arms & Delts', 'Abs', 'Rest'];
+            const activeSplit = selectedSplit || 'Push';
+
+            const logs = appState.workoutLogs || {};
+            const matchingSessions = [];
+
+            Object.keys(logs).sort().reverse().forEach(date => {
+                const log = logs[date];
+                if (log.type && log.type.toLowerCase() === activeSplit.toLowerCase()) {
+                    matchingSessions.push({ date, ...log });
+                }
+            });
+
+            // Split filter tabs
+            let tabsHTML = '<div class="flex" style="flex-wrap:wrap; gap:0.4rem; margin-bottom:1rem;">';
+            splits.forEach(s => {
+                const isActive = s.toLowerCase() === activeSplit.toLowerCase();
+                tabsHTML += `
+                    <button type="button" class="search-preset-chip ${isActive ? 'active' : ''}" onclick="renderPresetSplitFilter('${s}')" style="font-size:0.8rem; padding:0.35rem 0.75rem;">
+                        ${s}
+                    </button>
+                `;
+            });
+            tabsHTML += '</div>';
+
+            let listHTML = '';
+            if (matchingSessions.length === 0) {
+                listHTML = `
+                    <div style="text-align:center; padding:2rem 1rem; color:var(--text-muted);">
+                        <p>No ${activeSplit} sessions recorded yet.</p>
+                    </div>
+                `;
+            } else {
+                matchingSessions.forEach(log => {
+                    const [y, m, d] = log.date.split('-').map(Number);
+                    const formattedDate = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(y, m - 1, d));
+                    const exCount = (log.exercises || []).length;
+                    const exNames = (log.exercises || []).map(e => e.name).join(', ');
+
+                    listHTML += `
+                        <div class="search-result-item" onclick="navigateToDayFromSearch('${log.date}')">
+                            <div style="overflow:hidden; flex:1;">
+                                <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.2rem;">
+                                    <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:0.72rem;">${log.type}</span>
+                                    <strong style="font-size:0.85rem;">${formattedDate}</strong>
+                                    ${log.gym ? `<span class="text-muted" style="font-size:0.75rem;">• ${escapeHtml(log.gym)}</span>` : ''}
+                                </div>
+                                <div class="text-muted" style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                    ${exCount > 0 ? escapeHtml(exNames) : 'No exercises logged'}
+                                </div>
+                            </div>
+                            <i data-lucide="chevron-right" class="text-muted" style="width:14px;height:14px;flex-shrink:0;"></i>
+                        </div>
+                    `;
+                });
+            }
+
+            body.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <div style="font-weight:700; font-size:0.88rem; display:flex; align-items:center; gap:0.4rem;">
+                        <i data-lucide="dumbbell" style="width:16px;height:16px;color:var(--primary);"></i> Workouts by Split
+                    </div>
+                    <button class="btn btn-sm" onclick="selectSearchPreset('all')" style="padding:0.2rem 0.6rem; font-size:0.75rem;">← Presets</button>
+                </div>
+
+                ${tabsHTML}
+
+                <div class="search-section-title">
+                    <span>${activeSplit} Workouts (${matchingSessions.length})</span>
+                    <span style="font-weight:400; font-size:0.7rem;">Click to view</span>
+                </div>
+                <div style="max-height:280px; overflow-y:auto;">
+                    ${listHTML}
+                </div>
+            `;
+        }
+
+        // 5. Notes Search Preset
+        function renderPresetNotesSearch() {
+            const body = document.getElementById('search-modal-body');
+            const logs = appState.workoutLogs || {};
+            const notesResults = [];
+
+            Object.keys(logs).sort().reverse().forEach(date => {
+                const log = logs[date];
+                const sessionNotes = log.notes || '';
+                const exerciseNotesList = [];
+
+                if (log.exercises) {
+                    log.exercises.forEach(ex => {
+                        if (ex.notes && ex.notes.trim().length > 0) {
+                            exerciseNotesList.push({ exercise: ex.name, text: ex.notes.trim() });
+                        }
+                    });
+                }
+
+                if (sessionNotes.trim().length > 0 || exerciseNotesList.length > 0) {
+                    notesResults.push({
+                        date,
+                        type: log.type || '',
+                        gym: log.gym || '',
+                        sessionNotes,
+                        exerciseNotesList
+                    });
+                }
+            });
+
+            let listHTML = '';
+            if (notesResults.length === 0) {
+                listHTML = `
+                    <div style="text-align:center; padding:2rem 1rem; color:var(--text-muted);">
+                        <i data-lucide="file-text" style="width:32px;height:32px;opacity:0.4;margin-bottom:0.5rem;"></i>
+                        <p>No workout notes found yet.</p>
+                        <p style="font-size:0.75rem; opacity:0.7;">Add notes when logging sessions or sets to review them here!</p>
+                    </div>
+                `;
+            } else {
+                notesResults.forEach(item => {
+                    const [y, m, d] = item.date.split('-').map(Number);
+                    const formattedDate = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(y, m - 1, d));
+
+                    let notesPreview = '';
+                    if (item.sessionNotes) {
+                        notesPreview += `<div style="font-size:0.8rem; color:var(--text); margin-top:0.25rem;">📝 <em>"${escapeHtml(item.sessionNotes)}"</em></div>`;
+                    }
+                    if (item.exerciseNotesList.length > 0) {
+                        item.exerciseNotesList.forEach(en => {
+                            notesPreview += `<div style="font-size:0.76rem; color:var(--text-muted); margin-top:0.2rem;"><strong>${escapeHtml(en.exercise)}:</strong> "${escapeHtml(en.text)}"</div>`;
+                        });
+                    }
+
+                    listHTML += `
+                        <div class="search-result-item" onclick="navigateToDayFromSearch('${item.date}')" style="align-items:flex-start;">
+                            <div style="flex:1;">
+                                <div style="display:flex; align-items:center; gap:0.4rem;">
+                                    <span class="badge ${getWorkoutColorClass(item.type)}" style="font-size:0.7rem;">${item.type}</span>
+                                    <strong style="font-size:0.85rem;">${formattedDate}</strong>
+                                    ${item.gym ? `<span class="text-muted" style="font-size:0.75rem;">• ${escapeHtml(item.gym)}</span>` : ''}
+                                </div>
+                                ${notesPreview}
+                            </div>
+                            <i data-lucide="chevron-right" class="text-muted" style="width:14px;height:14px;margin-top:0.25rem;flex-shrink:0;"></i>
+                        </div>
+                    `;
+                });
+            }
+
+            body.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <div style="font-weight:700; font-size:0.88rem; display:flex; align-items:center; gap:0.4rem;">
+                        <i data-lucide="file-text" style="width:16px;height:16px;color:#ec4899;"></i> Workout & Exercise Notes
+                    </div>
+                    <button class="btn btn-sm" onclick="selectSearchPreset('all')" style="padding:0.2rem 0.6rem; font-size:0.75rem;">← Presets</button>
+                </div>
+
+                <div class="search-section-title">
+                    <span>Logged Notes (${notesResults.length})</span>
+                    <span style="font-weight:400; font-size:0.7rem;">Click to open session</span>
+                </div>
+                <div style="max-height:300px; overflow-y:auto;">
+                    ${listHTML}
+                </div>
+            `;
+        }
+
+        // 6. Streaks & Consistency Stats Preset
+        function renderPresetStats() {
+            const body = document.getElementById('search-modal-body');
+            const logs = appState.workoutLogs || {};
+            const dates = Object.keys(logs).sort();
+            const totalWorkouts = dates.length;
+
+            // Split breakdown
+            const splitCounts = {};
+            let totalVolumeAllTime = 0;
+            dates.forEach(d => {
+                const log = logs[d];
+                const t = log.type || 'Workout';
+                splitCounts[t] = (splitCounts[t] || 0) + 1;
+                if (log.exercises) {
+                    log.exercises.forEach(ex => {
+                        if (ex.sets) {
+                            ex.sets.forEach(s => {
+                                totalVolumeAllTime += ((s.weight || 0) * (s.reps || 0));
+                            });
+                        }
+                    });
+                }
+            });
+
+            // Most logged split
+            let favoriteSplit = '—';
+            let maxSplitCount = 0;
+            Object.keys(splitCounts).forEach(s => {
+                if (splitCounts[s] > maxSplitCount) {
+                    maxSplitCount = splitCounts[s];
+                    favoriteSplit = s;
+                }
+            });
+
+            // First and last workout dates
+            let firstDateStr = dates.length > 0 ? dates[0] : '—';
+            let lastDateStr = dates.length > 0 ? dates[dates.length - 1] : '—';
+
+            body.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <div style="font-weight:700; font-size:0.88rem; display:flex; align-items:center; gap:0.4rem;">
+                        <i data-lucide="flame" style="width:16px;height:16px;color:#f97316;"></i> Training Consistency & Stats
+                    </div>
+                    <button class="btn btn-sm" onclick="selectSearchPreset('all')" style="padding:0.2rem 0.6rem; font-size:0.75rem;">← Presets</button>
+                </div>
+
+                <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:0.65rem; margin-bottom:1rem;">
+                    <div style="background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-tight); padding:0.85rem; text-align:center;">
+                        <div style="font-size:1.6rem; font-weight:800; color:var(--primary); line-height:1;">${totalWorkouts}</div>
+                        <div class="text-muted" style="font-size:0.7rem; margin-top:0.3rem;">LIFETIME SESSIONS</div>
+                    </div>
+                    <div style="background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-tight); padding:0.85rem; text-align:center;">
+                        <div style="font-size:1.6rem; font-weight:800; color:#3b82f6; line-height:1;">${favoriteSplit}</div>
+                        <div class="text-muted" style="font-size:0.7rem; margin-top:0.3rem;">TOP SPLIT (${maxSplitCount} times)</div>
+                    </div>
+                    <div style="background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-tight); padding:0.85rem; text-align:center;">
+                        <div style="font-size:1.4rem; font-weight:800; color:#f59e0b; line-height:1;">${totalVolumeAllTime.toLocaleString()} <span style="font-size:0.8rem; font-weight:500;">${appState.unit}</span></div>
+                        <div class="text-muted" style="font-size:0.7rem; margin-top:0.3rem;">CUMULATIVE VOLUME</div>
+                    </div>
+                    <div style="background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-tight); padding:0.85rem; text-align:center;">
+                        <div style="font-size:1.4rem; font-weight:800; color:#a855f7; line-height:1;">${(appState.exercises || []).length}</div>
+                        <div class="text-muted" style="font-size:0.7rem; margin-top:0.3rem;">EXERCISES IN LIBRARY</div>
+                    </div>
+                </div>
+
+                <div style="background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-tight); padding:0.75rem 0.9rem; font-size:0.82rem; margin-bottom:1.25rem;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:0.25rem;">
+                        <span class="text-muted">First Logged Workout:</span>
+                        <strong>${firstDateStr}</strong>
+                    </div>
+                    <div style="display:flex; justify-content:space-between;">
+                        <span class="text-muted">Most Recent Workout:</span>
+                        <strong>${lastDateStr}</strong>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end;">
+                    <button class="btn btn-primary btn-sm" onclick="closeSearchModal(); window.location.hash='#progress';" style="display:inline-flex; align-items:center; gap:0.35rem;">
+                        <i data-lucide="trending-up" style="width:14px;height:14px;"></i> Open Progress Analytics
+                    </button>
+                </div>
+            `;
+        }
+
+        // 7. Live Dynamic Search (Matches exercises, notes, dates, gyms, splits)
+        function renderLiveSearchResults(rawQuery) {
+            const body = document.getElementById('search-modal-body');
+            const q = rawQuery.toLowerCase();
+            const logs = appState.workoutLogs || {};
+            const exercises = appState.exercises || [];
+
+            // 1. Matched Exercises
+            const matchedExercises = exercises.filter(e => {
+                return e.name.toLowerCase().includes(q) || (e.category && e.category.toLowerCase().includes(q));
+            });
+
+            // 2. Matched Workouts & Dates & Notes & Gyms
+            const matchedWorkouts = [];
+            Object.keys(logs).sort().reverse().forEach(date => {
+                const log = logs[date];
+                const typeMatches = (log.type || '').toLowerCase().includes(q);
+                const gymMatches = (log.gym || '').toLowerCase().includes(q);
+                const dateMatches = date.toLowerCase().includes(q);
+                const notesMatches = (log.notes || '').toLowerCase().includes(q);
+                
+                let matchedExNotes = '';
+                let hasExNameMatch = false;
+                if (log.exercises) {
+                    log.exercises.forEach(ex => {
+                        if (ex.name.toLowerCase().includes(q)) hasExNameMatch = true;
+                        if (ex.notes && ex.notes.toLowerCase().includes(q)) {
+                            matchedExNotes = `${ex.name}: ${ex.notes}`;
+                        }
+                    });
+                }
+
+                if (typeMatches || gymMatches || dateMatches || notesMatches || matchedExNotes || hasExNameMatch) {
+                    matchedWorkouts.push({
+                        date,
+                        type: log.type || '',
+                        gym: log.gym || '',
+                        notes: log.notes || '',
+                        matchedExNotes,
+                        exercises: log.exercises || []
+                    });
+                }
+            });
+
+            if (matchedExercises.length === 0 && matchedWorkouts.length === 0) {
+                body.innerHTML = `
+                    <div style="text-align:center; padding:2.5rem 1rem; color:var(--text-muted);">
+                        <i data-lucide="search-x" style="width:36px;height:36px;opacity:0.4;margin-bottom:0.6rem;"></i>
+                        <h4 style="margin:0 0 0.25rem 0; color:var(--text);">No results found for "${escapeHtml(rawQuery)}"</h4>
+                        <p style="font-size:0.8rem; margin:0 0 1rem 0;">Try searching for an exercise name (e.g. "Pull-up"), a split (e.g. "Push"), or a date.</p>
+                        <button class="btn btn-sm" onclick="clearSearchInput()">Clear Search</button>
+                    </div>
+                `;
+                lucide.createIcons({ root: body });
+                return;
+            }
+
+            let resultsHTML = '';
+
+            // Render Exercises Section
+            if (matchedExercises.length > 0) {
+                resultsHTML += `
+                    <div class="search-section-title">
+                        <span>Exercises (${matchedExercises.length})</span>
+                        <span style="font-weight:400; font-size:0.7rem;">Click to view PR / Chart</span>
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                `;
+                matchedExercises.slice(0, 6).forEach(ex => {
+                    const stats = calculateExercisePRStats(ex.name);
+                    let prSnippet = 'No logs yet';
+                    if (stats && stats.hasData) {
+                        prSnippet = stats.isBodyweight 
+                            ? `PR: BW × ${stats.allTimeBest.reps}` 
+                            : `PR: ${stats.allTimeBest.weight}${appState.unit} × ${stats.allTimeBest.reps}`;
+                    }
+
+                    resultsHTML += `
+                        <div class="search-result-item" onclick="selectSearchPreset('pr', '${escapeHtml(ex.name).replace(/'/g, "\\'")}')">
+                            <div class="flex items-center gap-2" style="overflow:hidden;">
+                                <span class="badge ${getWorkoutColorClass(ex.category)}" style="font-size:0.7rem; flex-shrink:0;">${ex.category}</span>
+                                <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                    <div style="font-weight:700; font-size:0.88rem;">${escapeHtml(ex.name)}</div>
+                                    <div class="text-muted" style="font-size:0.75rem;">${prSnippet}</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2" style="flex-shrink:0;">
+                                <button class="btn btn-sm" onclick="event.stopPropagation(); navigateToExerciseFromSearch('${escapeHtml(ex.name).replace(/'/g, "\\'")}')" style="padding:0.2rem 0.55rem; font-size:0.72rem;" title="Open chart">
+                                    <i data-lucide="trending-up" style="width:12px;height:12px;"></i> Chart
+                                </button>
+                                <i data-lucide="chevron-right" class="text-muted" style="width:14px;height:14px;"></i>
+                            </div>
+                        </div>
+                    `;
+                });
+                resultsHTML += `</div>`;
+            }
+
+            // Render Workouts Section
+            if (matchedWorkouts.length > 0) {
+                resultsHTML += `
+                    <div class="search-section-title">
+                        <span>Workouts & Notes (${matchedWorkouts.length})</span>
+                        <span style="font-weight:400; font-size:0.7rem;">Click to open day</span>
+                    </div>
+                    <div>
+                `;
+                matchedWorkouts.slice(0, 10).forEach(log => {
+                    const [y, m, d] = log.date.split('-').map(Number);
+                    const formattedDate = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(y, m - 1, d));
+                    
+                    let noteSnippet = '';
+                    if (log.notes) {
+                        noteSnippet = `<div style="font-size:0.75rem; color:var(--text); margin-top:0.15rem;">📝 "${escapeHtml(log.notes)}"</div>`;
+                    } else if (log.matchedExNotes) {
+                        noteSnippet = `<div style="font-size:0.75rem; color:var(--primary); margin-top:0.15rem;">💬 ${escapeHtml(log.matchedExNotes)}</div>`;
+                    } else {
+                        const exNames = log.exercises.slice(0, 3).map(e => e.name).join(', ') + (log.exercises.length > 3 ? ` +${log.exercises.length - 3} more` : '');
+                        noteSnippet = `<div class="text-muted" style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(exNames || 'No exercises')}</div>`;
+                    }
+
+                    resultsHTML += `
+                        <div class="search-result-item" onclick="navigateToDayFromSearch('${log.date}')">
+                            <div style="overflow:hidden; flex:1;">
+                                <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.15rem;">
+                                    <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:0.7rem;">${log.type}</span>
+                                    <strong style="font-size:0.85rem;">${formattedDate}</strong>
+                                    ${log.gym ? `<span class="text-muted" style="font-size:0.75rem;">• ${escapeHtml(log.gym)}</span>` : ''}
+                                </div>
+                                ${noteSnippet}
+                            </div>
+                            <i data-lucide="chevron-right" class="text-muted" style="width:14px;height:14px;flex-shrink:0;margin-left:0.5rem;"></i>
+                        </div>
+                    `;
+                });
+                resultsHTML += `</div>`;
+            }
+
+            body.innerHTML = resultsHTML;
+            lucide.createIcons({ root: body });
+        }
+
+        // Global Shortcut Listeners for Search
+        document.addEventListener('keydown', (e) => {
+            // ESC key to close search modal
+            if (e.key === 'Escape') {
+                const searchModal = document.getElementById('modal-search');
+                if (searchModal && searchModal.classList.contains('open')) {
+                    closeSearchModal();
+                    e.preventDefault();
+                    return;
+                }
+            }
+
+            // Keyboard shortcuts: Ctrl+K, Cmd+K, Ctrl+/, Cmd+/
+            const isModifier = e.ctrlKey || e.metaKey;
+            if (isModifier && (e.key.toLowerCase() === 'k' || e.key === '/')) {
+                e.preventDefault();
+                toggleSearchModal();
+            }
+        });
+
         // Settings & Backup
         window.openSettingsModal = () => {
             const unitEl = document.getElementById('settings-unit');
