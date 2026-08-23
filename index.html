@@ -285,16 +285,11 @@
         }
         .calendar-cell {
             background-color: var(--surface);
-            min-height: 96px;
-            padding: 0.55rem 0.5rem;
+            min-height: 100px;
+            padding: 0.5rem;
             cursor: pointer;
             transition: background-color 0.2s;
             position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.35rem;
-            overflow: hidden;
         }
         .calendar-cell:hover { background-color: var(--surface-2); }
         .calendar-cell.today { border: 2px solid var(--primary); background-color: rgba(74, 222, 128, 0.05); }
@@ -302,29 +297,11 @@
         .calendar-cell.empty { background-color: var(--bg); opacity: 0.5; cursor: default; }
         .calendar-cell.empty:hover { background-color: var(--bg); }
         .calendar-date {
-            font-weight: 700;
-            font-size: 0.85rem;
+            font-weight: 500;
             color: var(--text-muted);
-            line-height: 1;
-            margin-bottom: 0.15rem;
+            margin-bottom: 0.5rem;
         }
-        .calendar-cell.today .calendar-date { color: var(--primary); font-weight: 800; }
-        
-        .calendar-cell .badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 0.2rem 0.55rem;
-            border-radius: var(--radius-pill);
-            font-size: 0.72rem;
-            font-weight: 700;
-            letter-spacing: 0.02em;
-            line-height: 1;
-            white-space: nowrap;
-            box-sizing: border-box;
-            max-width: 100%;
-        }
+        .calendar-cell.today .calendar-date { color: var(--primary); font-weight: 700; }
         
         /* Modals */
         .modal-overlay {
@@ -1025,8 +1002,8 @@
             }
             .calendar-cell .badge {
                 font-size: 0.65rem;
-                padding: 0.15rem 0.45rem;
-                border-radius: var(--radius-pill);
+                padding: 0.15rem 0.35rem;
+                border-radius: 4px;
                 max-width: 100%;
                 overflow: hidden;
                 text-overflow: ellipsis;
