@@ -315,15 +315,15 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 0.22rem 0.45rem;
-            border-radius: var(--radius-tight);
-            font-size: 0.7rem;
+            padding: 0.2rem 0.55rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.72rem;
             font-weight: 700;
             letter-spacing: 0.02em;
-            line-height: 1.2;
+            line-height: 1;
+            white-space: nowrap;
             box-sizing: border-box;
             max-width: 100%;
-            word-break: normal;
         }
         
         /* Modals */
@@ -1025,8 +1025,8 @@
             }
             .calendar-cell .badge {
                 font-size: 0.65rem;
-                padding: 0.15rem 0.35rem;
-                border-radius: 4px;
+                padding: 0.15rem 0.45rem;
+                border-radius: var(--radius-pill);
                 max-width: 100%;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -2577,6 +2577,14 @@
             const clean = type.toLowerCase().replace(/[^a-z0-9]/g, '');
             return `bg-${clean}`;
         }
+        function getCalendarBadgeLabel(type) {
+            if (!type) return '';
+            const normalized = type.trim().toLowerCase();
+            if (normalized === 'arms & delts' || normalized === 'arms and delts' || normalized === 'arms & shoulder' || normalized === 'arms & shoulders') {
+                return 'A & D';
+            }
+            return type;
+        }
         function getTimeColorClass(time) { return `time-${time.replace(/\s+/g, '').toLowerCase()}`; }
         function getBgTimeColorClass(time) { return `bg-time-${time.replace(/\s+/g, '').toLowerCase()}`; }
 
@@ -4056,7 +4064,8 @@
                 
                 let badgeHTML = '';
                 if(log) {
-                    badgeHTML = `<span class="badge ${getWorkoutColorClass(log.type)}">${log.type}</span>`;
+                    const badgeLabel = getCalendarBadgeLabel(log.type);
+                    badgeHTML = `<span class="badge ${getWorkoutColorClass(log.type)}" title="${escapeHtml(log.type)}">${escapeHtml(badgeLabel)}</span>`;
                 }
                 
                 gridHTML += `
