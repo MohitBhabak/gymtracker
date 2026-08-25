@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>GymLog Mobile — Workout & PR Tracker</title>
+
+  <!-- PWA & Mobile WebClip Meta -->
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#09090b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GymLog">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+
+  <!-- Fonts (Fontshare + Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,700,500,400&f[]=satoshi@700,500,400&display=swap" rel="stylesheet">
+
+  <!-- Chart.js & Lucide Icons -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Google Identity Services for Drive Sync -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- Mobile Stylesheet -->
+  <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+
+  <!-- Top Mobile Header -->
+  <header class="mobile-header">
+    <div class="brand-badge">
+      <i data-lucide="dumbbell" style="width: 22px; height: 22px;"></i>
+      GymLog
+    </div>
+    <div class="header-tools">
+      <div class="streak-pill" title="Workout Consistency Streak">
+        🔥 <span id="streak-count">0</span>
+      </div>
+      <button class="header-btn" onclick="openSearchSheet()" title="Search Workouts & PRs">
+        <i data-lucide="search" style="width: 18px; height: 18px;"></i>
+      </button>
+      <button class="header-btn" onclick="openSheet('sheet-install-guide')" title="Install App to Home Screen">
+        <i data-lucide="download" style="width: 18px; height: 18px;"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Views Container -->
+  <main>
+
+    <!-- 1. CALENDAR VIEW -->
+    <section id="view-calendar" class="view-section">
+      <div class="mobile-card">
+        <div class="month-nav">
+          <button class="nav-arrow-btn" onclick="prevMonth()" title="Previous Month">
+            <i data-lucide="chevron-left" style="width: 18px; height: 18px;"></i>
+          </button>
+          <span id="cal-month-title" class="month-title">Month 2026</span>
+          <button class="nav-arrow-btn" onclick="nextMonth()" title="Next Month">
+            <i data-lucide="chevron-right" style="width: 18px; height: 18px;"></i>
+          </button>
+        </div>
+
+        <div class="calendar-grid" style="margin-bottom: 6px;">
+          <div class="cal-weekday">M</div>
+          <div class="cal-weekday">T</div>
+          <div class="cal-weekday">W</div>
+          <div class="cal-weekday">T</div>
+          <div class="cal-weekday">F</div>
+          <div class="cal-weekday">S</div>
+          <div class="cal-weekday">S</div>
+        </div>
+
+        <div id="cal-days-grid" class="calendar-grid">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Quick Action -->
+      <button class="fab-btn" onclick="openDayLogSheet(new Date().toISOString().split('T')[0])">
+        <i data-lucide="plus-circle" style="width: 20px; height: 20px;"></i>
+        + Log Today's Workout
+      </button>
+
+      <!-- Monthly Summary Card -->
+      <div class="mobile-card">
+        <div class="mobile-card-title" style="margin-bottom: 0.75rem;">
+          <i data-lucide="activity" style="width: 18px; height: 18px; color: var(--primary);"></i>
+          Monthly Summary
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="stat-label">Total Workouts</span>
+            <span id="month-stat-sessions" class="stat-value text-primary">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Total Volume</span>
+            <span id="month-stat-volume" class="stat-value">0 lbs</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Total Sets</span>
+            <span id="month-stat-sets" class="stat-value">0</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Consistency</span>
+            <span class="stat-value" style="color: #fbbf24;">Active</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. PROGRESS VIEW -->
+    <section id="view-progress" class="view-section hidden">
+      <div class="mobile-card">
+        <div class="input-group" style="margin-bottom: 0.75rem;">
+          <label class="input-label">Select Exercise</label>
+          <select id="progress-exercise-select" class="mobile-input" onchange="updateExerciseAnalytics(this.value)">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <div class="stats-grid" style="margin-bottom: 1rem;">
+          <div class="stat-box">
+            <span class="stat-label">Est. 1RM</span>
+            <span id="progress-stat-1rm" class="stat-value text-primary">0 lbs</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Max Weight</span>
+            <span id="progress-stat-maxwt" class="stat-value">0 lbs</span>
+          </div>
+          <div class="stat-box" style="grid-column: span 2;">
+            <span class="stat-label">Lifetime Volume</span>
+            <span id="progress-stat-vol" class="stat-value">0 lbs</span>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <canvas id="chart-progress"></canvas>
+        </div>
+      </div>
+
+      <div class="mobile-card-title" style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+        <i data-lucide="history" style="width: 18px; height: 18px; color: var(--primary);"></i>
+        Past Sessions
+      </div>
+      <div id="progress-history-list">
+        <!-- Dynamically populated -->
+      </div>
+    </section>
+
+    <!-- 3. WEIGHT VIEW -->
+    <section id="view-weight" class="view-section hidden">
+      <div class="mobile-card">
+        <div class="stats-grid" style="margin-bottom: 1rem;">
+          <div class="stat-box">
+            <span class="stat-label">Current Weight</span>
+            <span id="weight-stat-current" class="stat-value text-primary">-- lbs</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Trendline Average</span>
+            <span id="weight-stat-trend" class="stat-value">-- lbs</span>
+          </div>
+        </div>
+
+        <!-- Quick Log Stepper -->
+        <div class="input-group">
+          <label class="input-label">Today's Weight (lbs)</label>
+          <div class="stepper-row">
+            <button class="stepper-btn" onclick="stepWeightInput(-0.5)">-</button>
+            <input type="number" step="0.1" id="input-today-weight" class="mobile-input" style="text-align: center; font-size: 1.25rem; font-weight: 700;" placeholder="165.0">
+            <button class="stepper-btn" onclick="stepWeightInput(+0.5)">+</button>
+          </div>
+        </div>
+
+        <button class="fab-btn" style="margin-top: 0.5rem;" onclick="logTodayWeight()">
+          <i data-lucide="check" style="width: 18px; height: 18px;"></i>
+          Save Bodyweight
+        </button>
+      </div>
+
+      <div class="mobile-card">
+        <div class="mobile-card-title" style="margin-bottom: 0.75rem;">
+          <i data-lucide="trending-up" style="width: 18px; height: 18px; color: var(--primary);"></i>
+          Weight Trend Progression
+        </div>
+        <div class="chart-container">
+          <canvas id="chart-weight"></canvas>
+        </div>
+      </div>
+
+      <div class="mobile-card-title" style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+        <i data-lucide="calendar" style="width: 18px; height: 18px; color: var(--primary);"></i>
+        Weight History
+      </div>
+      <div id="weight-history-list">
+        <!-- Dynamically populated -->
+      </div>
+    </section>
+
+    <!-- 4. BENCH PR VIEW -->
+    <section id="view-bench" class="view-section hidden">
+      <div class="mobile-card">
+        <div class="stats-grid" style="margin-bottom: 1rem;">
+          <div class="stat-box">
+            <span class="stat-label">All-Time Bench PR</span>
+            <span id="bench-stat-current" class="stat-value" style="color: #fbbf24;">-- lbs</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">Estimated 1RM</span>
+            <span id="bench-stat-1rm" class="stat-value text-primary">-- lbs</span>
+          </div>
+        </div>
+
+        <button class="fab-btn" onclick="openAddBenchPRSheet()">
+          <i data-lucide="trophy" style="width: 18px; height: 18px;"></i>
+          + Log New Bench PR
+        </button>
+      </div>
+
+      <div class="mobile-card">
+        <div class="mobile-card-title" style="margin-bottom: 0.75rem;">
+          <i data-lucide="line-chart" style="width: 18px; height: 18px; color: #fbbf24;"></i>
+          Bench PR Milestones
+        </div>
+        <div class="chart-container">
+          <canvas id="chart-bench"></canvas>
+        </div>
+      </div>
+
+      <div class="mobile-card-title" style="margin-top: 0.5rem; margin-bottom: 0.5rem;">
+        <i data-lucide="award" style="width: 18px; height: 18px; color: #fbbf24;"></i>
+        Historical PR Logs
+      </div>
+      <div id="bench-history-list">
+        <!-- Dynamically populated -->
+      </div>
+    </section>
+
+    <!-- 5. SETTINGS VIEW -->
+    <section id="view-settings" class="view-section hidden">
+      <!-- Google Drive Sync Card -->
+      <div class="mobile-card">
+        <div class="mobile-card-title">
+          <i data-lucide="cloud" style="width: 18px; height: 18px; color: #60a5fa;"></i>
+          Google Drive Cross-Sync
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0.5rem 0 0.85rem 0;">
+          Sync workout logs and PRs automatically between your phone and desktop web app via private Google Drive storage.
+        </p>
+        <div id="gdrive-sync-status-mobile" style="font-size: 0.85rem; margin-bottom: 0.75rem;">
+          <span style="color: var(--text-muted);">○ Not connected</span>
+        </div>
+      </div>
+
+      <!-- JSON Backup & Export -->
+      <div class="mobile-card">
+        <div class="mobile-card-title">
+          <i data-lucide="database" style="width: 18px; height: 18px; color: var(--primary);"></i>
+          Data Backup & Transfer
+        </div>
+        <div class="flex gap-2" style="margin-top: 0.85rem;">
+          <button class="fab-btn" style="flex: 1; padding: 0.75rem;" onclick="exportJSONBackup()">
+            <i data-lucide="download" style="width: 16px; height: 16px;"></i>
+            Export JSON
+          </button>
+          <label class="fab-btn" style="flex: 1; padding: 0.75rem; background: var(--surface-offset); color: var(--text); cursor: pointer;">
+            <i data-lucide="upload" style="width: 16px; height: 16px;"></i>
+            Import JSON
+            <input type="file" accept=".json" style="display: none;" onchange="importJSONBackup(this)">
+          </label>
+        </div>
+      </div>
+
+      <!-- Theme & PWA -->
+      <div class="mobile-card">
+        <div class="mobile-card-title">
+          <i data-lucide="smartphone" style="width: 18px; height: 18px; color: var(--primary);"></i>
+          App Preferences
+        </div>
+        <div class="flex flex-col gap-2" style="margin-top: 0.85rem;">
+          <button class="fab-btn" style="background: var(--surface-offset); color: var(--text); justify-content: space-between;" onclick="toggleMobileTheme()">
+            <span class="flex items-center gap-2">
+              <i data-lucide="moon" style="width: 16px; height: 16px;"></i>
+              Toggle Dark / Light Mode
+            </span>
+            <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+          </button>
+          <button class="fab-btn" style="background: var(--surface-offset); color: var(--text); justify-content: space-between;" onclick="openSheet('sheet-install-guide')">
+            <span class="flex items-center gap-2">
+              <i data-lucide="plus-square" style="width: 16px; height: 16px;"></i>
+              Add to Phone Home Screen
+            </span>
+            <i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i>
+          </button>
+          <a href="../index.html" class="fab-btn" style="background: var(--surface-offset); color: var(--text-muted); justify-content: space-between; text-decoration: none;">
+            <span class="flex items-center gap-2">
+              <i data-lucide="monitor" style="width: 16px; height: 16px;"></i>
+              Open Desktop Web Version
+            </span>
+            <i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <a href="#calendar" class="nav-item active" data-view="calendar" onclick="switchTab('calendar')">
+      <i data-lucide="calendar"></i>
+      <span>Calendar</span>
+    </a>
+    <a href="#progress" class="nav-item" data-view="progress" onclick="switchTab('progress')">
+      <i data-lucide="bar-chart-2"></i>
+      <span>Progress</span>
+    </a>
+    <a href="#weight" class="nav-item" data-view="weight" onclick="switchTab('weight')">
+      <i data-lucide="scale"></i>
+      <span>Weight</span>
+    </a>
+    <a href="#bench" class="nav-item" data-view="bench" onclick="switchTab('bench')">
+      <i data-lucide="award"></i>
+      <span>Bench PR</span>
+    </a>
+    <a href="#settings" class="nav-item" data-view="settings" onclick="switchTab('settings')">
+      <i data-lucide="settings"></i>
+      <span>Settings</span>
+    </a>
+  </nav>
+
+  <!-- BOTTOM SHEETS / MODALS -->
+
+  <!-- 1. DAY WORKOUT LOG SHEET -->
+  <div id="sheet-workout-log" class="sheet-overlay">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div>
+          <h3 id="sheet-log-date-title" class="sheet-title">Log Workout</h3>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Choose split & track your sets</span>
+        </div>
+        <button class="sheet-close-btn" onclick="closeSheet('sheet-workout-log')">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+
+      <!-- Split Chips -->
+      <div class="input-group">
+        <label class="input-label">Workout Split</label>
+        <div id="split-chips-container" class="chip-row">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Quick Paste Helper -->
+      <div class="flex justify-between items-center" style="margin-bottom: 0.5rem;">
+        <label class="input-label">Exercises & Sets</label>
+        <button type="button" style="font-size: 0.75rem; color: var(--primary); font-weight: 700; display: flex; align-items: center; gap: 0.25rem;" onclick="openNoteParserModal()">
+          <i data-lucide="clipboard" style="width: 14px; height: 14px;"></i>
+          Paste Notes
+        </button>
+      </div>
+
+      <!-- Exercises List -->
+      <div id="log-exercises-container">
+        <!-- Rendered via JS -->
+      </div>
+
+      <button type="button" class="fab-btn" style="background: var(--surface-2); color: var(--text); margin-bottom: 1rem;" onclick="addExerciseToLog('', [{weight:'', reps:''}])">
+        + Add Another Exercise
+      </button>
+
+      <!-- Workout Details -->
+      <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-bottom: 0.75rem;">
+        <div class="input-group">
+          <label class="input-label">Duration (mins)</label>
+          <input type="number" id="log-workout-duration" class="mobile-input" placeholder="60">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Effort (RPE 1-10)</label>
+          <input type="number" id="log-workout-rpe" class="mobile-input" placeholder="8" min="1" max="10">
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">Workout Notes</label>
+        <textarea id="log-workout-notes" class="mobile-input" rows="2" placeholder="Felt strong on bench, increased incline dumbell press..."></textarea>
+      </div>
+
+      <!-- Save & Delete Actions -->
+      <div class="flex flex-col gap-2" style="margin-top: 0.5rem;">
+        <button type="button" class="fab-btn" onclick="saveWorkoutLog()">
+          <i data-lucide="check" style="width: 18px; height: 18px;"></i>
+          Save Workout Session
+        </button>
+        <button type="button" id="btn-delete-workout" class="fab-btn" style="background: var(--danger-bg); color: var(--danger);" onclick="deleteCurrentWorkout()">
+          <i data-lucide="trash-2" style="width: 18px; height: 18px;"></i>
+          Delete Session
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. QUICK PASTE NOTE PARSER SHEET -->
+  <div id="sheet-note-parser" class="sheet-overlay">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <div>
+          <h3 class="sheet-title">Paste Notes</h3>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">From Apple Notes, Keep, or Messages</span>
+        </div>
+        <button class="sheet-close-btn" onclick="closeSheet('sheet-note-parser')">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">Raw Workout Text</label>
+        <textarea id="quick-paste-input" class="mobile-input" rows="7" placeholder="Incline DB: 70x10, 75x8, 80x6
+Lat Pulldown: 140x12, 160x10
+Tricep Pushdown: 60x15, 70x12"></textarea>
+      </div>
+
+      <button type="button" class="fab-btn" onclick="parseAndInsertNotes()">
+        <i data-lucide="sparkles" style="width: 18px; height: 18px;"></i>
+        Parse & Insert Exercises
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. BENCH PR SHEET -->
+  <div id="sheet-bench-pr" class="sheet-overlay">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 class="sheet-title">Log Bench PR</h3>
+        <button class="sheet-close-btn" onclick="closeSheet('sheet-bench-pr')">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">Date</label>
+        <input type="date" id="input-bench-date" class="mobile-input">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+        <div class="input-group">
+          <label class="input-label">Weight (lbs)</label>
+          <input type="number" id="input-bench-weight" class="mobile-input" placeholder="225">
+        </div>
+        <div class="input-group">
+          <label class="input-label">Reps Completed</label>
+          <input type="number" id="input-bench-reps" class="mobile-input" placeholder="1" min="1">
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">RPE (1-10)</label>
+        <input type="number" id="input-bench-rpe" class="mobile-input" placeholder="10" min="1" max="10">
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">Notes (Grip, pause, spotter...)</label>
+        <input type="text" id="input-bench-notes" class="mobile-input" placeholder="Clean touch and go">
+      </div>
+
+      <button type="button" class="fab-btn" onclick="saveBenchPR()">
+        <i data-lucide="check" style="width: 18px; height: 18px;"></i>
+        Save Milestone PR
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. SEARCH / COMMAND PALETTE SHEET -->
+  <div id="sheet-search" class="sheet-overlay">
+    <div class="bottom-sheet" style="max-height: 85vh;">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 class="sheet-title">Search History</h3>
+        <button class="sheet-close-btn" onclick="closeSheet('sheet-search')">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+
+      <div class="input-group" style="margin-bottom: 0.75rem;">
+        <input type="text" id="mobile-search-input" class="mobile-input" placeholder="Search exercises, splits, notes..." oninput="performMobileSearch(this.value)">
+      </div>
+
+      <div id="search-results-list" style="overflow-y: auto; max-height: 60vh;">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. INSTALL GUIDE SHEET -->
+  <div id="sheet-install-guide" class="sheet-overlay">
+    <div class="bottom-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-header">
+        <h3 class="sheet-title">Install GymLog Mobile</h3>
+        <button class="sheet-close-btn" onclick="closeSheet('sheet-install-guide')">
+          <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+        </button>
+      </div>
+
+      <div class="mobile-card" style="margin-bottom: 0.75rem;">
+        <div class="mobile-card-title" style="color: #60a5fa; margin-bottom: 0.4rem;">
+          <i data-lucide="apple" style="width: 18px; height: 18px;"></i>
+          iPhone & iPad (Safari)
+        </div>
+        <p style="font-size: 0.85rem; line-height: 1.4; color: var(--text-muted);">
+          1. Tap the <b>Share</b> icon at the bottom of Safari.<br>
+          2. Scroll down and tap <b>Add to Home Screen</b>.<br>
+          3. Tap <b>Add</b>. GymLog will launch as a standalone fullscreen app!
+        </p>
+      </div>
+
+      <div class="mobile-card" style="margin-bottom: 0.75rem;">
+        <div class="mobile-card-title" style="color: var(--primary); margin-bottom: 0.4rem;">
+          <i data-lucide="smartphone" style="width: 18px; height: 18px;"></i>
+          Android (Chrome)
+        </div>
+        <p style="font-size: 0.85rem; line-height: 1.4; color: var(--text-muted);">
+          1. Tap the <b>three dots (⋮)</b> in Chrome.<br>
+          2. Tap <b>Install App</b> or <b>Add to Home Screen</b>.
+        </p>
+      </div>
+
+      <button type="button" class="fab-btn" onclick="triggerPWAInstall(); closeSheet('sheet-install-guide');">
+        Got it!
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

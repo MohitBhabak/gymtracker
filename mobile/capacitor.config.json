@@ -1,0 +1,17 @@
+{
+  "appId": "com.gymlog.mobile",
+  "appName": "GymLog",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "backgroundColor": "#09090b",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#09090b"
+    },
+    "StatusBar": {
+      "style": "dark",
+      "backgroundColor": "#09090b"
+    }
+  }
+}
