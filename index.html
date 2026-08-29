@@ -1023,6 +1023,18 @@
         .calendar-cell.schedule-mode:hover {
             border-color: var(--primary);
         }
+        .calendar-cell.schedule-mode .badge,
+        .badge.badge-scheduled {
+            opacity: 0.65;
+            filter: saturate(0.85);
+            border-style: dashed;
+            transition: opacity 0.2s ease, filter 0.2s ease;
+        }
+        .calendar-cell.schedule-mode:hover .badge,
+        .badge.badge-scheduled:hover {
+            opacity: 0.9;
+            filter: saturate(1);
+        }
 
         @media (max-width: 767px) {
             header {
@@ -4275,7 +4287,7 @@
                     const scheduledType = appState.scheduledWorkouts ? appState.scheduledWorkouts[dateStr] : null;
                     if (scheduledType) {
                         const badgeLabel = getCalendarBadgeLabel(scheduledType);
-                        badgeHTML = `<span class="badge ${getWorkoutColorClass(scheduledType)}" title="Planned: ${escapeHtml(scheduledType)}">${escapeHtml(badgeLabel)}</span>`;
+                        badgeHTML = `<span class="badge badge-scheduled ${getWorkoutColorClass(scheduledType)}" title="Planned: ${escapeHtml(scheduledType)}">${escapeHtml(badgeLabel)}</span>`;
                     }
                 } else {
                     cellClickHandler = `openDayDetail('${dateStr}')`;
