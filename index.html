@@ -947,6 +947,83 @@
             flex-shrink: 0;
         }
 
+        /* Calendar View Mode Toggle */
+        .calendar-view-toggle-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .calendar-view-toggle {
+            display: inline-flex;
+            background: var(--surface-offset);
+            padding: 3px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border);
+            gap: 2px;
+        }
+        .view-toggle-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: var(--radius-pill);
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.15s ease-out;
+            user-select: none;
+        }
+        .view-toggle-btn:hover {
+            color: var(--text);
+        }
+        .view-toggle-btn.active {
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        .view-toggle-btn.active .toggle-icon {
+            color: var(--primary);
+        }
+
+        /* Schedule Chips in Modal */
+        .schedule-chips-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.6rem;
+        }
+        .schedule-chip-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.6rem 0.8rem;
+            border-radius: var(--radius-base);
+            font-size: 0.85rem;
+            font-weight: 600;
+            background: var(--surface-offset);
+            border: 1px solid var(--border);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: left;
+        }
+        .schedule-chip-btn:hover {
+            border-color: rgba(255,255,255,0.25);
+            background: var(--surface-2);
+            transform: translateY(-1px);
+        }
+        .schedule-chip-btn.active {
+            border-color: var(--primary);
+            background: rgba(74, 222, 128, 0.12);
+        }
+        .calendar-cell.schedule-mode:hover {
+            border-color: var(--primary);
+        }
+
         @media (max-width: 767px) {
             header {
                 padding: 0.75rem 1rem;
@@ -1581,6 +1658,35 @@
             </div>
         </div>
 
+        <!-- Quick Workout Schedule Picker Modal -->
+        <div id="modal-schedule-picker" class="modal-overlay" onclick="if(event.target===this) closeModal('modal-schedule-picker')">
+            <div class="modal-content" style="max-width: 440px; border-radius: var(--radius-base);" onclick="event.stopPropagation()">
+                <div class="modal-header" style="margin-bottom: 0.85rem; align-items: flex-start;">
+                    <div>
+                        <div style="font-size: 0.72rem; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.15rem;">🗓️ Plan Workout</div>
+                        <h2 id="schedule-picker-date-title" style="margin: 0; font-size: 1.25rem;">Select Date</h2>
+                    </div>
+                    <button class="icon-btn" onclick="closeModal('modal-schedule-picker')"><i data-lucide="x"></i></button>
+                </div>
+                <div style="margin-bottom: 1.25rem;">
+                    <p class="text-muted" style="font-size: 0.82rem; margin: 0 0 1rem 0; line-height: 1.4;">
+                        Select what workout you plan to do on this day. Tap any split to assign instantly.
+                    </p>
+                    <div class="schedule-chips-grid" id="schedule-chips-container">
+                        <!-- Injected dynamically -->
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+                    <button type="button" class="btn" id="btn-unschedule-day" onclick="setScheduledWorkout(currentSchedulePickerDate, null)" style="background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25); font-size: 0.8rem; padding: 0.45rem 0.85rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i> Clear Day
+                    </button>
+                    <button type="button" class="btn" onclick="closeModal('modal-schedule-picker')" style="font-size: 0.85rem; padding: 0.45rem 0.95rem;">
+                        Done
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Search & Quick Presets Modal (Spotlight / Command Palette) -->
         <div id="modal-search" class="modal-overlay search-modal-overlay" onclick="if(event.target===this) closeSearchModal()">
             <div class="modal-content search-modal-card" onclick="event.stopPropagation()">
@@ -2074,7 +2180,9 @@
             benchLogs: [],
             currentMonth: new Date(),
             targetEmail: '',
-            fontTheme: 'cabinet-satoshi'
+            fontTheme: 'cabinet-satoshi',
+            scheduledWorkouts: {},
+            calendarViewMode: 'default'
         };
         window.appState = appState;
 
@@ -2093,6 +2201,8 @@
                 appState.benchLogs = parsed.benchLogs || [];
                 appState.targetEmail = parsed.targetEmail || '';
                 appState.fontTheme = parsed.fontTheme || 'cabinet-satoshi';
+                appState.scheduledWorkouts = (parsed.scheduledWorkouts && typeof parsed.scheduledWorkouts === 'object') ? parsed.scheduledWorkouts : {};
+                appState.calendarViewMode = parsed.calendarViewMode || 'default';
             } catch (e) {
                 console.error('Failed to parse saved state', e);
             }
@@ -2126,7 +2236,9 @@
                 weightLogs: appState.weightLogs,
                 benchLogs: appState.benchLogs,
                 targetEmail: appState.targetEmail,
-                fontTheme: appState.fontTheme || 'cabinet-satoshi'
+                fontTheme: appState.fontTheme || 'cabinet-satoshi',
+                scheduledWorkouts: appState.scheduledWorkouts || {},
+                calendarViewMode: appState.calendarViewMode || 'default'
             }));
         }
 
@@ -2351,6 +2463,7 @@
                 benchLogs: appState.benchLogs,
                 targetEmail: appState.targetEmail,
                 fontTheme: appState.fontTheme || 'cabinet-satoshi',
+                scheduledWorkouts: appState.scheduledWorkouts || {},
                 updatedAt: Date.now()
             };
         }
@@ -2363,6 +2476,10 @@
             if (remoteData.fontTheme && typeof remoteData.fontTheme === 'string') {
                 appState.fontTheme = remoteData.fontTheme;
                 applyFontTheme(appState.fontTheme, false);
+            }
+            if (remoteData.scheduledWorkouts && typeof remoteData.scheduledWorkouts === 'object') {
+                if (!appState.scheduledWorkouts) appState.scheduledWorkouts = {};
+                Object.assign(appState.scheduledWorkouts, remoteData.scheduledWorkouts);
             }
 
             if (remoteData.gyms && Array.isArray(remoteData.gyms)) {
@@ -3961,7 +4078,10 @@
                 workoutLogs: appState.workoutLogs,
                 exercises: appState.exercises,
                 weightLogs: appState.weightLogs,
-                benchLogs: appState.benchLogs
+                benchLogs: appState.benchLogs,
+                scheduledWorkouts: appState.scheduledWorkouts || {},
+                fontTheme: appState.fontTheme || 'cabinet-satoshi',
+                targetEmail: appState.targetEmail || ''
             }));
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
@@ -3987,6 +4107,12 @@
                         appState.exercises = parsed.exercises;
                         appState.weightLogs = parsed.weightLogs || [];
                         appState.benchLogs = parsed.benchLogs || [];
+                        appState.scheduledWorkouts = (parsed.scheduledWorkouts && typeof parsed.scheduledWorkouts === 'object') ? parsed.scheduledWorkouts : {};
+                        if (parsed.fontTheme) {
+                            appState.fontTheme = parsed.fontTheme;
+                            applyFontTheme(appState.fontTheme, false);
+                        }
+                        if (parsed.targetEmail) appState.targetEmail = parsed.targetEmail;
                         saveState();
                         closeModal('modal-settings');
                         handleRoute(); // re-render current view
@@ -4002,9 +4128,110 @@
             event.target.value = ''; // reset input
         };
 
+        // ==========================================
+        // WORKOUT SCHEDULING ENGINE
+        // ==========================================
+        let currentSchedulePickerDate = null;
+
+        const SCHEDULE_SPLITS = [
+            { name: 'Push', colorClass: 'type-push', display: 'Push' },
+            { name: 'Pull', colorClass: 'type-pull', display: 'Pull' },
+            { name: 'Legs', colorClass: 'type-legs', display: 'Legs' },
+            { name: 'Upper', colorClass: 'type-upper', display: 'Upper' },
+            { name: 'Lower', colorClass: 'type-lower', display: 'Lower' },
+            { name: 'Arms & Delts', colorClass: 'type-armsdelts', display: 'A & D' },
+            { name: 'Abs', colorClass: 'type-abs', display: 'Abs' },
+            { name: 'Cardio', colorClass: 'type-lower', display: 'Cardio' },
+            { name: 'Rest', colorClass: 'type-rest', display: 'Rest' }
+        ];
+
+        window.setCalendarViewMode = function(mode) {
+            appState.calendarViewMode = mode;
+            saveStateLocalOnly();
+            renderCalendarView();
+        };
+
+        window.openSchedulePicker = function(dateStr) {
+            currentSchedulePickerDate = dateStr;
+            const [y, m, d] = dateStr.split('-').map(Number);
+            const dateObj = new Date(y, m - 1, d);
+            const formattedDate = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(dateObj);
+            
+            const titleEl = document.getElementById('schedule-picker-date-title');
+            if (titleEl) titleEl.innerText = formattedDate;
+
+            const currentAssigned = appState.scheduledWorkouts ? appState.scheduledWorkouts[dateStr] : null;
+            const container = document.getElementById('schedule-chips-container');
+            const clearBtn = document.getElementById('btn-unschedule-day');
+
+            if (clearBtn) {
+                clearBtn.style.display = currentAssigned ? 'inline-flex' : 'none';
+            }
+
+            if (container) {
+                let chipsHTML = '';
+                SCHEDULE_SPLITS.forEach(split => {
+                    const isSelected = currentAssigned === split.name;
+                    chipsHTML += `
+                        <button type="button" class="schedule-chip-btn ${isSelected ? 'active' : ''}" onclick="setScheduledWorkout('${dateStr}', '${split.name.replace(/'/g, "\\'")}')">
+                            <span style="display:flex; align-items:center; gap:0.45rem; overflow:hidden;">
+                                <span class="badge ${split.colorClass}" style="font-size:0.7rem; padding:0.15rem 0.45rem;">${split.display}</span>
+                                <span style="font-size:0.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${split.name}</span>
+                            </span>
+                            ${isSelected ? '<i data-lucide="check" style="width:14px;height:14px;color:var(--primary);flex-shrink:0;"></i>' : ''}
+                        </button>
+                    `;
+                });
+                container.innerHTML = chipsHTML;
+                lucide.createIcons({ root: container });
+            }
+
+            openModal('modal-schedule-picker');
+        };
+
+        window.setScheduledWorkout = function(dateStr, workoutType) {
+            if (!appState.scheduledWorkouts) appState.scheduledWorkouts = {};
+            if (!workoutType) {
+                delete appState.scheduledWorkouts[dateStr];
+                showAppToast('Workout unscheduled', 'info');
+            } else {
+                appState.scheduledWorkouts[dateStr] = workoutType;
+                showAppToast(`Scheduled ${workoutType}`, 'success');
+            }
+            saveState();
+            closeModal('modal-schedule-picker');
+            renderCalendarView();
+        };
+
+        window.clearMonthSchedule = async function() {
+            const year = appState.currentMonth.getFullYear();
+            const monthStr = String(appState.currentMonth.getMonth() + 1).padStart(2, '0');
+            const prefix = `${year}-${monthStr}`;
+            
+            const count = Object.keys(appState.scheduledWorkouts || {}).filter(k => k.startsWith(prefix)).length;
+            if (count === 0) {
+                showAppToast('No scheduled workouts in this month to clear.', 'info');
+                return;
+            }
+
+            const monthName = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(appState.currentMonth);
+            const confirmed = await showAppConfirm(`Are you sure you want to clear all ${count} planned workout${count === 1 ? '' : 's'} for ${monthName}?`, 'Clear Month Schedule');
+            if (confirmed) {
+                Object.keys(appState.scheduledWorkouts).forEach(k => {
+                    if (k.startsWith(prefix)) {
+                        delete appState.scheduledWorkouts[k];
+                    }
+                });
+                saveState();
+                renderCalendarView();
+                showAppToast(`Cleared ${count} scheduled workouts for ${monthName}`, 'success');
+            }
+        };
+
         // Calendar Render
         function renderCalendarView() {
             const view = document.getElementById('view-calendar');
+            const isScheduleView = appState.calendarViewMode === 'schedule';
             
             const year = appState.currentMonth.getFullYear();
             const month = appState.currentMonth.getMonth();
@@ -4036,17 +4263,31 @@
             
             for(let i=1; i<=daysInMonth; i++) {
                 const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                const log = appState.workoutLogs[dateStr];
                 const isToday = dateStr === todayStr ? 'today' : '';
                 
                 let badgeHTML = '';
-                if(log) {
-                    const badgeLabel = getCalendarBadgeLabel(log.type);
-                    badgeHTML = `<span class="badge ${getWorkoutColorClass(log.type)}" title="${escapeHtml(log.type)}">${escapeHtml(badgeLabel)}</span>`;
+                let cellClickHandler = '';
+                let cellExtraClass = '';
+
+                if (isScheduleView) {
+                    cellClickHandler = `openSchedulePicker('${dateStr}')`;
+                    cellExtraClass = 'schedule-mode';
+                    const scheduledType = appState.scheduledWorkouts ? appState.scheduledWorkouts[dateStr] : null;
+                    if (scheduledType) {
+                        const badgeLabel = getCalendarBadgeLabel(scheduledType);
+                        badgeHTML = `<span class="badge ${getWorkoutColorClass(scheduledType)}" title="Planned: ${escapeHtml(scheduledType)}">${escapeHtml(badgeLabel)}</span>`;
+                    }
+                } else {
+                    cellClickHandler = `openDayDetail('${dateStr}')`;
+                    const log = appState.workoutLogs[dateStr];
+                    if(log) {
+                        const badgeLabel = getCalendarBadgeLabel(log.type);
+                        badgeHTML = `<span class="badge ${getWorkoutColorClass(log.type)}" title="${escapeHtml(log.type)}">${escapeHtml(badgeLabel)}</span>`;
+                    }
                 }
                 
                 gridHTML += `
-                    <div class="calendar-cell ${isToday}" onclick="openDayDetail('${dateStr}')">
+                    <div class="calendar-cell ${isToday} ${cellExtraClass}" onclick="${cellClickHandler}">
                         <div class="calendar-date">${i}</div>
                         ${badgeHTML}
                     </div>
@@ -4058,71 +4299,158 @@
             for(let i=0; i<remaining; i++) gridHTML += `<div class="calendar-cell empty"></div>`;
             
             gridHTML += `</div>`;
+
+            // Toggle Bar under Calendar Grid
+            const toggleHTML = `
+                <div class="calendar-view-toggle-wrap">
+                    <div class="calendar-view-toggle">
+                        <button type="button" class="view-toggle-btn ${!isScheduleView ? 'active' : ''}" onclick="setCalendarViewMode('default')" title="View and log completed workout sessions">
+                            <i data-lucide="calendar" style="width:14px;height:14px;" class="toggle-icon"></i>
+                            <span>Default View</span>
+                        </button>
+                        <button type="button" class="view-toggle-btn ${isScheduleView ? 'active' : ''}" onclick="setCalendarViewMode('schedule')" title="Plan future workout schedule">
+                            <i data-lucide="calendar-check" style="width:14px;height:14px;" class="toggle-icon"></i>
+                            <span>Schedule View</span>
+                        </button>
+                    </div>
+                    ${isScheduleView ? '<span class="text-muted" style="font-size:0.75rem; margin-left:0.75rem;"><i data-lucide="info" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:3px;"></i>Tap any date to schedule a workout</span>' : ''}
+                </div>
+            `;
             
             // Sidebar summary
-            const counts = {};
-            const timeCounts = {};
-            let totalSessions = 0;
-            Object.keys(appState.workoutLogs).forEach(key => {
-                if(key.startsWith(`${year}-${String(month+1).padStart(2,'0')}`)) {
-                    const type = appState.workoutLogs[key].type;
-                    counts[type] = (counts[type] || 0) + 1;
-                    
-                    const time = appState.workoutLogs[key].timeOfDay;
-                    if(time) {
-                        timeCounts[time] = (timeCounts[time] || 0) + 1;
+            let sidebarHTML = '';
+
+            if (isScheduleView) {
+                const scheduledCounts = {};
+                let totalScheduled = 0;
+                const monthPrefix = `${year}-${String(month+1).padStart(2,'0')}`;
+                
+                Object.keys(appState.scheduledWorkouts || {}).forEach(key => {
+                    if (key.startsWith(monthPrefix)) {
+                        const type = appState.scheduledWorkouts[key];
+                        if (type) {
+                            scheduledCounts[type] = (scheduledCounts[type] || 0) + 1;
+                            totalScheduled++;
+                        }
                     }
-                    totalSessions++;
+                });
+
+                sidebarHTML = `
+                    <div class="card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                            <h3 style="margin:0;">Planned Schedule</h3>
+                            <span class="badge" style="background:rgba(74,222,128,0.15); color:var(--primary); font-size:0.7rem;">Schedule View</span>
+                        </div>
+                        <div style="font-size:2rem; font-weight:800; color:var(--primary); margin-bottom:1rem;">
+                            ${totalScheduled} <span style="font-size:1rem; color:var(--text-muted); font-weight:500;">planned ${totalScheduled === 1 ? 'workout' : 'workouts'}</span>
+                        </div>
+                `;
+
+                if (Object.keys(scheduledCounts).length > 0) {
+                    sidebarHTML += `<h4 style="margin-bottom:0.5rem; font-size:0.8rem;" class="text-muted">PLANNED BY SPLIT</h4>`;
+                    Object.entries(scheduledCounts).forEach(([type, count]) => {
+                        sidebarHTML += `
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; align-items:center;">
+                                <span style="min-width:90px; font-size:0.85rem; font-weight:500;">${type}</span>
+                                <div style="flex:1; height:8px; background:var(--surface-offset); border-radius:4px; margin:0 0.75rem; overflow:hidden;">
+                                    <div class="${getWorkoutBgClass(type)}" style="width:${Math.min(100, (count/Math.max(1, totalScheduled))*100)}%; height:100%;"></div>
+                                </div>
+                                <span style="font-weight:600; font-size:0.85rem;">${count}</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    sidebarHTML += `
+                        <div style="text-align:center; padding:1.5rem 0.5rem; color:var(--text-muted); font-size:0.85rem;">
+                            <i data-lucide="calendar-plus" style="width:32px;height:32px;opacity:0.4;margin-bottom:0.5rem;"></i>
+                            <p style="margin:0;">No workouts scheduled for this month yet. Tap any date on the calendar to plan your workouts!</p>
+                        </div>
+                    `;
                 }
-            });
-            
-            let summaryHTML = `<div class="card"><h3 style="margin-bottom:1rem;">Monthly Breakdown</h3>`;
-            summaryHTML += `<div style="font-size:2rem; font-weight:800; color:var(--primary); margin-bottom:1rem;">${totalSessions} <span style="font-size:1rem; color:var(--text-muted); font-weight:500;">sessions</span></div>`;
-            
-            if (Object.keys(counts).length > 0) {
-                summaryHTML += `<h4 style="margin-bottom:0.5rem; font-size:0.8rem;" class="text-muted">BY TYPE</h4>`;
-                Object.entries(counts).forEach(([type, count]) => {
-                    summaryHTML += `
-                        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; align-items:center;">
-                            <span style="min-width:90px; font-size:0.85rem; font-weight:500;">${type}</span>
-                            <div style="flex:1; height:8px; background:var(--surface-offset); border-radius:4px; margin:0 0.75rem; overflow:hidden;">
-                                <div class="${getWorkoutBgClass(type)}" style="width:${Math.min(100, (count/Math.max(1, totalSessions))*100)}%; height:100%;"></div>
-                            </div>
-                            <span style="font-weight:600; font-size:0.85rem;">${count}</span>
+
+                sidebarHTML += `
+                        <div style="margin-top:1.5rem; display:flex; flex-direction:column; gap:0.5rem;">
+                            ${totalScheduled > 0 ? `
+                                <button class="btn" onclick="clearMonthSchedule()" style="width:100%; padding:0.6rem; font-size:0.8rem; color:var(--text-muted); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; gap:0.4rem;">
+                                    <i data-lucide="calendar-x" style="width:14px;height:14px;"></i> Clear Month Schedule
+                                </button>
+                            ` : ''}
+                            <button class="btn" onclick="setCalendarViewMode('default')" style="width:100%; padding:0.75rem; font-size:0.85rem; border:1px solid var(--border); display:flex; align-items:center; justify-content:center; gap:0.4rem; background:var(--surface-offset);">
+                                <i data-lucide="arrow-left" style="width:15px;height:15px;"></i> Return to Default View
+                            </button>
                         </div>
-                    `;
+                    </div>
+                `;
+            } else {
+                const counts = {};
+                const timeCounts = {};
+                let totalSessions = 0;
+                Object.keys(appState.workoutLogs).forEach(key => {
+                    if(key.startsWith(`${year}-${String(month+1).padStart(2,'0')}`)) {
+                        const type = appState.workoutLogs[key].type;
+                        counts[type] = (counts[type] || 0) + 1;
+                        
+                        const time = appState.workoutLogs[key].timeOfDay;
+                        if(time) {
+                            timeCounts[time] = (timeCounts[time] || 0) + 1;
+                        }
+                        totalSessions++;
+                    }
                 });
-            }
-
-            if (Object.keys(timeCounts).length > 0) {
-                summaryHTML += `<h4 style="margin-top:1.5rem; margin-bottom:0.5rem; font-size:0.8rem;" class="text-muted">BY TIME</h4>`;
-                Object.entries(timeCounts).forEach(([time, count]) => {
-                    summaryHTML += `
-                        <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; align-items:center;">
-                            <span style="width:100px; font-size:0.9rem;">${time}</span>
-                            <div style="flex:1; height:8px; background:var(--surface-offset); border-radius:4px; margin:0 1rem; overflow:hidden;">
-                                <div class="${getBgTimeColorClass(time)}" style="width:${(count/totalSessions)*100}%; height:100%;"></div>
+                
+                let summaryHTML = `<div class="card"><h3 style="margin-bottom:1rem;">Monthly Breakdown</h3>`;
+                summaryHTML += `<div style="font-size:2rem; font-weight:800; color:var(--primary); margin-bottom:1rem;">${totalSessions} <span style="font-size:1rem; color:var(--text-muted); font-weight:500;">sessions</span></div>`;
+                
+                if (Object.keys(counts).length > 0) {
+                    summaryHTML += `<h4 style="margin-bottom:0.5rem; font-size:0.8rem;" class="text-muted">BY TYPE</h4>`;
+                    Object.entries(counts).forEach(([type, count]) => {
+                        summaryHTML += `
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; align-items:center;">
+                                <span style="min-width:90px; font-size:0.85rem; font-weight:500;">${type}</span>
+                                <div style="flex:1; height:8px; background:var(--surface-offset); border-radius:4px; margin:0 0.75rem; overflow:hidden;">
+                                    <div class="${getWorkoutBgClass(type)}" style="width:${Math.min(100, (count/Math.max(1, totalSessions))*100)}%; height:100%;"></div>
+                                </div>
+                                <span style="font-weight:600; font-size:0.85rem;">${count}</span>
                             </div>
-                            <span>${count}</span>
-                        </div>
-                    `;
-                });
+                        `;
+                    });
+                }
+
+                if (Object.keys(timeCounts).length > 0) {
+                    summaryHTML += `<h4 style="margin-top:1.5rem; margin-bottom:0.5rem; font-size:0.8rem;" class="text-muted">BY TIME</h4>`;
+                    Object.entries(timeCounts).forEach(([time, count]) => {
+                        summaryHTML += `
+                            <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; align-items:center;">
+                                <span style="width:100px; font-size:0.9rem;">${time}</span>
+                                <div style="flex:1; height:8px; background:var(--surface-offset); border-radius:4px; margin:0 1rem; overflow:hidden;">
+                                    <div class="${getBgTimeColorClass(time)}" style="width:${(count/totalSessions)*100}%; height:100%;"></div>
+                                </div>
+                                <span>${count}</span>
+                            </div>
+                        `;
+                    });
+                }
+
+                summaryHTML += `</div>`;
+
+                // Progressive Overload button
+                const poBtn = `
+                    <button class="btn" onclick="poOpenDrawer()" style="width:100%; margin-top:1.5rem; padding:1.25rem; font-size:1.2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; border:1px solid var(--border);">
+                        <i data-lucide="trending-up" style="width:20px;height:20px;"></i>
+                        Progressive Overload
+                    </button>
+                `;
+
+                sidebarHTML = `${summaryHTML}${poBtn}`;
             }
-
-            summaryHTML += `</div>`;
-
-            // Progressive Overload button
-            const poBtn = `
-                <button class="btn" onclick="poOpenDrawer()" style="width:100%; margin-top:1.5rem; padding:1.25rem; font-size:1.2rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; border:1px solid var(--border);">
-                    <i data-lucide="trending-up" style="width:20px;height:20px;"></i>
-                    Progressive Overload
-                </button>
-            `;
 
             view.innerHTML = `
                 <div class="grid-2">
-                    <div>${gridHTML}</div>
-                    <div>${summaryHTML}${poBtn}</div>
+                    <div>
+                        ${gridHTML}
+                        ${toggleHTML}
+                    </div>
+                    <div>${sidebarHTML}</div>
                 </div>
             `;
             lucide.createIcons();

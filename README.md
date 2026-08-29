@@ -10,7 +10,8 @@ GymLog is available in two dedicated versions:
 
 ## ✨ Features
 
-- 📅 **Interactive Workout Calendar:** Log workout types (Push, Pull, Legs, Upper, Lower, Abs, Arms & Delts, Rest), duration, effort intensity (RPE), time of day, and track monthly consistency streaks.
+- 📅 **Interactive Workout Calendar & Scheduling:** Switch between **Default View** (logging completed workout sessions with RPE, duration, and time of day) and **Schedule View** (quick 1-click date-to-split planning for upcoming workouts).
+- 🗓️ **Workout Scheduling Engine:** Plan split days ahead of time with zero logging overhead—tap any date in Schedule View to instantly assign or change Push, Pull, Legs, Upper, Lower, Arms & Delts (A & D), Abs, Cardio, or Rest.
 - 📋 **Smart Quick Paste & Note Parser:** Copy raw workout notes from Apple Notes, Google Keep, Notion, or text messages and paste them directly into GymLog. Automatically detects exercises, weights, reps, decimal values, and bodyweight sets with zero API keys or external tokens.
 - 🔍 **Instant Search & Quick Presets (`Ctrl+K` / `⌘K`):** Global command palette and search bar for instant non-AI lookups. Features fast preset calculators for all-time Exercise PRs (with estimated 1RM and lifetime volume), monthly workout volume/breakdown tallies, workout split filters, and notes search.
 - ⚡ **Rapid Set Logging:** High-speed set and rep logging with keyboard tabbing (desktop) and quick steppers / touch buttons (mobile).
