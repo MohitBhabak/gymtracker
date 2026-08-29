@@ -1036,6 +1036,28 @@
             filter: saturate(1);
         }
 
+        /* Drag-to-Clear Marquee Box */
+        .calendar-selection-box {
+            position: fixed;
+            border: 1.5px dashed #ef4444;
+            background: rgba(239, 68, 68, 0.16);
+            pointer-events: none;
+            z-index: 200;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+        }
+        .calendar-cell.cell-drag-clearing {
+            background-color: rgba(239, 68, 68, 0.16) !important;
+            border-color: rgba(239, 68, 68, 0.6) !important;
+            outline: 1.5px dashed rgba(239, 68, 68, 0.8) !important;
+            outline-offset: -2px;
+        }
+        .calendar-cell.cell-drag-clearing .badge {
+            opacity: 0.3 !important;
+            text-decoration: line-through;
+            border-color: #ef4444 !important;
+        }
+
         @media (max-width: 767px) {
             header {
                 padding: 0.75rem 1rem;
@@ -4144,6 +4166,8 @@
         // WORKOUT SCHEDULING ENGINE
         // ==========================================
         let currentSchedulePickerDate = null;
+        window.calendarJustDragged = false;
+        let calendarDragState = null;
 
         const SCHEDULE_SPLITS = [
             { name: 'Push', colorClass: 'type-push', display: 'Push' },
@@ -4164,6 +4188,7 @@
         };
 
         window.openSchedulePicker = function(dateStr) {
+            if (window.calendarJustDragged) return;
             currentSchedulePickerDate = dateStr;
             const [y, m, d] = dateStr.split('-').map(Number);
             const dateObj = new Date(y, m - 1, d);
@@ -4240,6 +4265,109 @@
             }
         };
 
+        // --- Drag-to-Clear Marquee Engine ---
+        window.initCalendarDragClear = function(e) {
+            // Only trigger on left-click and when in Schedule View
+            if (e.button !== 0 || appState.calendarViewMode !== 'schedule') return;
+
+            calendarDragState = {
+                startX: e.clientX,
+                startY: e.clientY,
+                isDragging: false,
+                boxEl: null
+            };
+
+            window.addEventListener('mousemove', handleCalendarDragMove);
+            window.addEventListener('mouseup', handleCalendarDragEnd);
+        };
+
+        function handleCalendarDragMove(e) {
+            if (!calendarDragState) return;
+
+            const dx = e.clientX - calendarDragState.startX;
+            const dy = e.clientY - calendarDragState.startY;
+
+            if (!calendarDragState.isDragging && Math.hypot(dx, dy) > 8) {
+                calendarDragState.isDragging = true;
+                
+                const box = document.createElement('div');
+                box.className = 'calendar-selection-box';
+                box.id = 'calendar-selection-box';
+                document.body.appendChild(box);
+                calendarDragState.boxEl = box;
+            }
+
+            if (calendarDragState.isDragging && calendarDragState.boxEl) {
+                // Prevent text selection while dragging
+                e.preventDefault();
+
+                const left = Math.min(e.clientX, calendarDragState.startX);
+                const top = Math.min(e.clientY, calendarDragState.startY);
+                const width = Math.abs(dx);
+                const height = Math.abs(dy);
+
+                calendarDragState.boxEl.style.left = `${left}px`;
+                calendarDragState.boxEl.style.top = `${top}px`;
+                calendarDragState.boxEl.style.width = `${width}px`;
+                calendarDragState.boxEl.style.height = `${height}px`;
+
+                const selRect = { left, top, right: left + width, bottom: top + height };
+                const cells = document.querySelectorAll('.calendar-cell[data-date]');
+
+                cells.forEach(cell => {
+                    const rect = cell.getBoundingClientRect();
+                    const isIntersect = selRect.left < rect.right &&
+                                        selRect.right > rect.left &&
+                                        selRect.top < rect.bottom &&
+                                        selRect.bottom > rect.top;
+
+                    if (isIntersect) {
+                        cell.classList.add('cell-drag-clearing');
+                    } else {
+                        cell.classList.remove('cell-drag-clearing');
+                    }
+                });
+            }
+        }
+
+        function handleCalendarDragEnd(e) {
+            window.removeEventListener('mousemove', handleCalendarDragMove);
+            window.removeEventListener('mouseup', handleCalendarDragEnd);
+
+            if (!calendarDragState) return;
+
+            if (calendarDragState.boxEl) {
+                calendarDragState.boxEl.remove();
+            }
+
+            if (calendarDragState.isDragging) {
+                window.calendarJustDragged = true;
+                setTimeout(() => { window.calendarJustDragged = false; }, 100);
+
+                const highlightedCells = document.querySelectorAll('.calendar-cell.cell-drag-clearing');
+                let clearedCount = 0;
+
+                highlightedCells.forEach(cell => {
+                    const dateStr = cell.getAttribute('data-date');
+                    if (dateStr && appState.scheduledWorkouts && appState.scheduledWorkouts[dateStr]) {
+                        delete appState.scheduledWorkouts[dateStr];
+                        clearedCount++;
+                    }
+                    cell.classList.remove('cell-drag-clearing');
+                });
+
+                if (clearedCount > 0) {
+                    saveState();
+                    renderCalendarView();
+                    showAppToast(`Cleared ${clearedCount} planned workout${clearedCount === 1 ? '' : 's'}`, 'info');
+                } else {
+                    document.querySelectorAll('.calendar-cell.cell-drag-clearing').forEach(el => el.classList.remove('cell-drag-clearing'));
+                }
+            }
+
+            calendarDragState = null;
+        }
+
         // Calendar Render
         function renderCalendarView() {
             const view = document.getElementById('view-calendar');
@@ -4259,7 +4387,7 @@
                     <h2>${monthName} ${year}</h2>
                     <button class="icon-btn" onclick="nextMonth()"><i data-lucide="chevron-right"></i></button>
                 </div>
-                <div class="calendar-grid">
+                <div class="calendar-grid" ${isScheduleView ? 'onmousedown="initCalendarDragClear(event)"' : ''}>
                     <div class="calendar-day-header">Sun</div>
                     <div class="calendar-day-header">Mon</div>
                     <div class="calendar-day-header">Tue</div>
@@ -4299,7 +4427,7 @@
                 }
                 
                 gridHTML += `
-                    <div class="calendar-cell ${isToday} ${cellExtraClass}" onclick="${cellClickHandler}">
+                    <div class="calendar-cell ${isToday} ${cellExtraClass}" data-date="${dateStr}" onclick="${cellClickHandler}">
                         <div class="calendar-date">${i}</div>
                         ${badgeHTML}
                     </div>
@@ -4325,7 +4453,7 @@
                             <span>Schedule View</span>
                         </button>
                     </div>
-                    ${isScheduleView ? '<span class="text-muted" style="font-size:0.75rem; margin-left:0.75rem;"><i data-lucide="info" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:3px;"></i>Tap any date to schedule a workout</span>' : ''}
+                    ${isScheduleView ? '<span class="text-muted" style="font-size:0.75rem; margin-left:0.75rem;"><i data-lucide="mouse-pointer" style="width:12px;height:12px;display:inline-block;vertical-align:middle;margin-right:3px;"></i>Tap date to schedule &bull; Hold left-click & drag to clear dates</span>' : ''}
                 </div>
             `;
             
