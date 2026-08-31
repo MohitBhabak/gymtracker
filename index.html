@@ -377,7 +377,7 @@
         }
         .bg-push { background-color: var(--workout-push); }
         .bg-pull { background-color: var(--workout-pull); }
-        .bg-legs { background-color: var(--workout-legs); }
+        .bg-legs, .bg-lowerlegs, .bg-legslower, .bg-lowerandlegs, .bg-legsandlower { background-color: var(--workout-legs); }
         .bg-upper { background-color: var(--workout-upper); }
         .bg-lower { background-color: var(--workout-lower); }
         .bg-abs { background-color: var(--workout-abs); }
@@ -2703,6 +2703,9 @@
         function getWorkoutBgClass(type) {
             if (!type) return 'bg-push';
             const clean = type.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (clean === 'lowerlegs' || clean === 'legslower' || clean === 'lowerleg' || clean === 'leglower' || clean === 'lowerandlegs' || clean === 'legsandlower') {
+                return 'bg-legs';
+            }
             return `bg-${clean}`;
         }
         function getCalendarBadgeLabel(type) {
@@ -4467,8 +4470,12 @@
                 
                 Object.keys(appState.scheduledWorkouts || {}).forEach(key => {
                     if (key.startsWith(monthPrefix)) {
-                        const type = appState.scheduledWorkouts[key];
+                        let type = appState.scheduledWorkouts[key];
                         if (type) {
+                            const norm = type.trim().toLowerCase();
+                            if (norm === 'legs' || norm === 'leg' || norm === 'lower') {
+                                type = 'Lower & Legs';
+                            }
                             scheduledCounts[type] = (scheduledCounts[type] || 0) + 1;
                             totalScheduled++;
                         }
@@ -4527,8 +4534,14 @@
                 let totalSessions = 0;
                 Object.keys(appState.workoutLogs).forEach(key => {
                     if(key.startsWith(`${year}-${String(month+1).padStart(2,'0')}`)) {
-                        const type = appState.workoutLogs[key].type;
-                        counts[type] = (counts[type] || 0) + 1;
+                        let type = appState.workoutLogs[key].type;
+                        if (type) {
+                            const norm = type.trim().toLowerCase();
+                            if (norm === 'legs' || norm === 'leg' || norm === 'lower') {
+                                type = 'Lower & Legs';
+                            }
+                            counts[type] = (counts[type] || 0) + 1;
+                        }
                         
                         const time = appState.workoutLogs[key].timeOfDay;
                         if(time) {
