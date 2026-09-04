@@ -1058,6 +1058,77 @@
             border-color: #ef4444 !important;
         }
 
+        /* Swap Picker Mini Calendar */
+        .swap-calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            background: var(--surface-offset);
+            padding: 6px;
+            border-radius: var(--radius-tight);
+            border: 1px solid var(--border);
+        }
+        .swap-day-header {
+            text-align: center;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            padding: 0.3rem 0;
+            text-transform: uppercase;
+        }
+        .swap-cell {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-tight);
+            min-height: 52px;
+            padding: 0.35rem 0.25rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+            user-select: none;
+        }
+        .swap-cell:hover:not(.swap-cell-source):not(.swap-cell-empty) {
+            border-color: var(--primary);
+            background: var(--surface-2);
+            transform: translateY(-1px);
+        }
+        .swap-cell.swap-cell-today {
+            border-color: rgba(74, 222, 128, 0.45);
+        }
+        .swap-cell.swap-cell-source {
+            border: 1.5px solid var(--primary);
+            background: rgba(74, 222, 128, 0.08);
+            cursor: default;
+        }
+        .swap-cell.swap-cell-empty {
+            background: transparent;
+            border-color: transparent;
+            cursor: default;
+            opacity: 0.2;
+        }
+        .swap-cell-date {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            line-height: 1;
+        }
+        .swap-cell.swap-cell-source .swap-cell-date {
+            color: var(--primary);
+        }
+        .swap-cell .badge {
+            font-size: 0.62rem;
+            padding: 0.1rem 0.35rem;
+            line-height: 1;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
         @media (max-width: 767px) {
             header {
                 padding: 0.75rem 1rem;
@@ -1717,6 +1788,53 @@
                     <button type="button" class="btn" onclick="closeModal('modal-schedule-picker')" style="font-size: 0.85rem; padding: 0.45rem 0.95rem;">
                         Done
                     </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Move / Swap Workout Modal -->
+        <div id="modal-swap-picker" class="modal-overlay" onclick="if(event.target===this) closeModal('modal-swap-picker')">
+            <div class="modal-content" style="max-width: 480px; border-radius: var(--radius-base);" onclick="event.stopPropagation()">
+                <div class="modal-header" style="margin-bottom: 0.75rem; align-items: flex-start;">
+                    <div>
+                        <div style="font-size: 0.72rem; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.15rem;">⇄ Move / Swap Workout</div>
+                        <h2 id="swap-picker-title" style="margin: 0; font-size: 1.2rem;">Select Destination Date</h2>
+                    </div>
+                    <button class="icon-btn" onclick="closeModal('modal-swap-picker')"><i data-lucide="x"></i></button>
+                </div>
+                
+                <div id="swap-source-info" style="margin-bottom: 0.85rem; padding: 0.6rem 0.85rem; background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-tight); display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem;">
+                    <!-- Source summary injected dynamically -->
+                </div>
+
+                <!-- Quick shift buttons -->
+                <div style="display: flex; gap: 0.4rem; margin-bottom: 0.85rem; flex-wrap: wrap;">
+                    <button type="button" class="btn" id="btn-quick-shift-prev" style="flex: 1; min-width: 95px; padding: 0.4rem 0.5rem; font-size: 0.78rem; background: var(--surface-offset); border: 1px solid var(--border); display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                        <i data-lucide="chevron-left" style="width: 13px; height: 13px;"></i> Prev Day
+                    </button>
+                    <button type="button" class="btn" id="btn-quick-shift-next" style="flex: 1; min-width: 95px; padding: 0.4rem 0.5rem; font-size: 0.78rem; background: var(--surface-offset); border: 1px solid var(--border); display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                        Next Day <i data-lucide="chevron-right" style="width: 13px; height: 13px;"></i>
+                    </button>
+                    <button type="button" class="btn" id="btn-quick-shift-week" style="flex: 1; min-width: 110px; padding: 0.4rem 0.5rem; font-size: 0.78rem; background: var(--surface-offset); border: 1px solid var(--border); display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;">
+                        <i data-lucide="rotate-cw" style="width: 13px; height: 13px;"></i> +7 Days (Next Wk)
+                    </button>
+                </div>
+
+                <!-- Mini Calendar Navigation -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0 0.2rem;">
+                    <button type="button" class="icon-btn" onclick="prevSwapPickerMonth()" style="padding: 0.25rem;"><i data-lucide="chevron-left" style="width: 16px; height: 16px;"></i></button>
+                    <div id="swap-picker-month-label" style="font-weight: 700; font-size: 0.92rem;">Month Year</div>
+                    <button type="button" class="icon-btn" onclick="nextSwapPickerMonth()" style="padding: 0.25rem;"><i data-lucide="chevron-right" style="width: 16px; height: 16px;"></i></button>
+                </div>
+
+                <!-- Mini Calendar Grid -->
+                <div class="swap-calendar-grid" id="swap-picker-grid">
+                    <!-- Injected dynamically -->
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+                    <span class="text-muted" style="font-size: 0.78rem;"><i data-lucide="mouse-pointer" style="width: 12px; height: 12px; display: inline-block; vertical-align: middle; margin-right: 3px;"></i>Click any date to move or swap</span>
+                    <button type="button" class="btn" onclick="closeModal('modal-swap-picker')" style="padding: 0.4rem 0.9rem; font-size: 0.85rem;">Cancel</button>
                 </div>
             </div>
         </div>
@@ -4961,39 +5079,158 @@
             if(type !== 'Rest') openLogSession(dateStr);
         };
         
-        window.swapLog = async (dateStr) => {
-            const targetDate = await showAppPrompt(`Enter the date to move/swap with ${dateStr}:`, '', 'Move / Swap Workout Day', { placeholder: 'YYYY-MM-DD' });
-            if (!targetDate) return;
-            const trimmedDate = targetDate.trim();
+        // ==========================================
+        // WORKOUT MOVE / SWAP CALENDAR ENGINE
+        // ==========================================
+        let currentSwapSourceDate = null;
+        let currentSwapPickerMonth = null;
+
+        window.swapLog = function(dateStr) {
+            currentSwapSourceDate = dateStr;
+            const [y, m, d] = dateStr.split('-').map(Number);
+            currentSwapPickerMonth = new Date(y, m - 1, 1);
             
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmedDate)) {
-                return showAppAlert('Invalid date format. Please use YYYY-MM-DD.', 'Invalid Date', 'warning');
+            const sourceLog = appState.workoutLogs[dateStr];
+            if (!sourceLog) return;
+
+            const sourceDateObj = new Date(y, m - 1, d);
+            const formattedDate = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(sourceDateObj);
+
+            const infoEl = document.getElementById('swap-source-info');
+            if (infoEl) {
+                infoEl.innerHTML = `
+                    <span style="display:flex; align-items:center; gap:0.4rem; overflow:hidden;">
+                        <span class="badge ${getWorkoutColorClass(sourceLog.type)}">${getCalendarBadgeLabel(sourceLog.type)}</span>
+                        <strong style="color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${formattedDate}</strong>
+                    </span>
+                    <span class="badge" style="background:rgba(74,222,128,0.15); color:var(--primary); font-size:0.68rem; font-weight:700;">CURRENT</span>
+                `;
             }
+
+            // Quick shift button actions
+            const prevBtn = document.getElementById('btn-quick-shift-prev');
+            if (prevBtn) prevBtn.onclick = () => quickShiftWorkout(dateStr, -1);
             
-            if (trimmedDate === dateStr) {
-                return showAppAlert('Cannot swap a day with itself.', 'Invalid Target', 'warning');
-            }
+            const nextBtn = document.getElementById('btn-quick-shift-next');
+            if (nextBtn) nextBtn.onclick = () => quickShiftWorkout(dateStr, 1);
             
-            const currentLog = appState.workoutLogs[dateStr];
-            const targetLog = appState.workoutLogs[trimmedDate];
-            
-            if (targetLog) {
-                appState.workoutLogs[dateStr] = targetLog;
-            } else {
-                delete appState.workoutLogs[dateStr];
-            }
-            
-            if (currentLog) {
-                appState.workoutLogs[trimmedDate] = currentLog;
-            } else {
-                delete appState.workoutLogs[trimmedDate];
-            }
-            
-            saveState();
-            renderCalendarView();
-            closeModal('modal-day');
-            showAppToast(`Swapped ${dateStr} with ${trimmedDate}`, 'success');
+            const weekBtn = document.getElementById('btn-quick-shift-week');
+            if (weekBtn) weekBtn.onclick = () => quickShiftWorkout(dateStr, 7);
+
+            renderSwapPickerGrid();
+            openModal('modal-swap-picker');
+            lucide.createIcons();
         };
+
+        window.prevSwapPickerMonth = function() {
+            if (!currentSwapPickerMonth) return;
+            currentSwapPickerMonth.setMonth(currentSwapPickerMonth.getMonth() - 1);
+            renderSwapPickerGrid();
+        };
+
+        window.nextSwapPickerMonth = function() {
+            if (!currentSwapPickerMonth) return;
+            currentSwapPickerMonth.setMonth(currentSwapPickerMonth.getMonth() + 1);
+            renderSwapPickerGrid();
+        };
+
+        function renderSwapPickerGrid() {
+            if (!currentSwapPickerMonth || !currentSwapSourceDate) return;
+
+            const year = currentSwapPickerMonth.getFullYear();
+            const month = currentSwapPickerMonth.getMonth();
+            const monthName = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(currentSwapPickerMonth);
+
+            const labelEl = document.getElementById('swap-picker-month-label');
+            if (labelEl) labelEl.innerText = monthName;
+
+            const grid = document.getElementById('swap-picker-grid');
+            if (!grid) return;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+
+            let html = `
+                <div class="swap-day-header">Su</div>
+                <div class="swap-day-header">Mo</div>
+                <div class="swap-day-header">Tu</div>
+                <div class="swap-day-header">We</div>
+                <div class="swap-day-header">Th</div>
+                <div class="swap-day-header">Fr</div>
+                <div class="swap-day-header">Sa</div>
+            `;
+
+            for (let i = 0; i < firstDay; i++) {
+                html += `<div class="swap-cell swap-cell-empty"></div>`;
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const targetDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isSource = targetDateStr === currentSwapSourceDate;
+                const isToday = targetDateStr === todayStr ? 'swap-cell-today' : '';
+                const targetLog = appState.workoutLogs[targetDateStr];
+
+                let badgeHTML = '';
+                if (isSource) {
+                    badgeHTML = `<span style="font-size:0.58rem; color:var(--primary); font-weight:800;">SOURCE</span>`;
+                } else if (targetLog) {
+                    const badgeLabel = getCalendarBadgeLabel(targetLog.type);
+                    badgeHTML = `<span class="badge ${getWorkoutColorClass(targetLog.type)}" title="Swap with ${escapeHtml(targetLog.type)}">${escapeHtml(badgeLabel)}</span>`;
+                } else {
+                    badgeHTML = `<span style="font-size:0.6rem; color:var(--text-faint); opacity:0.6;">+ Move</span>`;
+                }
+
+                const clickAttr = isSource ? '' : `onclick="executeSwapOrMove('${currentSwapSourceDate}', '${targetDateStr}')"`;
+                const sourceClass = isSource ? 'swap-cell-source' : '';
+
+                html += `
+                    <div class="swap-cell ${sourceClass} ${isToday}" ${clickAttr} title="${isSource ? 'Current source date' : (targetLog ? 'Swap with ' + targetLog.type : 'Move workout to this day')}">
+                        <span class="swap-cell-date">${day}</span>
+                        ${badgeHTML}
+                    </div>
+                `;
+            }
+
+            const totalCells = firstDay + daysInMonth;
+            const remaining = Math.ceil(totalCells / 7) * 7 - totalCells;
+            for (let i = 0; i < remaining; i++) {
+                html += `<div class="swap-cell swap-cell-empty"></div>`;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        window.executeSwapOrMove = function(sourceDateStr, targetDateStr) {
+            if (!sourceDateStr || !targetDateStr || sourceDateStr === targetDateStr) return;
+
+            const currentLog = appState.workoutLogs[sourceDateStr];
+            if (!currentLog) return;
+            const targetLog = appState.workoutLogs[targetDateStr];
+
+            if (targetLog) {
+                appState.workoutLogs[sourceDateStr] = targetLog;
+                appState.workoutLogs[targetDateStr] = currentLog;
+                showAppToast(`Swapped ${currentLog.type} (${sourceDateStr}) with ${targetLog.type} (${targetDateStr})`, 'success');
+            } else {
+                delete appState.workoutLogs[sourceDateStr];
+                appState.workoutLogs[targetDateStr] = currentLog;
+                showAppToast(`Moved ${currentLog.type} Day to ${targetDateStr}`, 'success');
+            }
+
+            saveState();
+            closeModal('modal-swap-picker');
+            closeModal('modal-day');
+            renderCalendarView();
+        };
+
+        function quickShiftWorkout(sourceDateStr, dayOffset) {
+            const [y, m, d] = sourceDateStr.split('-').map(Number);
+            const dateObj = new Date(y, m - 1, d);
+            dateObj.setDate(dateObj.getDate() + dayOffset);
+            const targetDateStr = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+            executeSwapOrMove(sourceDateStr, targetDateStr);
+        }
 
         window.clearLog = (dateStr) => {
             delete appState.workoutLogs[dateStr];
