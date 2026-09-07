@@ -5165,6 +5165,7 @@
 
         // Day Detail
         window.openDayDetail = (dateStr) => {
+            if (window.calendarJustDragged) return;
             const log = appState.workoutLogs[dateStr];
             const modalBody = document.getElementById('modal-day-body');
             const [y, m, day] = dateStr.split('-').map(Number);
