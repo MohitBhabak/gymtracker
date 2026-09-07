@@ -1030,6 +1030,11 @@
             border-style: dashed;
             transition: opacity 0.15s ease, filter 0.15s ease;
         }
+        .calendar-cell.schedule-mode .badge.badge-completed {
+            opacity: 1 !important;
+            border-style: solid !important;
+            filter: saturate(1) !important;
+        }
         .calendar-cell.schedule-mode:hover .badge,
         .badge.badge-scheduled:hover {
             opacity: 1;
@@ -4736,7 +4741,7 @@
                         const log = appState.workoutLogs[dateStr];
                         if (log) {
                             const badgeLabel = getCalendarBadgeLabel(log.type);
-                            badgeHTML = `<span class="badge ${getWorkoutColorClass(log.type)}" title="Completed: ${escapeHtml(log.type)}">${escapeHtml(badgeLabel)}</span>`;
+                            badgeHTML = `<span class="badge badge-completed ${getWorkoutColorClass(log.type)}" title="Completed: ${escapeHtml(log.type)}">${escapeHtml(badgeLabel)}</span>`;
                         }
                     } else {
                         // Today & future dates: show planned scheduled workout
