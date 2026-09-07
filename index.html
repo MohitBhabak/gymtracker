@@ -4382,8 +4382,19 @@
             const dateObj = new Date(y, m - 1, d);
             const formattedDate = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(dateObj);
             
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+            const isPast = dateStr < todayStr;
+            const pastLog = appState.workoutLogs ? appState.workoutLogs[dateStr] : null;
+            
             const titleEl = document.getElementById('schedule-picker-date-title');
-            if (titleEl) titleEl.innerText = formattedDate;
+            if (titleEl) {
+                if (isPast) {
+                    const statusText = pastLog ? `Actual: ${pastLog.type} Day` : 'No workout logged';
+                    titleEl.innerHTML = `<span>${formattedDate}</span><span class="badge ${pastLog ? getWorkoutColorClass(pastLog.type) : ''}" style="display:inline-block; margin-left:0.5rem; font-size:0.7rem; vertical-align:middle;">${statusText}</span>`;
+                } else {
+                    titleEl.innerText = formattedDate;
+                }
+            }
 
             const currentAssigned = appState.scheduledWorkouts ? appState.scheduledWorkouts[dateStr] : null;
             const container = document.getElementById('schedule-chips-container');
