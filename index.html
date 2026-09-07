@@ -4730,10 +4730,21 @@
                 if (isScheduleView) {
                     cellClickHandler = `openSchedulePicker('${dateStr}')`;
                     cellExtraClass = 'schedule-mode';
-                    const scheduledType = appState.scheduledWorkouts ? appState.scheduledWorkouts[dateStr] : null;
-                    if (scheduledType) {
-                        const badgeLabel = getCalendarBadgeLabel(scheduledType);
-                        badgeHTML = `<span class="badge badge-scheduled ${getWorkoutColorClass(scheduledType)}" title="Planned: ${escapeHtml(scheduledType)}">${escapeHtml(badgeLabel)}</span>`;
+                    
+                    if (dateStr < todayStr) {
+                        // Past dates: reflect whatever session was actually completed
+                        const log = appState.workoutLogs[dateStr];
+                        if (log) {
+                            const badgeLabel = getCalendarBadgeLabel(log.type);
+                            badgeHTML = `<span class="badge ${getWorkoutColorClass(log.type)}" title="Completed: ${escapeHtml(log.type)}">${escapeHtml(badgeLabel)}</span>`;
+                        }
+                    } else {
+                        // Today & future dates: show planned scheduled workout
+                        const scheduledType = appState.scheduledWorkouts ? appState.scheduledWorkouts[dateStr] : null;
+                        if (scheduledType) {
+                            const badgeLabel = getCalendarBadgeLabel(scheduledType);
+                            badgeHTML = `<span class="badge badge-scheduled ${getWorkoutColorClass(scheduledType)}" title="Planned: ${escapeHtml(scheduledType)}">${escapeHtml(badgeLabel)}</span>`;
+                        }
                     }
                 } else {
                     cellClickHandler = `openDayDetail('${dateStr}')`;
