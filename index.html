@@ -1858,6 +1858,49 @@
             </div>
         </div>
 
+        <!-- Batch Gym Assignment Modal -->
+        <div id="modal-batch-gym" class="modal-overlay" onclick="if(event.target===this) closeModal('modal-batch-gym')">
+            <div class="modal-content" style="max-width: 480px; border-radius: var(--radius-base);" onclick="event.stopPropagation()">
+                <div class="modal-header" style="margin-bottom: 0.75rem; align-items: flex-start;">
+                    <div>
+                        <div style="font-size: 0.72rem; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.15rem;">📍 Batch Gym Location</div>
+                        <h2 style="margin: 0; font-size: 1.2rem;">Apply Gym to Selected Sessions</h2>
+                    </div>
+                    <button class="icon-btn" onclick="closeModal('modal-batch-gym')"><i data-lucide="x"></i></button>
+                </div>
+                
+                <div id="batch-gym-selected-summary" style="margin-bottom: 1rem; padding: 0.65rem 0.85rem; background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-tight); font-size: 0.85rem;">
+                    <!-- Injected dynamically -->
+                </div>
+
+                <div style="margin-bottom: 1.15rem;">
+                    <label style="font-size: 0.8rem; font-weight: 600; margin-bottom: 0.5rem; display: block;">Choose Gym to Apply:</label>
+                    <div id="batch-gym-chips-container" style="display: flex; flex-direction: column; gap: 0.4rem; max-height: 180px; overflow-y: auto;">
+                        <!-- Injected gym buttons -->
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.15rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+                    <label style="font-size: 0.78rem; font-weight: 600; margin-bottom: 0.4rem; display: block; color: var(--text-muted);">Or Add & Apply New Gym:</label>
+                    <div style="display: flex; gap: 0.4rem;">
+                        <input type="text" id="batch-gym-new-input" placeholder="e.g. Fit4Less, LA Fitness..." style="flex: 1; font-size: 0.85rem; padding: 0.5rem 0.75rem;" onkeydown="if(event.key==='Enter'){event.preventDefault(); applyNewBatchGym();}">
+                        <button type="button" class="btn btn-primary" onclick="applyNewBatchGym()" style="font-size: 0.82rem; font-weight: 600; padding: 0.5rem 0.9rem;">
+                            Add & Apply
+                        </button>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+                    <button type="button" class="btn" onclick="applyBatchGym('')" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.25); font-size: 0.8rem; padding: 0.45rem 0.8rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <i data-lucide="trash-2" style="width: 13px; height: 13px;"></i> Clear Gym Tag
+                    </button>
+                    <button type="button" class="btn" onclick="closeModal('modal-batch-gym')" style="font-size: 0.85rem; padding: 0.45rem 0.95rem;">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Search & Quick Presets Modal (Spotlight / Command Palette) -->
         <div id="modal-search" class="modal-overlay search-modal-overlay" onclick="if(event.target===this) closeSearchModal()">
             <div class="modal-content search-modal-card" onclick="event.stopPropagation()">
