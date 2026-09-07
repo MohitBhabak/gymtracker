@@ -4448,21 +4448,29 @@
             }
         };
 
-        // --- Drag-to-Clear Marquee Engine ---
-        window.initCalendarDragClear = function(e) {
-            // Only trigger on left-click and when in Schedule View
-            if (e.button !== 0 || appState.calendarViewMode !== 'schedule') return;
+        // --- Drag Marquee Selection Engine (Schedule Clear & Batch Gym Assign) ---
+        let currentBatchGymDates = [];
+
+        window.initCalendarDragSelection = function(e) {
+            // Only trigger on left-click
+            if (e.button !== 0) return;
+
+            const mode = appState.calendarViewMode === 'schedule' ? 'schedule-clear' : 'default-gym-assign';
 
             calendarDragState = {
                 startX: e.clientX,
                 startY: e.clientY,
                 isDragging: false,
-                boxEl: null
+                boxEl: null,
+                mode: mode
             };
 
             window.addEventListener('mousemove', handleCalendarDragMove);
             window.addEventListener('mouseup', handleCalendarDragEnd);
         };
+
+        // Keep alias for backwards compatibility
+        window.initCalendarDragClear = window.initCalendarDragSelection;
 
         function handleCalendarDragMove(e) {
             if (!calendarDragState) return;
@@ -4474,7 +4482,9 @@
                 calendarDragState.isDragging = true;
                 
                 const box = document.createElement('div');
-                box.className = 'calendar-selection-box';
+                box.className = calendarDragState.mode === 'schedule-clear'
+                    ? 'calendar-selection-box'
+                    : 'calendar-selection-box gym-select-box';
                 box.id = 'calendar-selection-box';
                 document.body.appendChild(box);
                 calendarDragState.boxEl = box;
@@ -4496,6 +4506,9 @@
 
                 const selRect = { left, top, right: left + width, bottom: top + height };
                 const cells = document.querySelectorAll('.calendar-cell[data-date]');
+                const highlightClass = calendarDragState.mode === 'schedule-clear'
+                    ? 'cell-drag-clearing'
+                    : 'cell-drag-gym-select';
 
                 cells.forEach(cell => {
                     const rect = cell.getBoundingClientRect();
@@ -4505,9 +4518,9 @@
                                         selRect.bottom > rect.top;
 
                     if (isIntersect) {
-                        cell.classList.add('cell-drag-clearing');
+                        cell.classList.add(highlightClass);
                     } else {
-                        cell.classList.remove('cell-drag-clearing');
+                        cell.classList.remove(highlightClass);
                     }
                 });
             }
