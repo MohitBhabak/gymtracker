@@ -4799,21 +4799,30 @@
             if (isScheduleView) {
                 const scheduledCounts = {};
                 let totalScheduled = 0;
-                const monthPrefix = `${year}-${String(month+1).padStart(2,'0')}`;
                 
-                Object.keys(appState.scheduledWorkouts || {}).forEach(key => {
-                    if (key.startsWith(monthPrefix)) {
-                        let type = appState.scheduledWorkouts[key];
-                        if (type) {
-                            const norm = type.trim().toLowerCase();
-                            if (norm === 'legs' || norm === 'leg' || norm === 'lower') {
-                                type = 'Lower & Legs';
-                            }
-                            scheduledCounts[type] = (scheduledCounts[type] || 0) + 1;
-                            totalScheduled++;
+                for (let d = 1; d <= daysInMonth; d++) {
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                    let type = null;
+                    if (dateStr < todayStr) {
+                        // Past dates: count actual session performed
+                        if (appState.workoutLogs && appState.workoutLogs[dateStr]) {
+                            type = appState.workoutLogs[dateStr].type;
+                        }
+                    } else {
+                        // Today & future dates: count planned scheduled workouts
+                        if (appState.scheduledWorkouts && appState.scheduledWorkouts[dateStr]) {
+                            type = appState.scheduledWorkouts[dateStr];
                         }
                     }
-                });
+                    if (type) {
+                        const norm = type.trim().toLowerCase();
+                        if (norm === 'legs' || norm === 'leg' || norm === 'lower') {
+                            type = 'Lower & Legs';
+                        }
+                        scheduledCounts[type] = (scheduledCounts[type] || 0) + 1;
+                        totalScheduled++;
+                    }
+                }
 
                 sidebarHTML = `
                     <div class="card">
