@@ -4538,26 +4538,47 @@
 
             if (calendarDragState.isDragging) {
                 window.calendarJustDragged = true;
-                setTimeout(() => { window.calendarJustDragged = false; }, 100);
+                setTimeout(() => { window.calendarJustDragged = false; }, 120);
 
-                const highlightedCells = document.querySelectorAll('.calendar-cell.cell-drag-clearing');
-                let clearedCount = 0;
+                if (calendarDragState.mode === 'schedule-clear') {
+                    const highlightedCells = document.querySelectorAll('.calendar-cell.cell-drag-clearing');
+                    let clearedCount = 0;
 
-                highlightedCells.forEach(cell => {
-                    const dateStr = cell.getAttribute('data-date');
-                    if (dateStr && appState.scheduledWorkouts && appState.scheduledWorkouts[dateStr]) {
-                        delete appState.scheduledWorkouts[dateStr];
-                        clearedCount++;
+                    highlightedCells.forEach(cell => {
+                        const dateStr = cell.getAttribute('data-date');
+                        if (dateStr && appState.scheduledWorkouts && appState.scheduledWorkouts[dateStr]) {
+                            delete appState.scheduledWorkouts[dateStr];
+                            clearedCount++;
+                        }
+                        cell.classList.remove('cell-drag-clearing');
+                    });
+
+                    if (clearedCount > 0) {
+                        saveState();
+                        renderCalendarView();
+                        showAppToast(`Cleared ${clearedCount} planned workout${clearedCount === 1 ? '' : 's'}`, 'info');
+                    } else {
+                        document.querySelectorAll('.calendar-cell.cell-drag-clearing').forEach(el => el.classList.remove('cell-drag-clearing'));
                     }
-                    cell.classList.remove('cell-drag-clearing');
-                });
+                } else if (calendarDragState.mode === 'default-gym-assign') {
+                    const highlightedCells = document.querySelectorAll('.calendar-cell.cell-drag-gym-select');
+                    const selectedDatesWithLogs = [];
 
-                if (clearedCount > 0) {
-                    saveState();
-                    renderCalendarView();
-                    showAppToast(`Cleared ${clearedCount} planned workout${clearedCount === 1 ? '' : 's'}`, 'info');
-                } else {
-                    document.querySelectorAll('.calendar-cell.cell-drag-clearing').forEach(el => el.classList.remove('cell-drag-clearing'));
+                    highlightedCells.forEach(cell => {
+                        const dateStr = cell.getAttribute('data-date');
+                        if (dateStr && appState.workoutLogs && appState.workoutLogs[dateStr]) {
+                            selectedDatesWithLogs.push(dateStr);
+                        }
+                        cell.classList.remove('cell-drag-gym-select');
+                    });
+
+                    if (selectedDatesWithLogs.length > 0) {
+                        selectedDatesWithLogs.sort((a, b) => a.localeCompare(b));
+                        openBatchGymModal(selectedDatesWithLogs);
+                    } else {
+                        document.querySelectorAll('.calendar-cell.cell-drag-gym-select').forEach(el => el.classList.remove('cell-drag-gym-select'));
+                        showAppToast('No workout sessions found in selected dates', 'info');
+                    }
                 }
             }
 
