@@ -4585,6 +4585,96 @@
             calendarDragState = null;
         }
 
+        window.openBatchGymModal = function(dates) {
+            currentBatchGymDates = dates;
+            const summaryEl = document.getElementById('batch-gym-selected-summary');
+            const container = document.getElementById('batch-gym-chips-container');
+            const input = document.getElementById('batch-gym-new-input');
+            if (input) input.value = '';
+
+            if (summaryEl) {
+                const dateChips = dates.map(d => {
+                    const log = appState.workoutLogs[d];
+                    const badgeClass = log ? getWorkoutColorClass(log.type) : '';
+                    const typeName = log ? log.type : 'Workout';
+                    const [y, m, day] = d.split('-').map(Number);
+                    const shortDate = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(y, m - 1, day));
+                    const currentGymLabel = log && log.gym ? ` • ${escapeHtml(log.gym)}` : '';
+                    return `<span class="badge ${badgeClass}" style="font-size:0.75rem; padding:0.2rem 0.5rem;" title="${escapeHtml(log ? log.gym || 'No gym assigned' : '')}">${shortDate} (${typeName}${currentGymLabel})</span>`;
+                }).join('');
+
+                summaryEl.innerHTML = `
+                    <div style="font-weight: 700; margin-bottom: 0.5rem; color: var(--primary); display: flex; align-items: center; gap: 0.35rem;">
+                        <i data-lucide="check-circle-2" style="width: 14px; height: 14px;"></i>
+                        ${dates.length} Workout Session${dates.length === 1 ? '' : 's'} Selected:
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; max-height: 90px; overflow-y: auto;">
+                        ${dateChips}
+                    </div>
+                `;
+            }
+
+            if (container) {
+                const gyms = appState.gyms || [];
+                if (gyms.length === 0) {
+                    container.innerHTML = `<p class="text-muted" style="font-size: 0.85rem; margin: 0.5rem 0;">No saved gyms yet. Type a gym name below to add & apply.</p>`;
+                } else {
+                    container.innerHTML = gyms.map(gym => `
+                        <button type="button" class="btn" onclick="applyBatchGym('${escapeHtml(gym)}')" style="width: 100%; text-align: left; padding: 0.6rem 0.85rem; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between; background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-tight);">
+                            <span style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; color: var(--text);">
+                                <i data-lucide="map-pin" style="width: 14px; height: 14px; color: var(--primary);"></i>
+                                ${escapeHtml(gym)}
+                            </span>
+                            <span style="font-size: 0.72rem; color: var(--primary); font-weight: 600; background: rgba(74, 222, 128, 0.12); padding: 0.2rem 0.5rem; border-radius: var(--radius-pill);">Apply</span>
+                        </button>
+                    `).join('');
+                }
+            }
+
+            lucide.createIcons();
+            openModal('modal-batch-gym');
+        };
+
+        window.applyBatchGym = function(gymName) {
+            if (!currentBatchGymDates || currentBatchGymDates.length === 0) {
+                closeModal('modal-batch-gym');
+                return;
+            }
+
+            let updatedCount = 0;
+            currentBatchGymDates.forEach(dateStr => {
+                if (appState.workoutLogs && appState.workoutLogs[dateStr]) {
+                    appState.workoutLogs[dateStr].gym = gymName;
+                    updatedCount++;
+                }
+            });
+
+            if (gymName && (!appState.gyms || !appState.gyms.some(g => g.toLowerCase() === gymName.toLowerCase()))) {
+                if (!appState.gyms) appState.gyms = [];
+                appState.gyms.push(gymName);
+            }
+
+            saveState();
+            closeModal('modal-batch-gym');
+            renderCalendarView();
+
+            if (gymName) {
+                showAppToast(`Applied "${gymName}" to ${updatedCount} session${updatedCount === 1 ? '' : 's'}`, 'success');
+            } else {
+                showAppToast(`Cleared gym location from ${updatedCount} session${updatedCount === 1 ? '' : 's'}`, 'info');
+            }
+        };
+
+        window.applyNewBatchGym = function() {
+            const input = document.getElementById('batch-gym-new-input');
+            if (!input) return;
+            const val = input.value.trim();
+            if (!val) {
+                return showAppToast('Please enter a gym name', 'warning');
+            }
+            applyBatchGym(val);
+        };
+
         // Calendar Render
         function renderCalendarView() {
             const view = document.getElementById('view-calendar');
