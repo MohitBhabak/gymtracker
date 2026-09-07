@@ -1027,18 +1027,13 @@
         .badge.badge-scheduled {
             opacity: 0.82;
             filter: saturate(0.92);
-            border-style: dashed;
-            transition: opacity 0.15s ease, filter 0.15s ease;
-        }
-        .calendar-cell.schedule-mode .badge.badge-completed {
-            opacity: 1 !important;
-            border-style: solid !important;
-            filter: saturate(1) !important;
+            border-style: dashed !important;
+            transition: opacity 0.15s ease, filter 0.15s ease, border-color 0.15s ease;
         }
         .calendar-cell.schedule-mode:hover .badge,
         .badge.badge-scheduled:hover {
-            opacity: 1;
-            filter: saturate(1);
+            opacity: 1 !important;
+            filter: saturate(1) !important;
         }
 
         /* Drag-to-Clear Marquee Box */
