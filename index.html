@@ -4747,14 +4747,14 @@
                         const log = appState.workoutLogs[dateStr];
                         if (log) {
                             const badgeLabel = getCalendarBadgeLabel(log.type);
-                            badgeHTML = `<span class="badge badge-scheduled ${getWorkoutColorClass(log.type)}" title="Completed: ${escapeHtml(log.type)}">${escapeHtml(badgeLabel)}</span>`;
+                            badgeHTML = `<span class="badge badge-scheduled ${getWorkoutColorClass(log.type)}" title="Completed: ${escapeHtml(log.type)}" aria-label="Completed: ${escapeHtml(log.type)}">${escapeHtml(badgeLabel)}</span>`;
                         }
                     } else {
                         // Today & future dates: show planned scheduled workout
                         const scheduledType = appState.scheduledWorkouts ? appState.scheduledWorkouts[dateStr] : null;
                         if (scheduledType) {
                             const badgeLabel = getCalendarBadgeLabel(scheduledType);
-                            badgeHTML = `<span class="badge badge-scheduled ${getWorkoutColorClass(scheduledType)}" title="Planned: ${escapeHtml(scheduledType)}">${escapeHtml(badgeLabel)}</span>`;
+                            badgeHTML = `<span class="badge badge-scheduled ${getWorkoutColorClass(scheduledType)}" title="Planned: ${escapeHtml(scheduledType)}" aria-label="Planned: ${escapeHtml(scheduledType)}">${escapeHtml(badgeLabel)}</span>`;
                         }
                     }
                 } else {
