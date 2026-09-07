@@ -4747,7 +4747,7 @@
                         const log = appState.workoutLogs[dateStr];
                         if (log) {
                             const badgeLabel = getCalendarBadgeLabel(log.type);
-                            badgeHTML = `<span class="badge badge-completed ${getWorkoutColorClass(log.type)}" title="Completed: ${escapeHtml(log.type)}">${escapeHtml(badgeLabel)}</span>`;
+                            badgeHTML = `<span class="badge badge-scheduled ${getWorkoutColorClass(log.type)}" title="Completed: ${escapeHtml(log.type)}">${escapeHtml(badgeLabel)}</span>`;
                         }
                     } else {
                         // Today & future dates: show planned scheduled workout
