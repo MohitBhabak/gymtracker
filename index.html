@@ -2000,6 +2000,18 @@
                 <p class="text-muted" style="font-size:0.85rem; margin-bottom:1.25rem;">Add your planned exercises and hit <strong style="color:var(--text);">Show Targets</strong> to see your personal bests to beat.</p>
                 
                 <div style="margin-bottom: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                        <label for="po-gym-select" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;">Gym Location</label>
+                        <span class="text-muted" style="font-size: 0.75rem;">Filter personal bests</span>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <select id="po-gym-select" style="flex: 1; font-size: 0.85rem; padding: 0.5rem 0.75rem; background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-tight); color: var(--text);" onchange="poOnGymChange()">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.25rem;">
                     <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">Autofill Preset</div>
                     <div class="flex" style="flex-wrap: wrap; gap: 0.5rem;">
                         <button class="type-push" style="padding: 0.35rem 0.7rem; font-size: 0.8rem; border-radius:var(--radius-tight); cursor:pointer; font-weight:600;" onclick="poAutofill('Push')">Push</button>
