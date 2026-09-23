@@ -5157,15 +5157,26 @@
             const resultsEl = document.getElementById('po-results');
             if (!resultsEl) return;
 
+            const selectedGym = document.getElementById('po-gym-select')?.value || '';
+
             let html = '<div style="margin-top:1.5rem; border-top:1px solid var(--border); padding-top:1.5rem;">';
-            html += '<h4 style="margin-bottom:1rem; font-size:0.9rem; letter-spacing:0.04em;" class="text-muted">TO-BEAT TARGETS</h4>';
+            html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h4 style="margin:0; font-size:0.9rem; letter-spacing:0.04em;" class="text-muted">TO-BEAT TARGETS</h4>
+                    ${selectedGym ? `<span class="badge" style="background:rgba(255,255,255,0.06); border:1px solid var(--border); font-size:0.75rem; color:var(--text); font-weight:600;"><i data-lucide="map-pin" style="width:11px;height:11px;margin-right:3px;display:inline-block;vertical-align:middle;"></i>${escapeHtml(selectedGym)}</span>` : `<span class="badge" style="background:rgba(255,255,255,0.06); border:1px solid var(--border); font-size:0.75rem; color:var(--text-muted);">All Gyms</span>`}
+                </div>
+            `;
 
             let anyFound = false;
-            let emailBody = "My Target Scores to Beat:\n\n";
+            let emailBody = selectedGym
+                ? `My Target Scores to Beat (${selectedGym}):\n\n`
+                : "My Target Scores to Beat (All Gyms):\n\n";
 
             names.forEach(name => {
                 // Find all sessions for this exercise (case-insensitive)
-                const sessions = [];
+                const allSessions = [];
+                const gymSessions = [];
+
                 Object.keys(appState.workoutLogs).sort().forEach(date => {
                     const log = appState.workoutLogs[date];
                     log.exercises.filter(e => e.name.toLowerCase() === name.toLowerCase()).forEach(ex => {
@@ -5177,36 +5188,47 @@
                         } else {
                             bestSet = ex.sets.reduce((max, s) => (s.weight > max.weight || (s.weight === max.weight && s.reps > max.reps)) ? s : max, ex.sets[0]);
                         }
-                        sessions.push({ date, bestSet, isBw });
+                        const sessionItem = { date, bestSet, isBw, gym: log.gym || '' };
+                        allSessions.push(sessionItem);
+                        if (!selectedGym || (log.gym && log.gym.toLowerCase() === selectedGym.toLowerCase())) {
+                            gymSessions.push(sessionItem);
+                        }
                     });
                 });
 
-                // Find all-time best
-                let allTimeBest = null;
-                let isBw = false;
-                if (sessions.length > 0) {
-                    isBw = sessions[0].isBw;
-                    allTimeBest = sessions[0].bestSet;
-                    sessions.forEach(s => {
+                // Helper to compute best set from a session list
+                const computeBest = (list) => {
+                    if (list.length === 0) return null;
+                    let bestItem = list[0];
+                    list.forEach(s => {
                         if (s.isBw) {
-                            if (s.bestSet.reps > allTimeBest.reps) allTimeBest = s.bestSet;
+                            if (s.bestSet.reps > bestItem.bestSet.reps) bestItem = s;
                         } else {
-                            if (s.bestSet.weight > allTimeBest.weight || (s.bestSet.weight === allTimeBest.weight && s.bestSet.reps > allTimeBest.reps)) allTimeBest = s.bestSet;
+                            if (s.bestSet.weight > bestItem.bestSet.weight || (s.bestSet.weight === bestItem.bestSet.weight && s.bestSet.reps > bestItem.bestSet.reps)) bestItem = s;
                         }
                     });
-                }
+                    return bestItem;
+                };
 
-                const lastSession = sessions.length > 0 ? sessions[sessions.length - 1] : null;
+                const gymBestItem = computeBest(gymSessions);
+                const overallBestItem = computeBest(allSessions);
+                const lastGymSession = gymSessions.length > 0 ? gymSessions[gymSessions.length - 1] : null;
 
                 // Resolve display name from library
                 const libEx = appState.exercises.find(e => e.name.toLowerCase() === name.toLowerCase());
                 const displayName = libEx ? libEx.name : name;
 
-                if (allTimeBest) {
-                    if (isBw) {
-                        emailBody += `${displayName}: ${allTimeBest.reps} reps\n`;
+                if (gymBestItem) {
+                    if (gymBestItem.isBw) {
+                        emailBody += `${displayName}: ${gymBestItem.bestSet.reps} reps${selectedGym ? ` (at ${selectedGym})` : (gymBestItem.gym ? ` (at ${gymBestItem.gym})` : '')}\n`;
                     } else {
-                        emailBody += `${displayName}: ${allTimeBest.weight}${appState.unit} x ${allTimeBest.reps}\n`;
+                        emailBody += `${displayName}: ${gymBestItem.bestSet.weight}${appState.unit} x ${gymBestItem.bestSet.reps}${selectedGym ? ` (at ${selectedGym})` : (gymBestItem.gym ? ` (at ${gymBestItem.gym})` : '')}\n`;
+                    }
+                } else if (overallBestItem && selectedGym) {
+                    if (overallBestItem.isBw) {
+                        emailBody += `${displayName}: No history at ${selectedGym} (Overall best: ${overallBestItem.bestSet.reps} reps${overallBestItem.gym ? ` at ${overallBestItem.gym}` : ''})\n`;
+                    } else {
+                        emailBody += `${displayName}: No history at ${selectedGym} (Overall best: ${overallBestItem.bestSet.weight}${appState.unit} x ${overallBestItem.bestSet.reps}${overallBestItem.gym ? ` at ${overallBestItem.gym}` : ''})\n`;
                     }
                 } else {
                     emailBody += `${displayName}: No history\n`;
@@ -5215,41 +5237,65 @@
                 html += `
                     <div style="padding:0.875rem; background:var(--surface-offset); border-radius:var(--radius-base); margin-bottom:0.75rem;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
-                            <div style="font-weight:700; font-size:0.95rem;">${displayName}</div>
+                            <div style="font-weight:700; font-size:0.95rem;">${escapeHtml(displayName)}</div>
                 `;
 
-                if (!allTimeBest) {
-                    html += `<span class="text-muted" style="font-size:0.8rem;">No history</span>`;
-                } else if (isBw) {
+                const bestBadgeLabel = selectedGym ? `BEST AT ${escapeHtml(selectedGym).toUpperCase()}` : 'ALL-TIME BEST';
+
+                if (!gymBestItem) {
+                    if (selectedGym && overallBestItem) {
+                        html += `<span class="text-muted" style="font-size:0.8rem; text-align:right;">No history at ${escapeHtml(selectedGym)}</span>`;
+                    } else {
+                        html += `<span class="text-muted" style="font-size:0.8rem;">No history</span>`;
+                    }
+                } else if (gymBestItem.isBw) {
                     html += `<div style="text-align:right;">
-                        <div style="font-size:1.4rem; font-weight:800; color:var(--primary); line-height:1;">${allTimeBest.reps} <span style="font-size:0.75rem; font-weight:500;">reps</span></div>
-                        <div class="text-muted" style="font-size:0.7rem; margin-top:0.2rem;">ALL-TIME BEST</div>
+                        <div style="font-size:1.4rem; font-weight:800; color:var(--primary); line-height:1;">${gymBestItem.bestSet.reps} <span style="font-size:0.75rem; font-weight:500;">reps</span></div>
+                        <div class="text-muted" style="font-size:0.7rem; margin-top:0.2rem;">${bestBadgeLabel}</div>
                     </div>`;
                 } else {
                     html += `<div style="text-align:right;">
-                        <div style="font-size:1.4rem; font-weight:800; color:var(--primary); line-height:1;">${allTimeBest.weight}<span style="font-size:0.75rem; font-weight:500;">${appState.unit}</span> &times; ${allTimeBest.reps}</div>
-                        <div class="text-muted" style="font-size:0.7rem; margin-top:0.2rem;">ALL-TIME BEST</div>
+                        <div style="font-size:1.4rem; font-weight:800; color:var(--primary); line-height:1;">${gymBestItem.bestSet.weight}<span style="font-size:0.75rem; font-weight:500;">${appState.unit}</span> &times; ${gymBestItem.bestSet.reps}</div>
+                        <div class="text-muted" style="font-size:0.7rem; margin-top:0.2rem;">${bestBadgeLabel}</div>
                     </div>`;
                 }
 
                 html += `</div>`;
 
-                if (lastSession && allTimeBest) {
-                    const lastStr = lastSession.isBw
-                        ? `BW &times; ${lastSession.bestSet.reps} reps`
-                        : `${lastSession.bestSet.weight}${appState.unit} &times; ${lastSession.bestSet.reps}`;
-                    html += `<div class="text-muted" style="font-size:0.78rem; margin-top:0.4rem;">Last: <strong style="color:var(--text);">${lastStr}</strong> &mdash; ${lastSession.date}</div>`;
+                if (lastGymSession && gymBestItem) {
+                    const lastStr = lastGymSession.isBw
+                        ? `BW &times; ${lastGymSession.bestSet.reps} reps`
+                        : `${lastGymSession.bestSet.weight}${appState.unit} &times; ${lastGymSession.bestSet.reps}`;
+                    const gymSuffix = (!selectedGym && lastGymSession.gym) ? ` &bull; ${escapeHtml(lastGymSession.gym)}` : '';
+                    html += `<div class="text-muted" style="font-size:0.78rem; margin-top:0.4rem;">Last: <strong style="color:var(--text);">${lastStr}</strong> &mdash; ${lastGymSession.date}${gymSuffix}</div>`;
+                }
+
+                // If gym filter is on and overall best is different from gym best, show overall record reference
+                if (selectedGym && overallBestItem) {
+                    const isDifferentBest = !gymBestItem || (overallBestItem.isBw
+                        ? overallBestItem.bestSet.reps > gymBestItem.bestSet.reps
+                        : (overallBestItem.bestSet.weight > gymBestItem.bestSet.weight || (overallBestItem.bestSet.weight === gymBestItem.bestSet.weight && overallBestItem.bestSet.reps > gymBestItem.bestSet.reps)));
+                    
+                    if (isDifferentBest) {
+                        const overallStr = overallBestItem.isBw
+                            ? `${overallBestItem.bestSet.reps} reps`
+                            : `${overallBestItem.bestSet.weight}${appState.unit} &times; ${overallBestItem.bestSet.reps}`;
+                        const locationStr = overallBestItem.gym ? ` &bull; ${escapeHtml(overallBestItem.gym)}` : '';
+                        html += `<div class="text-muted" style="font-size:0.75rem; margin-top:0.35rem; opacity:0.85;">Overall record: <strong style="color:var(--text);">${overallStr}</strong> (${overallBestItem.date}${locationStr})</div>`;
+                    }
                 }
 
                 html += `</div>`;
-                anyFound = true;
+                if (gymBestItem || overallBestItem) anyFound = true;
             });
 
             if (!anyFound) {
-                html += '<p class="text-muted" style="font-size:0.85rem;">No logged sessions found for the entered exercises.</p>';
+                const gymMsg = selectedGym ? ` at ${selectedGym} or other gyms` : '';
+                html += `<p class="text-muted" style="font-size:0.85rem;">No logged sessions found for the entered exercises${gymMsg}.</p>`;
             }
             html += '</div>';
             resultsEl.innerHTML = html;
+            lucide.createIcons();
 
             if (anyFound) {
                 lastPoEmailBody = emailBody;
