@@ -5047,15 +5047,36 @@
         window.poAutofill = (type) => {
             const dates = Object.keys(appState.workoutLogs).sort((a, b) => b.localeCompare(a));
             let foundSession = null;
+            let isFallback = false;
             
             const typeLower = type.toLowerCase();
             const targetTypes = (typeLower === 'lower' || typeLower === 'legs') ? ['lower', 'legs'] : [typeLower];
+            const selectedGym = document.getElementById('po-gym-select')?.value || '';
 
-            for (let d of dates) {
-                const session = appState.workoutLogs[d];
-                if (session && session.type && targetTypes.includes(session.type.toLowerCase())) {
-                    foundSession = session;
-                    break;
+            // First search matching selected gym (if specified)
+            if (selectedGym) {
+                for (let d of dates) {
+                    const session = appState.workoutLogs[d];
+                    if (session && session.type && targetTypes.includes(session.type.toLowerCase())) {
+                        if (session.gym && session.gym.toLowerCase() === selectedGym.toLowerCase() && session.exercises && session.exercises.length > 0) {
+                            foundSession = session;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // If not found at specific gym (or no gym filter), search across all gyms
+            if (!foundSession) {
+                for (let d of dates) {
+                    const session = appState.workoutLogs[d];
+                    if (session && session.type && targetTypes.includes(session.type.toLowerCase())) {
+                        if (session.exercises && session.exercises.length > 0) {
+                            foundSession = session;
+                            if (selectedGym) isFallback = true;
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -5066,9 +5087,14 @@
                 // Clear any previous results when autofilling
                 const resultsEl = document.getElementById('po-results');
                 if (resultsEl) resultsEl.innerHTML = '';
+
+                if (isFallback) {
+                    showAppToast(`Autofilled from recent ${type} session (${foundSession.gym || 'different gym'})`, 'info');
+                }
             } else {
                 const displayType = (typeLower === 'lower' || typeLower === 'legs') ? 'Lower or Legs' : type;
-                showAppAlert(`No recent ${displayType} session found with logged exercises.`, 'No Recent Session', 'info');
+                const gymMsg = selectedGym ? ` at "${selectedGym}" or any other gym` : '';
+                showAppAlert(`No recent ${displayType} session found with logged exercises${gymMsg}.`, 'No Recent Session', 'info');
             }
         };
 
