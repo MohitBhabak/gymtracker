@@ -5023,7 +5023,11 @@
                 return;
             }
             const todayStr = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric' }).format(new Date());
-            const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(appState.targetEmail)}&su=${encodeURIComponent('Workout Targets to Beat - ' + todayStr)}&body=${encodeURIComponent(lastPoEmailBody)}`;
+            const selectedGym = document.getElementById('po-gym-select')?.value || '';
+            const subject = selectedGym 
+                ? `Workout Targets to Beat (${selectedGym}) - ${todayStr}`
+                : `Workout Targets to Beat - ${todayStr}`;
+            const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(appState.targetEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(lastPoEmailBody)}`;
             window.open(gmailLink, '_blank', 'noopener,noreferrer');
         };
 
