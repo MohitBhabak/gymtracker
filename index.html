@@ -4981,6 +4981,7 @@
 
         // --- Progressive Overload Drawer ---
         let poRows = [''];
+        let poSelectedGym = '';
         let lastPoEmailBody = '';
 
         function poResetBtn() {
@@ -4990,6 +4991,29 @@
                 btn.onclick = poSubmit;
             }
         }
+
+        function poPopulateGymSelect(selectedGym = '') {
+            const selectEl = document.getElementById('po-gym-select');
+            if (!selectEl) return;
+            const gyms = appState.gyms || [];
+            let html = `<option value="">All Gyms (All Locations)</option>`;
+            gyms.forEach(g => {
+                const isSelected = (g === selectedGym) ? 'selected' : '';
+                html += `<option value="${g.replace(/"/g, '&quot;')}" ${isSelected}>${g}</option>`;
+            });
+            selectEl.innerHTML = html;
+            selectEl.value = selectedGym;
+        }
+
+        window.poOnGymChange = () => {
+            poSelectedGym = document.getElementById('po-gym-select')?.value || '';
+            const resultsEl = document.getElementById('po-results');
+            if (resultsEl && resultsEl.children.length > 0) {
+                poSubmit();
+            } else {
+                poResetBtn();
+            }
+        };
 
         window.poEmailTargets = () => {
             if (!lastPoEmailBody) return;
@@ -5003,9 +5027,13 @@
             window.open(gmailLink, '_blank', 'noopener,noreferrer');
         };
 
-        window.poOpenDrawer = () => {
+        window.poOpenDrawer = (initialGym = null) => {
             poRows = [''];
+            if (initialGym !== null) {
+                poSelectedGym = initialGym;
+            }
             document.getElementById('po-results').innerHTML = '';
+            poPopulateGymSelect(poSelectedGym);
             poRenderInputs();
             document.getElementById('po-drawer-overlay').classList.add('open');
             lucide.createIcons();
