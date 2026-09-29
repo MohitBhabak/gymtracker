@@ -20,6 +20,8 @@
         :root {
             --primary: #4ade80;
             --primary-hover: #22c55e;
+            --primary-rgb: 74, 222, 128;
+            --on-primary: #000000;
             --bg: #0f0f0f;
             --surface: #161616;
             --surface-2: #1e1e1e;
@@ -245,7 +247,7 @@
             flex-shrink: 0;
         }
         .btn:hover { background-color: var(--surface-2); }
-        .btn-primary { background-color: var(--primary); color: #000; }
+        .btn-primary { background-color: var(--primary); color: var(--on-primary); }
         .btn-primary:hover { background-color: var(--primary-hover); }
         
         .badge {
@@ -292,7 +294,7 @@
             position: relative;
         }
         .calendar-cell:hover { background-color: var(--surface-2); }
-        .calendar-cell.today { border: 2px solid var(--primary); background-color: rgba(74, 222, 128, 0.05); }
+        .calendar-cell.today { border: 2px solid var(--primary); background-color: rgba(var(--primary-rgb), 0.05); }
         .calendar-cell.selected { background-color: var(--surface-offset); border: 1px solid var(--primary); }
         .calendar-cell.empty { background-color: var(--bg); opacity: 0.5; cursor: default; }
         .calendar-cell.empty:hover { background-color: var(--bg); }
@@ -333,15 +335,55 @@
         .modal-overlay.open .modal-content { transform: translateY(0); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
         
+
+        /* Appearance / Theme Customization */
+        .appearance-section { margin-bottom: 2rem; padding: 1.25rem; background-color: var(--surface-offset); border-radius: var(--radius-base); border: 1px solid var(--border); }
+        .appearance-row { padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
+        .appearance-row:last-child { border-bottom: none; padding-bottom: 0; }
+        .appearance-label { font-weight: 500; margin-bottom: 0.15rem; }
+        .appearance-hint { font-size: 0.75rem; margin-bottom: 0.6rem; }
+        .swatch-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+        .color-swatch {
+            width: 28px; height: 28px; border-radius: 50%;
+            border: 2px solid var(--border); cursor: pointer; padding: 0;
+            transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+        }
+        .color-swatch:hover { transform: scale(1.1); }
+        .color-swatch.active { box-shadow: 0 0 0 2px var(--surface-offset), 0 0 0 4px var(--text); }
+        .custom-color-wrap { position: relative; width: 28px; height: 28px; border-radius: 50%; overflow: hidden; border: 2px dashed var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .custom-color-wrap.active { border-style: solid; box-shadow: 0 0 0 2px var(--surface-offset), 0 0 0 4px var(--text); }
+        .custom-color-wrap input[type="color"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; padding: 0; border: none; }
+        .theme-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 0.5rem; }
+        .theme-card {
+            border: 2px solid var(--border); border-radius: var(--radius-base); padding: 0.4rem;
+            cursor: pointer; background: none; color: var(--text); text-align: left; font-family: inherit;
+            transition: border-color 0.15s ease-out;
+        }
+        .theme-card:hover { border-color: var(--text-muted); }
+        .theme-card.active { border-color: var(--primary); }
+        .theme-card-preview { height: 38px; border-radius: var(--radius-tight); display: flex; align-items: flex-end; gap: 4px; padding: 6px; margin-bottom: 0.35rem; border: 1px solid rgba(128,128,128,0.2); }
+        .theme-card-preview span { display: block; border-radius: 2px; }
+        .theme-card-name { font-size: 0.75rem; font-weight: 600; }
+        .segmented { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-base); padding: 3px; gap: 2px; flex-wrap: wrap; }
+        .segmented button { background: none; border: none; color: var(--text-muted); padding: 0.35rem 0.75rem; border-radius: var(--radius-tight); cursor: pointer; font-size: 0.8rem; font-weight: 600; font-family: inherit; }
+        .segmented button.active { background: var(--primary); color: var(--on-primary); }
+        .split-color-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.4rem; }
+        .split-color-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.5rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-tight); font-size: 0.8rem; font-weight: 600; }
+        .split-color-item input[type="color"] { width: 26px; height: 26px; padding: 0; border: none; background: none; cursor: pointer; flex-shrink: 0; }
+        .split-color-item input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        .split-color-item input[type="color"]::-webkit-color-swatch { border: 1px solid var(--border); border-radius: 50%; }
+        .split-color-item input[type="color"]::-moz-color-swatch { border: 1px solid var(--border); border-radius: 50%; }
+        .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after { transition: none !important; animation: none !important; }
+
         /* Workout Types Colors */
-        .type-push { background-color: rgba(249, 115, 22, 0.15); color: var(--workout-push); border: 1px solid var(--workout-push); }
-        .type-pull { background-color: rgba(96, 165, 250, 0.15); color: var(--workout-pull); border: 1px solid var(--workout-pull); }
-        .type-legs { background-color: rgba(167, 139, 250, 0.15); color: var(--workout-legs); border: 1px solid var(--workout-legs); }
-        .type-upper { background-color: rgba(251, 191, 36, 0.15); color: var(--workout-upper); border: 1px solid var(--workout-upper); }
-        .type-lower { background-color: rgba(45, 212, 191, 0.15); color: var(--workout-lower); border: 1px solid var(--workout-lower); }
-        .type-abs { background-color: rgba(244, 114, 182, 0.15); color: var(--workout-abs); border: 1px solid var(--workout-abs); }
-        .type-arms, .type-armsdelts, .type-arms-delts { background-color: rgba(132, 204, 22, 0.15); color: var(--workout-arms); border: 1px solid var(--workout-arms); }
-        .type-rest { background-color: rgba(75, 85, 99, 0.15); color: var(--workout-rest); border: 1px solid var(--workout-rest); }
+        .type-push { background-color: color-mix(in srgb, var(--workout-push) 15%, transparent); color: var(--workout-push); border: 1px solid var(--workout-push); }
+        .type-pull { background-color: color-mix(in srgb, var(--workout-pull) 15%, transparent); color: var(--workout-pull); border: 1px solid var(--workout-pull); }
+        .type-legs { background-color: color-mix(in srgb, var(--workout-legs) 15%, transparent); color: var(--workout-legs); border: 1px solid var(--workout-legs); }
+        .type-upper { background-color: color-mix(in srgb, var(--workout-upper) 15%, transparent); color: var(--workout-upper); border: 1px solid var(--workout-upper); }
+        .type-lower { background-color: color-mix(in srgb, var(--workout-lower) 15%, transparent); color: var(--workout-lower); border: 1px solid var(--workout-lower); }
+        .type-abs { background-color: color-mix(in srgb, var(--workout-abs) 15%, transparent); color: var(--workout-abs); border: 1px solid var(--workout-abs); }
+        .type-arms, .type-armsdelts, .type-arms-delts { background-color: color-mix(in srgb, var(--workout-arms) 15%, transparent); color: var(--workout-arms); border: 1px solid var(--workout-arms); }
+        .type-rest { background-color: color-mix(in srgb, var(--workout-rest) 15%, transparent); color: var(--workout-rest); border: 1px solid var(--workout-rest); }
         
         .time-earlymorning { background-color: rgba(20, 184, 166, 0.15); color: var(--time-earlymorning); border: 1px solid var(--time-earlymorning); }
         .time-morning { background-color: rgba(16, 185, 129, 0.15); color: var(--time-morning); border: 1px solid var(--time-morning); }
@@ -370,7 +412,7 @@
         }
         .exercise-item:hover { background-color: var(--surface-offset); }
         .exercise-item:last-child { border-bottom: none; }
-        .exercise-item.selected-exercise { background-color: rgba(74, 222, 128, 0.08); border-left: 3px solid var(--primary); }
+        .exercise-item.selected-exercise { background-color: rgba(var(--primary-rgb), 0.08); border-left: 3px solid var(--primary); }
         
         .dot {
             width: 8px; height: 8px; border-radius: 50%; display: inline-block;
@@ -546,13 +588,13 @@
         }
         .view-pill.active {
             background: var(--primary) !important;
-            color: #09090b !important;
+            color: var(--on-primary) !important;
             font-weight: 700 !important;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
         .view-pill.active i, .view-pill.active svg {
-            color: #09090b !important;
-            stroke: #09090b !important;
+            color: var(--on-primary) !important;
+            stroke: var(--on-primary) !important;
         }
         .view-pill .view-default-tag {
             font-size: 0.55rem;
@@ -567,7 +609,7 @@
         }
         .view-pill.active .view-default-tag {
             background: rgba(0, 0, 0, 0.22);
-            color: #09090b !important;
+            color: var(--on-primary) !important;
         }
         .gym-checkbox-label {
             display: flex;
@@ -851,7 +893,7 @@
             border-color: var(--text-muted);
         }
         .search-preset-chip.active {
-            background: rgba(74, 222, 128, 0.15);
+            background: rgba(var(--primary-rgb), 0.15);
             border-color: var(--primary);
             color: var(--primary);
         }
@@ -1018,7 +1060,7 @@
         }
         .schedule-chip-btn.active {
             border-color: var(--primary);
-            background: rgba(74, 222, 128, 0.12);
+            background: rgba(var(--primary-rgb), 0.12);
         }
         .calendar-cell.schedule-mode:hover {
             border-color: var(--primary);
@@ -1113,11 +1155,11 @@
             transform: translateY(-1px);
         }
         .swap-cell.swap-cell-today {
-            border-color: rgba(74, 222, 128, 0.45);
+            border-color: rgba(var(--primary-rgb), 0.45);
         }
         .swap-cell.swap-cell-source {
             border: 1.5px solid var(--primary);
-            background: rgba(74, 222, 128, 0.08);
+            background: rgba(var(--primary-rgb), 0.08);
             cursor: default;
         }
         .swap-cell.swap-cell-empty {
@@ -1517,6 +1559,61 @@
                         </div>
                     </div>
 
+                    <!-- Appearance Section -->
+                    <div class="appearance-section" id="settings-appearance">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem;">
+                            <h4 style="margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
+                                <i data-lucide="palette" style="width: 18px; height: 18px; color: var(--primary);"></i>
+                                Appearance
+                            </h4>
+                            <button type="button" class="btn btn-sm" onclick="resetAppearance()" style="font-size: 0.75rem; padding: 0.3rem 0.6rem; display: flex; align-items: center; gap: 0.3rem;">
+                                <i data-lucide="rotate-ccw" style="width: 12px; height: 12px;"></i> Reset
+                            </button>
+                        </div>
+
+                        <div class="appearance-row">
+                            <div class="appearance-label">Theme</div>
+                            <div class="text-muted appearance-hint">Background & surface colours. The header moon/sun button flips between your dark and light picks.</div>
+                            <div class="theme-card-grid" id="appearance-theme-grid"><!-- Injected by renderAppearanceSettings --></div>
+                        </div>
+
+                        <div class="appearance-row">
+                            <div class="appearance-label">Accent Colour</div>
+                            <div class="text-muted appearance-hint">Buttons, highlights, active tabs and charts</div>
+                            <div class="swatch-row" id="appearance-accent-row"><!-- Injected by renderAppearanceSettings --></div>
+                        </div>
+
+                        <div class="appearance-row">
+                            <div class="appearance-label">Workout Split Colours</div>
+                            <div class="text-muted appearance-hint">Calendar badges, dots and split tags</div>
+                            <div class="split-color-grid" id="appearance-split-grid"><!-- Injected by renderAppearanceSettings --></div>
+                        </div>
+
+                        <div class="appearance-row flex items-center justify-between" style="gap: 0.75rem; flex-wrap: wrap;">
+                            <div>
+                                <div class="appearance-label">Corner Style</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">Roundness of cards, buttons & inputs</div>
+                            </div>
+                            <div class="segmented" id="appearance-radius-seg"></div>
+                        </div>
+
+                        <div class="appearance-row flex items-center justify-between" style="gap: 0.75rem; flex-wrap: wrap;">
+                            <div>
+                                <div class="appearance-label">Text Size</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">Scales text and spacing across the app</div>
+                            </div>
+                            <div class="segmented" id="appearance-textsize-seg"></div>
+                        </div>
+
+                        <div class="appearance-row flex items-center justify-between" style="gap: 0.75rem;">
+                            <div>
+                                <div class="appearance-label">Reduce Motion</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">Turn off animations and transitions</div>
+                            </div>
+                            <input type="checkbox" id="appearance-reduce-motion" onchange="setAppearanceOption('reduceMotion', this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary);">
+                        </div>
+                    </div>
+
                     <!-- Gym Locations Section -->
                     <div style="margin-bottom: 2rem; padding: 1.25rem; background-color: var(--surface-offset); border-radius: var(--radius-base); border: 1px solid var(--border);">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
@@ -1585,7 +1682,7 @@
                                 <label style="font-size:0.8rem; color:var(--text-muted); display:block; margin-bottom:0.25rem;">Google OAuth Client ID</label>
                                 <input type="text" id="gdrive-client-id-input" placeholder="Paste your Google OAuth Client ID here" style="width:100%; font-size:0.8rem; font-family:monospace; padding:0.5rem 0.6rem; border-radius:var(--radius-tight); border:1px solid var(--border); background:var(--surface);" onchange="saveCustomClientId(this.value)">
                             </div>
-                            <button class="btn" id="btn-connect-gdrive" onclick="connectGDrive()" style="background-color:var(--primary); color:#000; font-weight:600; width:100%; justify-content:center; gap:0.5rem; margin-bottom:0.75rem;">
+                            <button class="btn" id="btn-connect-gdrive" onclick="connectGDrive()" style="background-color:var(--primary); color:var(--on-primary); font-weight:600; width:100%; justify-content:center; gap:0.5rem; margin-bottom:0.75rem;">
                                 <i data-lucide="cloud" style="width:16px; height:16px;"></i> Connect Google Drive Sync
                             </button>
                             <details style="font-size:0.8rem; color:var(--text-muted); line-height:1.4;">
@@ -2407,6 +2504,7 @@
             currentMonth: new Date(),
             targetEmail: '',
             fontTheme: 'cabinet-satoshi',
+            appearance: null,
             scheduledWorkouts: {},
             calendarViewMode: 'default'
         };
@@ -2427,6 +2525,7 @@
                 appState.benchLogs = parsed.benchLogs || [];
                 appState.targetEmail = parsed.targetEmail || '';
                 appState.fontTheme = parsed.fontTheme || 'cabinet-satoshi';
+                appState.appearance = parsed.appearance || null;
                 appState.scheduledWorkouts = (parsed.scheduledWorkouts && typeof parsed.scheduledWorkouts === 'object') ? parsed.scheduledWorkouts : {};
                 appState.calendarViewMode = parsed.calendarViewMode || 'default';
             } catch (e) {
@@ -2463,6 +2562,7 @@
                 benchLogs: appState.benchLogs,
                 targetEmail: appState.targetEmail,
                 fontTheme: appState.fontTheme || 'cabinet-satoshi',
+                appearance: appState.appearance,
                 scheduledWorkouts: appState.scheduledWorkouts || {},
                 calendarViewMode: appState.calendarViewMode || 'default'
             }));
@@ -2689,6 +2789,7 @@
                 benchLogs: appState.benchLogs,
                 targetEmail: appState.targetEmail,
                 fontTheme: appState.fontTheme || 'cabinet-satoshi',
+                appearance: appState.appearance,
                 scheduledWorkouts: appState.scheduledWorkouts || {},
                 updatedAt: Date.now()
             };
@@ -2702,6 +2803,10 @@
             if (remoteData.fontTheme && typeof remoteData.fontTheme === 'string') {
                 appState.fontTheme = remoteData.fontTheme;
                 applyFontTheme(appState.fontTheme, false);
+            }
+            if (remoteData.appearance && typeof remoteData.appearance === 'object') {
+                appState.appearance = remoteData.appearance;
+                applyAppearance(false);
             }
             if (remoteData.scheduledWorkouts && typeof remoteData.scheduledWorkouts === 'object') {
                 if (!appState.scheduledWorkouts) appState.scheduledWorkouts = {};
@@ -2859,29 +2964,228 @@
         // Initialize Icons
         lucide.createIcons();
 
-        // Theme
+        // ==========================================
+        // APPEARANCE / THEME CUSTOMIZATION ENGINE
+        // ==========================================
+        const THEME_PRESETS = {
+            'carbon':   { name: 'Carbon',    dark: true,  bg: '#0f0f0f', surface: '#161616', surface2: '#1e1e1e', offset: '#252525', border: 'rgba(255, 255, 255, 0.08)', text: '#f0f0f0', muted: '#888888', faint: '#444444' },
+            'oled':     { name: 'OLED Black', dark: true, bg: '#000000', surface: '#0a0a0a', surface2: '#141414', offset: '#1c1c1c', border: 'rgba(255, 255, 255, 0.08)', text: '#f5f5f5', muted: '#8a8a8a', faint: '#3f3f3f' },
+            'midnight': { name: 'Midnight',  dark: true,  bg: '#0b1020', surface: '#111831', surface2: '#18213f', offset: '#202a4d', border: 'rgba(148, 163, 255, 0.12)', text: '#e6e9f5', muted: '#8b93b5', faint: '#3d4566' },
+            'slate':    { name: 'Slate',     dark: true,  bg: '#0f172a', surface: '#1e293b', surface2: '#273449', offset: '#334155', border: 'rgba(255, 255, 255, 0.08)', text: '#f1f5f9', muted: '#94a3b8', faint: '#475569' },
+            'forest':   { name: 'Forest',    dark: true,  bg: '#0b120e', surface: '#111b15', surface2: '#17241c', offset: '#1f2f25', border: 'rgba(255, 255, 255, 0.08)', text: '#ecf3ee', muted: '#86998c', faint: '#3a4a40' },
+            'mocha':    { name: 'Mocha',     dark: true,  bg: '#14110f', surface: '#1c1815', surface2: '#25201c', offset: '#2f2924', border: 'rgba(255, 240, 220, 0.08)', text: '#f3ece4', muted: '#a09283', faint: '#4d443b' },
+            'light':    { name: 'Light',     dark: false, bg: '#ffffff', surface: '#f4f4f5', surface2: '#e4e4e7', offset: '#d4d4d8', border: 'rgba(0, 0, 0, 0.1)', text: '#171717', muted: '#52525b', faint: '#a1a1aa' },
+            'paper':    { name: 'Paper',     dark: false, bg: '#faf7f2', surface: '#f3eee6', surface2: '#e9e2d6', offset: '#ddd4c5', border: 'rgba(60, 40, 20, 0.12)', text: '#2a2420', muted: '#6b6055', faint: '#b3a898' },
+            'cloud':    { name: 'Cloud',     dark: false, bg: '#f8fafc', surface: '#eef2f7', surface2: '#e2e8f0', offset: '#cbd5e1', border: 'rgba(15, 23, 42, 0.1)', text: '#0f172a', muted: '#475569', faint: '#94a3b8' }
+        };
+        const ACCENT_PRESETS = [
+            { name: 'Green', hex: '#4ade80' }, { name: 'Lime', hex: '#a3e635' }, { name: 'Cyan', hex: '#22d3ee' },
+            { name: 'Blue', hex: '#60a5fa' }, { name: 'Indigo', hex: '#818cf8' }, { name: 'Violet', hex: '#a78bfa' },
+            { name: 'Pink', hex: '#f472b6' }, { name: 'Red', hex: '#f87171' }, { name: 'Orange', hex: '#fb923c' },
+            { name: 'Amber', hex: '#fbbf24' }
+        ];
+        const SPLIT_COLOR_DEFAULTS = {
+            push: '#f97316', pull: '#60a5fa', legs: '#a78bfa', upper: '#fbbf24',
+            lower: '#2dd4bf', abs: '#f472b6', arms: '#84cc16', rest: '#4b5563'
+        };
+        const SPLIT_COLOR_LABELS = { push: 'Push', pull: 'Pull', legs: 'Legs', upper: 'Upper', lower: 'Lower', abs: 'Abs', arms: 'Arms & Delts', rest: 'Rest' };
+        const RADIUS_PRESETS = {
+            sharp:   { name: 'Sharp',   tight: '2px', base: '3px' },
+            default: { name: 'Default', tight: '4px', base: '6px' },
+            rounded: { name: 'Rounded', tight: '8px', base: '12px' }
+        };
+        const TEXT_SIZE_PRESETS = {
+            small:   { name: 'S', size: '14px' },
+            default: { name: 'M', size: '16px' },
+            large:   { name: 'L', size: '18px' }
+        };
+        const DEFAULT_APPEARANCE = {
+            mode: 'dark', darkTheme: 'carbon', lightTheme: 'light', accent: '#4ade80',
+            radius: 'default', textSize: 'default', reduceMotion: false, splitColors: {}
+        };
+        window.THEME_PRESETS = THEME_PRESETS;
+
+        function normalizeAppearance(raw) {
+            const a = { ...DEFAULT_APPEARANCE, ...(raw && typeof raw === 'object' ? raw : {}) };
+            if (!THEME_PRESETS[a.darkTheme] || !THEME_PRESETS[a.darkTheme].dark) a.darkTheme = DEFAULT_APPEARANCE.darkTheme;
+            if (!THEME_PRESETS[a.lightTheme] || THEME_PRESETS[a.lightTheme].dark) a.lightTheme = DEFAULT_APPEARANCE.lightTheme;
+            if (a.mode !== 'light') a.mode = 'dark';
+            if (!/^#[0-9a-f]{6}$/i.test(a.accent)) a.accent = DEFAULT_APPEARANCE.accent;
+            if (!RADIUS_PRESETS[a.radius]) a.radius = 'default';
+            if (!TEXT_SIZE_PRESETS[a.textSize]) a.textSize = 'default';
+            a.reduceMotion = !!a.reduceMotion;
+            const splits = {};
+            Object.keys(SPLIT_COLOR_DEFAULTS).forEach(k => {
+                const v = a.splitColors && a.splitColors[k];
+                if (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v)) splits[k] = v;
+            });
+            a.splitColors = splits;
+            return a;
+        }
+
+        function hexToRgb(hex) {
+            const n = parseInt(hex.slice(1), 16);
+            return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+        }
+        function shadeHex(hex, amount) {
+            // amount < 0 darkens, > 0 lightens (fraction 0..1)
+            const [r, g, b] = hexToRgb(hex).map(c => {
+                const target = amount < 0 ? 0 : 255;
+                return Math.round(c + (target - c) * Math.abs(amount));
+            });
+            return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
+        }
+        function relativeLuminance(hex) {
+            const [r, g, b] = hexToRgb(hex).map(c => {
+                const v = c / 255;
+                return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+            });
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        }
+
+        // Canvas (Chart.js) can't read CSS variables, so resolve them at render time
+        function getThemeColor(varName, fallback) {
+            const v = getComputedStyle(document.body).getPropertyValue(varName).trim();
+            return v || fallback;
+        }
+        function getThemeRgba(varName, alpha, fallbackRgb) {
+            return `rgba(${getThemeColor(varName, fallbackRgb)}, ${alpha})`;
+        }
+        window.getThemeColor = getThemeColor;
+
         const btnTheme = document.getElementById('btn-theme');
         let isDark = true;
-        btnTheme.addEventListener('click', () => {
-            isDark = !isDark;
+
+        function applyAppearance(rerender = false) {
+            const a = appState.appearance = normalizeAppearance(appState.appearance);
+            const theme = THEME_PRESETS[a.mode === 'light' ? a.lightTheme : a.darkTheme];
+            isDark = theme.dark;
+            const bodyStyle = document.body.style;
             document.body.classList.toggle('light-theme', !isDark);
-            btnTheme.innerHTML = isDark ? '<i data-lucide="moon"></i>' : '<i data-lucide="sun"></i>';
-            lucide.createIcons();
-            if(window.myChart) {
-                window.myChart.options.scales.x.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-                window.myChart.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-                window.myChart.update();
+
+            bodyStyle.setProperty('--bg', theme.bg);
+            bodyStyle.setProperty('--surface', theme.surface);
+            bodyStyle.setProperty('--surface-2', theme.surface2);
+            bodyStyle.setProperty('--surface-offset', theme.offset);
+            bodyStyle.setProperty('--border', theme.border);
+            bodyStyle.setProperty('--text', theme.text);
+            bodyStyle.setProperty('--text-muted', theme.muted);
+            bodyStyle.setProperty('--text-faint', theme.faint);
+
+            bodyStyle.setProperty('--primary', a.accent);
+            bodyStyle.setProperty('--primary-hover', shadeHex(a.accent, -0.15));
+            bodyStyle.setProperty('--primary-rgb', hexToRgb(a.accent).join(', '));
+            bodyStyle.setProperty('--on-primary', relativeLuminance(a.accent) > 0.4 ? '#000000' : '#ffffff');
+
+            Object.keys(SPLIT_COLOR_DEFAULTS).forEach(k => {
+                bodyStyle.setProperty(`--workout-${k}`, a.splitColors[k] || SPLIT_COLOR_DEFAULTS[k]);
+            });
+
+            const radius = RADIUS_PRESETS[a.radius];
+            bodyStyle.setProperty('--radius-tight', radius.tight);
+            bodyStyle.setProperty('--radius-base', radius.base);
+            document.documentElement.style.fontSize = TEXT_SIZE_PRESETS[a.textSize].size;
+            document.body.classList.toggle('reduce-motion', a.reduceMotion);
+
+            const metaTheme = document.querySelector('meta[name="theme-color"]');
+            if (metaTheme) metaTheme.setAttribute('content', theme.bg);
+
+            if (btnTheme) {
+                btnTheme.innerHTML = isDark ? '<i data-lucide="moon"></i>' : '<i data-lucide="sun"></i>';
+                if (window.lucide) lucide.createIcons({ root: btnTheme });
             }
-            if(window.weightChartInstance) {
-                window.weightChartInstance.options.scales.x.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-                window.weightChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-                window.weightChartInstance.update();
-            }
-            if(window.benchChartInstance) {
-                window.benchChartInstance.options.scales.x.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-                window.benchChartInstance.options.scales.y.grid.color = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
-                window.benchChartInstance.update();
-            }
+
+            renderAppearanceSettings();
+            if (rerender && typeof handleRoute === 'function') handleRoute(); // redraw charts with new colours
+        }
+        window.applyAppearance = applyAppearance;
+
+        function renderAppearanceSettings() {
+            const a = appState.appearance;
+            const themeGrid = document.getElementById('appearance-theme-grid');
+            if (!themeGrid || !a) return;
+
+            themeGrid.innerHTML = Object.entries(THEME_PRESETS).map(([key, t]) => {
+                const isActive = key === (t.dark ? a.darkTheme : a.lightTheme) && t.dark === (a.mode === 'dark');
+                const isPicked = key === (t.dark ? a.darkTheme : a.lightTheme);
+                return `
+                    <button type="button" class="theme-card ${isActive ? 'active' : ''}" onclick="setAppearanceTheme('${key}')" title="${t.name} (${t.dark ? 'Dark' : 'Light'})">
+                        <div class="theme-card-preview" style="background:${t.bg};">
+                            <span style="width:40%; height:100%; background:${t.surface};"></span>
+                            <span style="width:22%; height:60%; background:${t.offset};"></span>
+                            <span style="width:14%; height:35%; background:${a.accent};"></span>
+                        </div>
+                        <div class="theme-card-name">${t.name}${isPicked && !isActive ? ' <span class="text-muted" style="font-weight:400;">•</span>' : ''}</div>
+                        <div class="text-muted" style="font-size:0.65rem;">${t.dark ? 'Dark' : 'Light'}</div>
+                    </button>`;
+            }).join('');
+
+            const accentRow = document.getElementById('appearance-accent-row');
+            const accentLower = a.accent.toLowerCase();
+            const isPreset = ACCENT_PRESETS.some(p => p.hex === accentLower);
+            accentRow.innerHTML = ACCENT_PRESETS.map(p => `
+                <button type="button" class="color-swatch ${p.hex === accentLower ? 'active' : ''}" style="background:${p.hex};" title="${p.name}" aria-label="${p.name} accent" onclick="setAppearanceOption('accent', '${p.hex}')"></button>
+            `).join('') + `
+                <label class="custom-color-wrap ${isPreset ? '' : 'active'}" title="Custom colour" style="${isPreset ? '' : `background:${a.accent};`}">
+                    ${isPreset ? '<i data-lucide="plus" style="width:14px;height:14px;color:var(--text-muted);"></i>' : ''}
+                    <input type="color" value="${a.accent}" aria-label="Custom accent colour" onchange="setAppearanceOption('accent', this.value)">
+                </label>`;
+
+            const splitGrid = document.getElementById('appearance-split-grid');
+            splitGrid.innerHTML = Object.keys(SPLIT_COLOR_DEFAULTS).map(k => `
+                <label class="split-color-item">
+                    <input type="color" value="${a.splitColors[k] || SPLIT_COLOR_DEFAULTS[k]}" onchange="setSplitColor('${k}', this.value)" aria-label="${SPLIT_COLOR_LABELS[k]} colour">
+                    <span style="flex:1;">${SPLIT_COLOR_LABELS[k]}</span>
+                    ${a.splitColors[k] ? `<button type="button" class="icon-btn" style="padding:0.1rem;" title="Reset to default" onclick="event.preventDefault(); setSplitColor('${k}', null)"><i data-lucide="undo-2" style="width:12px;height:12px;"></i></button>` : ''}
+                </label>
+            `).join('');
+
+            const renderSeg = (id, presets, current, option) => {
+                const el = document.getElementById(id);
+                if (el) el.innerHTML = Object.entries(presets).map(([key, p]) =>
+                    `<button type="button" class="${key === current ? 'active' : ''}" onclick="setAppearanceOption('${option}', '${key}')">${p.name}</button>`
+                ).join('');
+            };
+            renderSeg('appearance-radius-seg', RADIUS_PRESETS, a.radius, 'radius');
+            renderSeg('appearance-textsize-seg', TEXT_SIZE_PRESETS, a.textSize, 'textSize');
+
+            const motionEl = document.getElementById('appearance-reduce-motion');
+            if (motionEl) motionEl.checked = a.reduceMotion;
+
+            if (window.lucide) lucide.createIcons({ root: document.getElementById('settings-appearance') });
+        }
+        window.renderAppearanceSettings = renderAppearanceSettings;
+
+        window.setAppearanceTheme = (key) => {
+            const t = THEME_PRESETS[key];
+            if (!t) return;
+            if (t.dark) appState.appearance.darkTheme = key; else appState.appearance.lightTheme = key;
+            appState.appearance.mode = t.dark ? 'dark' : 'light';
+            applyAppearance(true);
+            saveState();
+        };
+        window.setAppearanceOption = (option, value) => {
+            appState.appearance[option] = value;
+            applyAppearance(option === 'accent');
+            saveState();
+        };
+        window.setSplitColor = (split, hex) => {
+            if (hex) appState.appearance.splitColors[split] = hex;
+            else delete appState.appearance.splitColors[split];
+            applyAppearance(false);
+            saveState();
+        };
+        window.resetAppearance = () => {
+            appState.appearance = { ...DEFAULT_APPEARANCE, splitColors: {} };
+            applyAppearance(true);
+            saveState();
+            showAppToast('Appearance reset to defaults', 'success');
+        };
+
+        btnTheme.addEventListener('click', () => {
+            appState.appearance.mode = isDark ? 'light' : 'dark';
+            applyAppearance(true);
+            saveState();
         });
 
         // Utils
@@ -3327,7 +3631,7 @@
                     </div>
 
                     <div class="search-preset-card" onclick="selectSearchPreset('split')">
-                        <div class="search-preset-icon-wrap" style="background:rgba(74, 222, 128, 0.15); color:var(--primary);">
+                        <div class="search-preset-icon-wrap" style="background:rgba(var(--primary-rgb), 0.15); color:var(--primary);">
                             <i data-lucide="dumbbell" style="width:18px;height:18px;"></i>
                         </div>
                         <div style="flex:1;">
@@ -3997,11 +4301,11 @@
                     resultsHTML += `
                         <div class="search-result-item" onclick="updateFontTheme('${fKey}')">
                             <div class="flex items-center gap-2" style="overflow:hidden;">
-                                <div style="width:26px; height:26px; border-radius:4px; background:rgba(74, 222, 128, 0.12); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                <div style="width:26px; height:26px; border-radius:4px; background:rgba(var(--primary-rgb), 0.12); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                                     <i data-lucide="type" style="width:14px;height:14px;color:var(--primary);"></i>
                                 </div>
                                 <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                                    <div style="font-weight:700; font-size:0.88rem;">${preset.name} ${isCurrent ? '<span class="badge" style="background:rgba(74,222,128,0.15);color:var(--primary);font-size:0.65rem;margin-left:0.25rem;">Active</span>' : ''}</div>
+                                    <div style="font-weight:700; font-size:0.88rem;">${preset.name} ${isCurrent ? '<span class="badge" style="background:rgba(var(--primary-rgb), 0.15);color:var(--primary);font-size:0.65rem;margin-left:0.25rem;">Active</span>' : ''}</div>
                                     <div class="text-muted" style="font-size:0.72rem;">${preset.heading.split(',')[0].replace(/'/g,'')} & ${preset.body.split(',')[0].replace(/'/g,'')}</div>
                                 </div>
                             </div>
@@ -4126,6 +4430,7 @@
             const emailEl = document.getElementById('settings-email');
             if (emailEl) emailEl.value = appState.targetEmail || '';
             renderSettingsGyms();
+            renderAppearanceSettings();
             openModal('modal-settings');
         };
 
@@ -4310,6 +4615,7 @@
                 benchLogs: appState.benchLogs,
                 scheduledWorkouts: appState.scheduledWorkouts || {},
                 fontTheme: appState.fontTheme || 'cabinet-satoshi',
+                appearance: appState.appearance,
                 targetEmail: appState.targetEmail || ''
             }));
             const downloadAnchorNode = document.createElement('a');
@@ -4340,6 +4646,10 @@
                         if (parsed.fontTheme) {
                             appState.fontTheme = parsed.fontTheme;
                             applyFontTheme(appState.fontTheme, false);
+                        }
+                        if (parsed.appearance) {
+                            appState.appearance = parsed.appearance;
+                            applyAppearance(false);
                         }
                         if (parsed.targetEmail) appState.targetEmail = parsed.targetEmail;
                         saveState();
@@ -4648,7 +4958,7 @@
                                 <i data-lucide="map-pin" style="width: 14px; height: 14px; color: var(--primary);"></i>
                                 ${escapeHtml(gym)}
                             </span>
-                            <span style="font-size: 0.72rem; color: var(--primary); font-weight: 600; background: rgba(74, 222, 128, 0.12); padding: 0.2rem 0.5rem; border-radius: var(--radius-pill);">Apply</span>
+                            <span style="font-size: 0.72rem; color: var(--primary); font-weight: 600; background: rgba(var(--primary-rgb), 0.12); padding: 0.2rem 0.5rem; border-radius: var(--radius-pill);">Apply</span>
                         </button>
                     `).join('');
                 }
@@ -4846,7 +5156,7 @@
                     <div class="card">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                             <h3 style="margin:0;">Planned Schedule</h3>
-                            <span class="badge" style="background:rgba(74,222,128,0.15); color:var(--primary); font-size:0.7rem;">Schedule View</span>
+                            <span class="badge" style="background:rgba(var(--primary-rgb), 0.15); color:var(--primary); font-size:0.7rem;">Schedule View</span>
                         </div>
                         <div style="font-size:2rem; font-weight:800; color:var(--primary); margin-bottom:1rem;">
                             ${totalScheduled} <span style="font-size:1rem; color:var(--text-muted); font-weight:500;">planned ${totalScheduled === 1 ? 'workout' : 'workouts'}</span>
@@ -5457,7 +5767,7 @@
                         <span class="badge ${getWorkoutColorClass(sourceLog.type)}">${getCalendarBadgeLabel(sourceLog.type)}</span>
                         <strong style="color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${formattedDate}</strong>
                     </span>
-                    <span class="badge" style="background:rgba(74,222,128,0.15); color:var(--primary); font-size:0.68rem; font-weight:700;">CURRENT</span>
+                    <span class="badge" style="background:rgba(var(--primary-rgb), 0.15); color:var(--primary); font-size:0.68rem; font-weight:700;">CURRENT</span>
                 `;
             }
 
@@ -6850,7 +7160,7 @@
                             <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.2rem; flex-wrap: wrap;">
                                 <span style="font-weight: 700; font-size: 0.85rem;">${v.name}</span>
                                 ${isDefault ? `
-                                    <span class="badge" style="background: rgba(74, 222, 128, 0.18); color: var(--primary); font-size: 0.68rem; padding: 0.1rem 0.4rem; display: inline-flex; align-items: center; gap: 0.2rem;">
+                                    <span class="badge" style="background: rgba(var(--primary-rgb), 0.18); color: var(--primary); font-size: 0.68rem; padding: 0.1rem 0.4rem; display: inline-flex; align-items: center; gap: 0.2rem;">
                                         <i data-lucide="star" style="width: 10px; height: 10px; fill: currentColor;"></i> Default
                                     </span>
                                 ` : ''}
@@ -7498,13 +7808,13 @@
                         datasets: [{
                             label: filteredSessions[0] && filteredSessions[0].isBodyweight ? `Max Reps` : `Max Weight (${appState.unit})`,
                             data: chartData.map(s => s.isBodyweight ? s.bestSet.reps : s.bestSet.weight),
-                            borderColor: '#4ade80',
-                            backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                            borderColor: getThemeColor('--primary', '#4ade80'),
+                            backgroundColor: getThemeRgba('--primary-rgb', 0.1, '74, 222, 128'),
                             borderWidth: 2,
                             tension: 0.4,
                             fill: true,
-                            pointBackgroundColor: '#161616',
-                            pointBorderColor: '#4ade80',
+                            pointBackgroundColor: getThemeColor('--surface', '#161616'),
+                            pointBorderColor: getThemeColor('--primary', '#4ade80'),
                             pointRadius: 4,
                             pointHoverRadius: 6
                         }]
@@ -7654,7 +7964,7 @@
                     borderWidth: 2,
                     tension: 0.4,
                     fill: true,
-                    pointBackgroundColor: '#161616',
+                    pointBackgroundColor: getThemeColor('--surface', '#161616'),
                     pointBorderColor: '#3b82f6',
                     pointRadius: 4,
                     pointHoverRadius: 6
@@ -7833,13 +8143,13 @@
                         datasets: [{
                             label: `Bench PR (${appState.unit})`,
                             data: chartData.map(s => s.weight),
-                            borderColor: '#4ade80',
-                            backgroundColor: 'rgba(74, 222, 128, 0.1)',
+                            borderColor: getThemeColor('--primary', '#4ade80'),
+                            backgroundColor: getThemeRgba('--primary-rgb', 0.1, '74, 222, 128'),
                             borderWidth: 2,
                             tension: 0.4,
                             fill: true,
-                            pointBackgroundColor: '#161616',
-                            pointBorderColor: '#4ade80',
+                            pointBackgroundColor: getThemeColor('--surface', '#161616'),
+                            pointBorderColor: getThemeColor('--primary', '#4ade80'),
                             pointRadius: 4,
                             pointHoverRadius: 6
                         }]
@@ -7943,6 +8253,7 @@
         window.addEventListener('hashchange', handleRoute);
         
         applyFontTheme(appState.fontTheme || 'cabinet-satoshi', false);
+        applyAppearance(false);
         handleRoute();
     </script>
 

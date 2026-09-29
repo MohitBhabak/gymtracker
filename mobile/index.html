@@ -276,6 +276,59 @@
         </div>
       </div>
 
+      <!-- Appearance Customization -->
+      <div class="mobile-card" id="settings-appearance">
+        <div class="mobile-card-title" style="justify-content: space-between;">
+          <span class="flex items-center gap-2">
+            <i data-lucide="palette" style="width: 18px; height: 18px; color: var(--primary);"></i>
+            Appearance
+          </span>
+          <button type="button" class="chip" style="font-size: 0.75rem;" onclick="resetAppearance()">Reset</button>
+        </div>
+
+        <div class="appearance-row">
+          <div class="appearance-label">Theme</div>
+          <div class="appearance-hint">Background & surface colours</div>
+          <div class="theme-card-grid" id="appearance-theme-grid"></div>
+        </div>
+
+        <div class="appearance-row">
+          <div class="appearance-label">Accent Colour</div>
+          <div class="appearance-hint">Buttons, highlights, active tabs and charts</div>
+          <div class="swatch-row" id="appearance-accent-row"></div>
+        </div>
+
+        <div class="appearance-row">
+          <div class="appearance-label">Workout Split Colours</div>
+          <div class="appearance-hint">Calendar badges and split tags</div>
+          <div class="split-color-grid" id="appearance-split-grid"></div>
+        </div>
+
+        <div class="appearance-row appearance-row-inline">
+          <div>
+            <div class="appearance-label">Corner Style</div>
+            <div class="appearance-hint">Cards, buttons & inputs</div>
+          </div>
+          <div class="segmented" id="appearance-radius-seg"></div>
+        </div>
+
+        <div class="appearance-row appearance-row-inline">
+          <div>
+            <div class="appearance-label">Text Size</div>
+            <div class="appearance-hint">Scales text across the app</div>
+          </div>
+          <div class="segmented" id="appearance-textsize-seg"></div>
+        </div>
+
+        <div class="appearance-row appearance-row-inline">
+          <div>
+            <div class="appearance-label">Reduce Motion</div>
+            <div class="appearance-hint">Turn off animations</div>
+          </div>
+          <input type="checkbox" id="appearance-reduce-motion" onchange="setAppearanceOption('reduceMotion', this.checked)" style="width: 20px; height: 20px; accent-color: var(--primary);">
+        </div>
+      </div>
+
       <!-- Theme & PWA -->
       <div class="mobile-card">
         <div class="mobile-card-title">
@@ -544,6 +597,7 @@ Tricep Pushdown: 60x15, 70x12"></textarea>
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Scripts -->
+  <script src="js/theme.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/app.js"></script>
 </body>

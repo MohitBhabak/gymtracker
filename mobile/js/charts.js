@@ -4,13 +4,18 @@ let progressChartInstance = null;
 let weightChartInstance = null;
 let benchChartInstance = null;
 
+// Resolved from the active theme each time a chart is drawn
 const CHART_COLORS = {
-  primary: '#4ade80',
-  primaryAlpha: 'rgba(74, 222, 128, 0.15)',
+  get primary() { return getThemeColor('--primary', '#4ade80'); },
+  get primaryAlpha() { return `rgba(${getThemeColor('--primary-rgb', '74, 222, 128')}, 0.15)`; },
   secondary: '#60a5fa',
   accent: '#fbbf24',
-  textMuted: '#9ca3af',
-  gridColor: 'rgba(255, 255, 255, 0.06)',
+  get textMuted() { return getThemeColor('--text-muted', '#9ca3af'); },
+  get gridColor() { return isDarkAppearance() ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)'; },
+  get pointBorder() { return getThemeColor('--bg', '#09090b'); },
+  get tooltipBg() { return getThemeColor('--surface-2', '#1c1c21'); },
+  get tooltipText() { return getThemeColor('--text', '#f4f4f5'); },
+  get tooltipBorder() { return getThemeColor('--border', 'rgba(255,255,255,0.1)'); },
 };
 
 /**
@@ -37,7 +42,7 @@ function renderMobileProgressChart(canvasId, labels, dataPoints, metricLabel = '
         fill: true,
         tension: 0.35,
         pointBackgroundColor: CHART_COLORS.primary,
-        pointBorderColor: '#09090b',
+        pointBorderColor: CHART_COLORS.pointBorder,
         pointBorderWidth: 2,
         pointRadius: 4,
         pointHoverRadius: 6,
@@ -55,10 +60,10 @@ function renderMobileProgressChart(canvasId, labels, dataPoints, metricLabel = '
           display: false
         },
         tooltip: {
-          backgroundColor: '#1c1c21',
-          titleColor: '#f4f4f5',
-          bodyColor: '#4ade80',
-          borderColor: 'rgba(255,255,255,0.1)',
+          backgroundColor: CHART_COLORS.tooltipBg,
+          titleColor: CHART_COLORS.tooltipText,
+          bodyColor: CHART_COLORS.primary,
+          borderColor: CHART_COLORS.tooltipBorder,
           borderWidth: 1,
           padding: 10,
           cornerRadius: 8,
@@ -143,9 +148,9 @@ function renderMobileWeightChart(canvasId, labels, rawWeights, trendlinePoints) 
           }
         },
         tooltip: {
-          backgroundColor: '#1c1c21',
-          titleColor: '#f4f4f5',
-          borderColor: 'rgba(255,255,255,0.1)',
+          backgroundColor: CHART_COLORS.tooltipBg,
+          titleColor: CHART_COLORS.tooltipText,
+          borderColor: CHART_COLORS.tooltipBorder,
           borderWidth: 1,
           padding: 8,
           cornerRadius: 8
@@ -223,9 +228,9 @@ function renderMobileBenchChart(canvasId, labels, prWeights, est1RMs) {
           }
         },
         tooltip: {
-          backgroundColor: '#1c1c21',
-          titleColor: '#f4f4f5',
-          borderColor: 'rgba(255,255,255,0.1)',
+          backgroundColor: CHART_COLORS.tooltipBg,
+          titleColor: CHART_COLORS.tooltipText,
+          borderColor: CHART_COLORS.tooltipBorder,
           borderWidth: 1,
           padding: 8,
           cornerRadius: 8

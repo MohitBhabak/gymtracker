@@ -1,10 +1,11 @@
 // GymLog Mobile - Offline Service Worker
-const CACHE_NAME = 'gymlog-mobile-v1';
+const CACHE_NAME = 'gymlog-mobile-v2';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './css/mobile.css',
   './js/app.js',
+  './js/theme.js',
   './js/charts.js',
   './manifest.webmanifest',
   './icons/icon.svg',

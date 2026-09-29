@@ -5,7 +5,8 @@ let appState = {
   workouts: [],
   bodyweight: [],
   benchPRs: [],
-  theme: 'dark'
+  theme: 'dark',
+  appearance: null
 };
 
 let currentView = 'calendar';
@@ -75,19 +76,16 @@ function loadState() {
         workouts: parsed.workouts || [],
         bodyweight: parsed.bodyweight || [],
         benchPRs: parsed.benchPRs || [],
-        theme: parsed.theme || 'dark'
+        theme: parsed.theme || 'dark',
+        appearance: parsed.appearance || null
       };
     }
   } catch (e) {
     console.error('Error loading state from localStorage:', e);
   }
 
-  // Apply saved theme
-  if (appState.theme === 'light') {
-    document.body.classList.add('light-theme');
-  } else {
-    document.body.classList.remove('light-theme');
-  }
+  // Apply saved theme, accent colour & other appearance preferences
+  applyAppearance();
 }
 
 function saveState() {
@@ -948,6 +946,7 @@ function deleteBenchPREntry(id) {
  * Mobile Settings & Backup View
  */
 function renderMobileSettings() {
+  renderAppearanceSettings();
   const driveStatus = document.getElementById('gdrive-sync-status-mobile');
   const token = localStorage.getItem('gymlog_gdrive_token');
   const email = localStorage.getItem('gymlog_gdrive_user_email');
@@ -963,8 +962,9 @@ function renderMobileSettings() {
 
 function toggleMobileTheme() {
   triggerHaptic('light');
-  const isLight = document.body.classList.toggle('light-theme');
-  appState.theme = isLight ? 'light' : 'dark';
+  const isLight = appState.appearance.mode !== 'light';
+  appState.appearance.mode = isLight ? 'light' : 'dark';
+  applyAppearance();
   saveState();
   showToast(isLight ? 'Light Theme enabled ☀️' : 'Dark Theme enabled 🌙');
 }
@@ -994,8 +994,10 @@ function importJSONBackup(fileInput) {
           workouts: imported.workouts || [],
           bodyweight: imported.bodyweight || [],
           benchPRs: imported.benchPRs || [],
-          theme: imported.theme || appState.theme
+          theme: imported.theme || appState.theme,
+          appearance: imported.appearance || (imported.theme ? null : appState.appearance)
         };
+        applyAppearance();
         saveState();
         triggerHaptic('success');
         showToast('Backup imported successfully! ✨', 'success');

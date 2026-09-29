@@ -3,6 +3,8 @@
   --primary: #4ade80;
   --primary-hover: #22c55e;
   --primary-glow: rgba(74, 222, 128, 0.25);
+  --primary-rgb: 74, 222, 128;
+  --on-primary: #000000;
   --bg: #09090b;
   --surface: #141417;
   --surface-2: #1c1c21;
@@ -289,7 +291,7 @@ main {
 
 .cal-cell.today {
   border-color: var(--primary);
-  background: rgba(74, 222, 128, 0.06);
+  background: rgba(var(--primary-rgb), 0.06);
 }
 
 .cal-cell:active {
@@ -324,14 +326,14 @@ main {
 }
 
 /* Split Badges Colors */
-.badge-push { background-color: var(--workout-push); }
-.badge-pull { background-color: var(--workout-pull); }
-.badge-legs { background-color: var(--workout-legs); }
-.badge-upper { background-color: var(--workout-upper); color: #000; }
-.badge-lower { background-color: var(--workout-lower); color: #000; }
-.badge-abs { background-color: var(--workout-abs); }
-.badge-arms { background-color: var(--workout-arms); color: #000; }
-.badge-rest { background-color: var(--workout-rest); }
+.badge-push { background-color: var(--workout-push); color: var(--on-workout-push); }
+.badge-pull { background-color: var(--workout-pull); color: var(--on-workout-pull); }
+.badge-legs { background-color: var(--workout-legs); color: var(--on-workout-legs); }
+.badge-upper { background-color: var(--workout-upper); color: var(--on-workout-upper, #000); }
+.badge-lower { background-color: var(--workout-lower); color: var(--on-workout-lower, #000); }
+.badge-abs { background-color: var(--workout-abs); color: var(--on-workout-abs); }
+.badge-arms { background-color: var(--workout-arms); color: var(--on-workout-arms, #000); }
+.badge-rest { background-color: var(--workout-rest); color: var(--on-workout-rest); }
 
 /* Quick Action Button (Floating Action Style) */
 .fab-btn {
@@ -342,7 +344,7 @@ main {
   width: 100%;
   padding: 0.9rem 1.25rem;
   background: var(--primary);
-  color: #000000;
+  color: var(--on-primary);
   font-weight: 700;
   font-size: 0.95rem;
   border-radius: var(--radius-md);
@@ -410,7 +412,7 @@ main {
 
 .chip.active {
   background: var(--primary);
-  color: #000000;
+  color: var(--on-primary);
   border-color: var(--primary);
 }
 
@@ -470,7 +472,7 @@ main {
 
 .stepper-btn:active {
   background: var(--primary);
-  color: #000;
+  color: var(--on-primary);
   transform: scale(0.92);
 }
 
@@ -698,4 +700,218 @@ main {
 @keyframes toastIn {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Appearance Customization */
+.appearance-row {
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.appearance-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.appearance-row-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.appearance-label {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.appearance-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin: 0.1rem 0 0.6rem 0;
+}
+
+.appearance-row-inline .appearance-hint {
+  margin-bottom: 0;
+}
+
+.theme-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.theme-card {
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.3rem;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.theme-card.active {
+  border-color: var(--primary);
+}
+
+.theme-card-preview {
+  height: 32px;
+  border-radius: calc(var(--radius-sm) - 3px);
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  padding: 5px;
+  margin-bottom: 0.3rem;
+  border: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.theme-card-preview span {
+  display: block;
+  border-radius: 2px;
+}
+
+.theme-card-name {
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.theme-card-mode {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+}
+
+.swatch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.color-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  padding: 0;
+  cursor: pointer;
+}
+
+.color-swatch.active,
+.custom-color-wrap.active {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text);
+}
+
+.custom-color-wrap {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px dashed var(--text-muted);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  overflow: hidden;
+}
+
+.custom-color-wrap.active {
+  border-style: solid;
+}
+
+.custom-color-wrap input[type="color"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.split-color-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.45rem;
+}
+
+.split-color-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.split-color-item input[type="color"] {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  background: none;
+  flex-shrink: 0;
+}
+
+.split-color-item input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.split-color-item input[type="color"]::-webkit-color-swatch {
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+
+.split-color-item input[type="color"]::-moz-color-swatch {
+  border: 1px solid var(--border);
+  border-radius: 50%;
+}
+
+.split-reset-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  padding: 0 0.2rem;
+}
+
+.segmented {
+  display: inline-flex;
+  flex-shrink: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 3px;
+  gap: 2px;
+}
+
+.segmented button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.4rem 0.7rem;
+  border-radius: calc(var(--radius-sm) - 3px);
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-family: inherit;
+}
+
+.segmented button.active {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  transition: none !important;
+  animation: none !important;
 }

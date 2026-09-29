@@ -20,6 +20,7 @@ GymLog is available in two dedicated versions:
 - 🏆 **Bench PR Tracker:** Dedicated Bench Press PR tracker featuring a progress graph and historical performance table.
 - 🚀 **Progressive Overload Assistant:** Select planned exercises to view your all-time best scores to beat, with direct one-click export to Gmail.
 - 🌙 **Dark-Mode First Design:** Sleek gym-aesthetic UI featuring `Cabinet Grotesk` and `Satoshi` typography, smooth micro-interactions, responsive mobile layout, and light/dark mode toggle.
+- 🎨 **Appearance Customization:** Pick from 9 themes (Carbon, OLED Black, Midnight, Slate, Forest, Mocha, Light, Paper, Cloud), choose an accent colour (10 presets or any custom colour), recolour each workout split, and adjust corner style, text size and motion — all under **Settings → Appearance**, saved with your data and synced via Drive/backups.
 - ☁️ **Google Drive Cross-Device Sync:** Sync workout logs, bodyweight entries, and PRs seamlessly across phones, tablets, and desktops using your personal Google account (`appDataFolder`).
 - 💾 **Local Data Ownership:** All data persists locally in `localStorage` with full JSON backup export and import capabilities. No external backend server required.
 
