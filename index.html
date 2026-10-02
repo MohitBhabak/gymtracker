@@ -5268,13 +5268,21 @@
                 if (Object.keys(gymCounts).length > 0) {
                     summaryHTML += `<h4 style="margin-top:1.5rem; margin-bottom:0.5rem; font-size:0.8rem;" class="text-muted">BY GYM</h4>`;
                     const gymRows = Object.entries(gymCounts).sort((a, b) => b[1] - a[1]);
+                    // Each gym keeps the same colour every month: its position in the saved gym list
+                    // (or a hash of its name for gyms no longer in the list) picks from the palette
+                    const GYM_BAR_COLORS = ['#60a5fa', '#f472b6', '#fbbf24', '#2dd4bf', '#a78bfa', '#fb923c', '#a3e635', '#f87171', '#22d3ee', '#e879f9'];
+                    const gymBarColor = (gym) => {
+                        let idx = (appState.gyms || []).findIndex(g => g.toLowerCase() === gym.toLowerCase());
+                        if (idx < 0) idx = [...gym.toLowerCase()].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 0);
+                        return GYM_BAR_COLORS[idx % GYM_BAR_COLORS.length];
+                    };
                     if (noGymCount > 0) gymRows.push([null, noGymCount]);
                     gymRows.forEach(([gym, count]) => {
                         summaryHTML += `
                             <div style="display:flex; justify-content:space-between; margin-bottom:0.5rem; align-items:center;">
-                                <span style="min-width:90px; max-width:140px; font-size:0.85rem; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${gym ? '' : 'color:var(--text-muted); font-style:italic;'}" title="${gym ? escapeHtml(gym) : 'No gym set'}">${gym ? escapeHtml(gym) : 'No gym set'}</span>
+                                <span style="width:120px; flex-shrink:0; font-size:0.85rem; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; ${gym ? '' : 'color:var(--text-muted); font-style:italic;'}" title="${gym ? escapeHtml(gym) : 'No gym set'}">${gym ? escapeHtml(gym) : 'No gym set'}</span>
                                 <div style="flex:1; height:8px; background:var(--surface-offset); border-radius:4px; margin:0 0.75rem; overflow:hidden;">
-                                    <div style="width:${Math.min(100, (count/Math.max(1, totalSessions))*100)}%; height:100%; background:${gym ? 'var(--primary)' : 'var(--text-faint)'};"></div>
+                                    <div style="width:${Math.min(100, (count/Math.max(1, totalSessions))*100)}%; height:100%; background:${gym ? gymBarColor(gym) : 'var(--text-faint)'};"></div>
                                 </div>
                                 <span style="font-weight:600; font-size:0.85rem;">${count}</span>
                             </div>
