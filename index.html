@@ -375,6 +375,20 @@
         .split-color-item input[type="color"]::-moz-color-swatch { border: 1px solid var(--border); border-radius: 50%; }
         .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after { transition: none !important; animation: none !important; }
 
+
+        /* Monthly Sessions Trend Modal */
+        .trend-pill { border: none; cursor: pointer; font-family: inherit; transition: filter 0.15s ease-out, transform 0.15s ease-out; }
+        .trend-pill:hover { filter: brightness(1.25); transform: translateY(-1px); }
+        .trend-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin-bottom: 1.25rem; }
+        .trend-stat { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-base); padding: 0.7rem 0.85rem; min-width: 0; }
+        .trend-stat-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 0.2rem; }
+        .trend-stat-value { font-family: var(--font-heading); font-size: 1.35rem; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .trend-stat-sub { font-size: 0.72rem; color: var(--text-muted); }
+        .trend-chart-wrap { position: relative; height: 300px; }
+        .trend-table-wrap { max-height: 300px; overflow-y: auto; }
+        .trend-table-wrap td, .trend-table-wrap th { padding: 0.5rem; }
+        @media (max-width: 600px) { .trend-stats { gap: 0.4rem; } .trend-stat { padding: 0.55rem 0.6rem; } .trend-stat-value { font-size: 1.15rem; } .trend-stat-label { font-size: 0.62rem; } .trend-stat-sub { font-size: 0.65rem; } .trend-chart-wrap { height: 240px; } }
+
         /* Workout Types Colors */
         .type-push { background-color: color-mix(in srgb, var(--workout-push) 15%, transparent); color: var(--workout-push); border: 1px solid var(--workout-push); }
         .type-pull { background-color: color-mix(in srgb, var(--workout-pull) 15%, transparent); color: var(--workout-pull); border: 1px solid var(--workout-pull); }
@@ -1999,6 +2013,27 @@
         </div>
 
         <!-- Search & Quick Presets Modal (Spotlight / Command Palette) -->
+        <!-- Monthly Sessions Trend Modal -->
+        <div id="modal-monthly-trend" class="modal-overlay" onclick="if(event.target===this) closeModal('modal-monthly-trend')">
+            <div class="modal-content" style="max-width: 760px;" onclick="event.stopPropagation()">
+                <div class="modal-header" style="margin-bottom: 1rem; align-items: flex-start;">
+                    <div>
+                        <div style="font-size: 0.72rem; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.15rem;">Consistency</div>
+                        <h2 style="margin: 0; font-size: 1.25rem;">Monthly Sessions</h2>
+                    </div>
+                    <button class="icon-btn" onclick="closeModal('modal-monthly-trend')" aria-label="Close"><i data-lucide="x"></i></button>
+                </div>
+                <div class="flex items-center justify-between" style="gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem;">
+                    <div class="segmented" id="trend-range-seg"></div>
+                    <div class="segmented" id="trend-view-seg"></div>
+                </div>
+                <div class="trend-stats" id="trend-stats"></div>
+                <div class="trend-chart-wrap" id="trend-chart-wrap"><canvas id="monthlyTrendChart" aria-label="Bar chart of workout sessions per month"></canvas></div>
+                <div class="trend-table-wrap hidden" id="trend-table-wrap"></div>
+                <div class="text-muted" style="font-size: 0.75rem; margin-top: 0.75rem;" id="trend-footnote"></div>
+            </div>
+        </div>
+
         <div id="modal-search" class="modal-overlay search-modal-overlay" onclick="if(event.target===this) closeSearchModal()">
             <div class="modal-content search-modal-card" onclick="event.stopPropagation()">
                 <!-- Search Input Bar -->
@@ -4405,6 +4440,12 @@
         document.addEventListener('keydown', (e) => {
             // ESC key to close search modal
             if (e.key === 'Escape') {
+                const trendModal = document.getElementById('modal-monthly-trend');
+                if (trendModal && trendModal.classList.contains('open')) {
+                    closeModal('modal-monthly-trend');
+                    e.preventDefault();
+                    return;
+                }
                 const searchModal = document.getElementById('modal-search');
                 if (searchModal && searchModal.classList.contains('open')) {
                     closeSearchModal();
@@ -5232,7 +5273,7 @@
                     }
                 });
                 
-                let summaryHTML = `<div class="card"><h3 style="margin-bottom:1rem;">Monthly Breakdown</h3>`;
+                let summaryHTML = `<div class="card"><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;"><h3 style="margin:0;">Monthly Breakdown</h3><button type="button" class="icon-btn" onclick="openMonthlyTrend()" title="Monthly sessions over time" aria-label="Monthly sessions over time" style="padding:0.3rem;"><i data-lucide="bar-chart-3" style="width:18px; height:18px;"></i></button></div>`;
                 // Month-over-month comparison. For the month in progress, compare against the same
                 // point last month (e.g. Oct 1–12 vs Sep 1–12) so a half-finished month isn't judged unfairly.
                 const prevMonthDate = new Date(year, month - 1, 1);
@@ -5253,10 +5294,11 @@
                     const deltaText = sessionDelta === 0 ? 'Same as' : `${sessionDelta > 0 ? '+' : ''}${sessionDelta}`;
                     const compareLabel = isCurrentMonth ? `${prevMonthName} 1–${prevCutoffDay}` : prevMonthName;
                     deltaHTML = `
-                        <div title="${prevSessions} session${prevSessions === 1 ? '' : 's'} in ${compareLabel}" style="display:inline-flex; align-items:center; gap:0.3rem; margin-top:0.35rem; padding:0.2rem 0.55rem; border-radius:var(--radius-pill); background:var(--surface-offset); font-size:0.75rem; font-weight:600; color:${deltaColor};">
+                        <button type="button" class="trend-pill" onclick="openMonthlyTrend()" title="${prevSessions} session${prevSessions === 1 ? '' : 's'} in ${compareLabel} · Click to see your monthly trend" style="display:inline-flex; align-items:center; gap:0.3rem; margin-top:0.35rem; padding:0.2rem 0.55rem; border-radius:var(--radius-pill); background:var(--surface-offset); font-size:0.75rem; font-weight:600; color:${deltaColor};">
                             <i data-lucide="${deltaIcon}" style="width:13px; height:13px;"></i>
                             ${deltaText} <span style="color:var(--text-muted); font-weight:500;">${sessionDelta === 0 ? '' : 'vs '}${compareLabel}</span>
-                        </div>`;
+                            <i data-lucide="chevron-right" style="width:12px; height:12px; color:var(--text-muted); margin-left:-0.1rem;"></i>
+                        </button>`;
                 }
 
                 summaryHTML += `<div style="margin-bottom:1rem;"><div style="font-size:2rem; font-weight:800; color:var(--primary);">${totalSessions} <span style="font-size:1rem; color:var(--text-muted); font-weight:500;">sessions</span></div>${deltaHTML}</div>`;
@@ -5340,6 +5382,197 @@
             `;
             lucide.createIcons();
         }
+
+        // ==========================================
+        // MONTHLY SESSIONS TREND (opened from the Monthly Breakdown card)
+        // ==========================================
+        let trendRange = '12';   // '6' | '12' | 'all'
+        let trendView = 'chart'; // 'chart' | 'table'
+
+        function monthKey(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        function getMonthlySessionSeries() {
+            // Counted the same way as the Monthly Breakdown total: one per logged day
+            const counts = {};
+            Object.keys(appState.workoutLogs).forEach(key => {
+                if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
+                const mk = key.slice(0, 7);
+                counts[mk] = (counts[mk] || 0) + 1;
+            });
+
+            const now = new Date();
+            const viewed = appState.currentMonth;
+            let end = new Date(now.getFullYear(), now.getMonth(), 1);
+            if (viewed > end) end = new Date(viewed.getFullYear(), viewed.getMonth(), 1);
+
+            let start;
+            if (trendRange === 'all') {
+                const firstKey = Object.keys(counts).sort()[0];
+                start = firstKey ? new Date(parseInt(firstKey.slice(0, 4), 10), parseInt(firstKey.slice(5, 7), 10) - 1, 1) : new Date(end);
+                if (start > end) start = new Date(end);
+            } else {
+                start = new Date(end.getFullYear(), end.getMonth() - (parseInt(trendRange, 10) - 1), 1);
+            }
+
+            const currentKey = monthKey(now);
+            const series = [];
+            for (let d = new Date(start); d <= end; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) {
+                const key = monthKey(d);
+                series.push({
+                    key,
+                    date: new Date(d),
+                    count: counts[key] || 0,
+                    inProgress: key === currentKey,
+                    isFuture: key > currentKey
+                });
+            }
+            return series;
+        }
+
+        function renderMonthlyTrend() {
+            const series = getMonthlySessionSeries();
+            const viewedKey = monthKey(appState.currentMonth);
+            const multiYear = series.length > 0 && series[0].date.getFullYear() !== series[series.length - 1].date.getFullYear();
+            const shortLabel = d => d.toLocaleString('en-US', { month: 'short' }) + (multiYear ? ` '${String(d.getFullYear()).slice(2)}` : '');
+            const longLabel = d => d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+            // Segmented controls (reuse the Appearance .segmented style)
+            const seg = (id, options, current, fn) => {
+                document.getElementById(id).innerHTML = options.map(([val, label]) =>
+                    `<button type="button" class="${val === current ? 'active' : ''}" onclick="${fn}('${val}')">${label}</button>`
+                ).join('');
+            };
+            seg('trend-range-seg', [['6', '6M'], ['12', '12M'], ['all', 'All']], trendRange, 'setTrendRange');
+            seg('trend-view-seg', [['chart', 'Chart'], ['table', 'Table']], trendView, 'setTrendView');
+
+            // Stats: averages only use finished months so a partial month doesn't drag them down
+            const completed = series.filter(m => !m.inProgress && !m.isFuture);
+            const total = series.reduce((sum, m) => sum + m.count, 0);
+            const avg = completed.length ? completed.reduce((sum, m) => sum + m.count, 0) / completed.length : 0;
+            const best = series.reduce((b, m) => (m.count > (b ? b.count : 0) ? m : b), null);
+            document.getElementById('trend-stats').innerHTML = `
+                <div class="trend-stat">
+                    <div class="trend-stat-label">Total</div>
+                    <div class="trend-stat-value">${total}</div>
+                    <div class="trend-stat-sub">sessions in ${series.length} month${series.length === 1 ? '' : 's'}</div>
+                </div>
+                <div class="trend-stat">
+                    <div class="trend-stat-label">Monthly Avg</div>
+                    <div class="trend-stat-value">${completed.length ? avg.toFixed(1) : '–'}</div>
+                    <div class="trend-stat-sub">${completed.length ? `over ${completed.length} full month${completed.length === 1 ? '' : 's'}` : 'no full months yet'}</div>
+                </div>
+                <div class="trend-stat">
+                    <div class="trend-stat-label">Best Month</div>
+                    <div class="trend-stat-value">${best ? best.count : '–'}</div>
+                    <div class="trend-stat-sub">${best ? longLabel(best.date) : 'no sessions yet'}</div>
+                </div>
+            `;
+
+            document.getElementById('trend-footnote').textContent = trendView === 'chart'
+                ? 'Click a bar to open that month in the calendar. The outlined bar is the month you are viewing; the faded bar is the month in progress.'
+                : 'Click a row to open that month in the calendar.';
+
+            const chartWrap = document.getElementById('trend-chart-wrap');
+            const tableWrap = document.getElementById('trend-table-wrap');
+            chartWrap.classList.toggle('hidden', trendView !== 'chart');
+            tableWrap.classList.toggle('hidden', trendView !== 'table');
+
+            if (trendView === 'table') {
+                let prev = null;
+                const rows = series.map(m => {
+                    const delta = prev === null ? null : m.count - prev;
+                    prev = m.count;
+                    const deltaCell = delta === null ? '<span class="text-muted">–</span>'
+                        : `<span style="color:${delta > 0 ? 'var(--primary)' : delta < 0 ? '#f87171' : 'var(--text-muted)'}; font-weight:600;">${delta > 0 ? '+' : ''}${delta}</span>`;
+                    return `<tr style="cursor:pointer;${m.key === viewedKey ? ' background:var(--surface-2);' : ''}" onclick="jumpToTrendMonth('${m.key}')">
+                        <td>${longLabel(m.date)}${m.inProgress ? ' <span class="text-muted" style="font-size:0.75rem;">(in progress)</span>' : ''}</td>
+                        <td style="font-weight:700;">${m.count}</td>
+                        <td>${deltaCell}</td>
+                    </tr>`;
+                }).reverse().join('');
+                tableWrap.innerHTML = `<table><thead><tr><th>Month</th><th>Sessions</th><th>Change</th></tr></thead><tbody>${rows}</tbody></table>`;
+                if (window.monthlyTrendChartInstance) { window.monthlyTrendChartInstance.destroy(); window.monthlyTrendChartInstance = null; }
+                return;
+            }
+
+            const primaryRgb = getThemeColor('--primary-rgb', '74, 222, 128');
+            const textColor = getThemeColor('--text', '#f0f0f0');
+            const mutedColor = getThemeColor('--text-muted', '#888888');
+            const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
+            if (window.monthlyTrendChartInstance) window.monthlyTrendChartInstance.destroy();
+            const ctx = document.getElementById('monthlyTrendChart').getContext('2d');
+            window.monthlyTrendChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: series.map(m => shortLabel(m.date)),
+                    datasets: [{
+                        label: 'Sessions',
+                        data: series.map(m => m.count),
+                        backgroundColor: series.map(m => `rgba(${primaryRgb}, ${m.inProgress || m.isFuture ? 0.4 : 0.9})`),
+                        hoverBackgroundColor: `rgba(${primaryRgb}, 1)`,
+                        borderColor: series.map(m => m.key === viewedKey ? textColor : 'transparent'),
+                        borderWidth: series.map(m => m.key === viewedKey ? 2 : 0),
+                        borderRadius: 4,
+                        borderSkipped: 'bottom',
+                        maxBarThickness: 44,
+                        categoryPercentage: 0.8,
+                        barPercentage: 0.9
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: appState.appearance && appState.appearance.reduceMotion ? false : { duration: 250 },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            displayColors: false,
+                            callbacks: {
+                                title: items => longLabel(series[items[0].dataIndex].date),
+                                label: item => {
+                                    const m = series[item.dataIndex];
+                                    const lines = [`${m.count} session${m.count === 1 ? '' : 's'}`];
+                                    const prevM = series[item.dataIndex - 1];
+                                    if (prevM) {
+                                        const d = m.count - prevM.count;
+                                        lines.push(`${d > 0 ? '+' : ''}${d} vs ${prevM.date.toLocaleString('en-US', { month: 'short' })}`);
+                                    }
+                                    if (m.inProgress) lines.push('Month in progress');
+                                    return lines;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: mutedColor, autoSkip: true, maxRotation: 0 } },
+                        y: { beginAtZero: true, grid: { color: gridColor }, border: { display: false }, ticks: { color: mutedColor, precision: 0 } }
+                    },
+                    onClick: (evt, elements) => {
+                        if (elements.length) jumpToTrendMonth(series[elements[0].index].key);
+                    },
+                    onHover: (evt, elements) => {
+                        evt.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+                    }
+                }
+            });
+        }
+
+        window.openMonthlyTrend = () => {
+            openModal('modal-monthly-trend');
+            renderMonthlyTrend();
+            lucide.createIcons({ root: document.getElementById('modal-monthly-trend') });
+        };
+        window.setTrendRange = (range) => { trendRange = range; renderMonthlyTrend(); };
+        window.setTrendView = (view) => { trendView = view; renderMonthlyTrend(); };
+        window.jumpToTrendMonth = (key) => {
+            appState.currentMonth = new Date(parseInt(key.slice(0, 4), 10), parseInt(key.slice(5, 7), 10) - 1, 1);
+            closeModal('modal-monthly-trend');
+            if (location.hash && location.hash !== '#calendar') location.hash = '#calendar';
+            else renderCalendarView();
+        };
 
         window.prevMonth = () => { appState.currentMonth.setMonth(appState.currentMonth.getMonth() - 1); renderCalendarView(); };
         window.nextMonth = () => { appState.currentMonth.setMonth(appState.currentMonth.getMonth() + 1); renderCalendarView(); };
