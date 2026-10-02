@@ -5233,7 +5233,33 @@
                 });
                 
                 let summaryHTML = `<div class="card"><h3 style="margin-bottom:1rem;">Monthly Breakdown</h3>`;
-                summaryHTML += `<div style="font-size:2rem; font-weight:800; color:var(--primary); margin-bottom:1rem;">${totalSessions} <span style="font-size:1rem; color:var(--text-muted); font-weight:500;">sessions</span></div>`;
+                // Month-over-month comparison. For the month in progress, compare against the same
+                // point last month (e.g. Oct 1–12 vs Sep 1–12) so a half-finished month isn't judged unfairly.
+                const prevMonthDate = new Date(year, month - 1, 1);
+                const prevPrefix = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth() + 1).padStart(2, '0')}`;
+                const nowDate = new Date();
+                const isCurrentMonth = nowDate.getFullYear() === year && nowDate.getMonth() === month;
+                const prevDaysInMonth = new Date(year, month, 0).getDate();
+                const prevCutoffDay = isCurrentMonth ? Math.min(nowDate.getDate(), prevDaysInMonth) : prevDaysInMonth;
+                const prevSessions = Object.keys(appState.workoutLogs).filter(key =>
+                    key.startsWith(prevPrefix) && parseInt(key.slice(8, 10), 10) <= prevCutoffDay
+                ).length;
+                const prevMonthName = prevMonthDate.toLocaleString('en-US', { month: 'short' });
+                const sessionDelta = totalSessions - prevSessions;
+                let deltaHTML = '';
+                if (totalSessions > 0 || prevSessions > 0) {
+                    const deltaColor = sessionDelta > 0 ? 'var(--primary)' : sessionDelta < 0 ? '#f87171' : 'var(--text-muted)';
+                    const deltaIcon = sessionDelta > 0 ? 'trending-up' : sessionDelta < 0 ? 'trending-down' : 'minus';
+                    const deltaText = sessionDelta === 0 ? 'Same as' : `${sessionDelta > 0 ? '+' : ''}${sessionDelta}`;
+                    const compareLabel = isCurrentMonth ? `${prevMonthName} 1–${prevCutoffDay}` : prevMonthName;
+                    deltaHTML = `
+                        <div title="${prevSessions} session${prevSessions === 1 ? '' : 's'} in ${compareLabel}" style="display:inline-flex; align-items:center; gap:0.3rem; margin-top:0.35rem; padding:0.2rem 0.55rem; border-radius:var(--radius-pill); background:var(--surface-offset); font-size:0.75rem; font-weight:600; color:${deltaColor};">
+                            <i data-lucide="${deltaIcon}" style="width:13px; height:13px;"></i>
+                            ${deltaText} <span style="color:var(--text-muted); font-weight:500;">${sessionDelta === 0 ? '' : 'vs '}${compareLabel}</span>
+                        </div>`;
+                }
+
+                summaryHTML += `<div style="margin-bottom:1rem;"><div style="font-size:2rem; font-weight:800; color:var(--primary);">${totalSessions} <span style="font-size:1rem; color:var(--text-muted); font-weight:500;">sessions</span></div>${deltaHTML}</div>`;
                 
                 if (Object.keys(counts).length > 0) {
                     summaryHTML += `<h4 style="margin-bottom:0.5rem; font-size:0.8rem;" class="text-muted">BY TYPE</h4>`;
