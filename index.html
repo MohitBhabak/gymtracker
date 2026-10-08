@@ -4491,6 +4491,13 @@
                     e.preventDefault();
                     return;
                 }
+                // Leave exercise Select mode when nothing else is open on top of it
+                if (isExerciseSelectMode && !document.querySelector('.modal-overlay.open') &&
+                    !['INPUT', 'TEXTAREA', 'SELECT'].includes((document.activeElement || {}).tagName)) {
+                    toggleExerciseSelectMode();
+                    e.preventDefault();
+                    return;
+                }
                 const searchModal = document.getElementById('modal-search');
                 if (searchModal && searchModal.classList.contains('open')) {
                     closeSearchModal();
@@ -6981,7 +6988,7 @@
                     <div class="flex justify-between items-center" style="margin-bottom:0.75rem;">
                         <h3 style="margin:0;">Exercises</h3>
                         <div class="flex items-center gap-2">
-                            <button class="btn btn-sm" id="btn-toggle-select-mode" onclick="toggleExerciseSelectMode()" style="padding:0.25rem 0.6rem; font-size:0.75rem; border: 1px solid var(--border); background: ${isExerciseSelectMode ? 'var(--primary)' : 'var(--surface-offset)'}; color: ${isExerciseSelectMode ? '#000' : 'var(--text)'}; font-weight:600;">
+                            <button class="btn btn-sm" id="btn-toggle-select-mode" onclick="toggleExerciseSelectMode()" title="${isExerciseSelectMode ? 'Done selecting (Esc)' : 'Select exercises (tip: Shift-click names in the list)'}" style="padding:0.25rem 0.6rem; font-size:0.75rem; border: 1px solid var(--border); background: ${isExerciseSelectMode ? 'var(--primary)' : 'var(--surface-offset)'}; color: ${isExerciseSelectMode ? '#000' : 'var(--text)'}; font-weight:600;">
                                 ${isExerciseSelectMode ? 'Done' : 'Select'}
                             </button>
                             <button class="icon-btn" onclick="openNewExerciseModal()" title="Add Exercise"><i data-lucide="plus"></i></button>
@@ -7041,7 +7048,7 @@
             appState.exercises.forEach((ex, idx) => {
                 const isSelected = selectedExerciseNames.has(ex.name);
                 listHTML += `
-                    <div class="exercise-item flex items-center justify-between" id="ex-item-${idx}" data-category="${ex.category}" draggable="${!isExerciseSelectMode}" ondragstart="onExerciseDragStart(event, ${idx})" ondragover="onExerciseDragOver(event, ${idx})" ondragleave="onExerciseDragLeave(event, ${idx})" ondrop="onExerciseDrop(event, ${idx})" ondragend="onExerciseDragEnd(event)" onclick="handleExerciseItemClick('${ex.name.replace(/'/g, "\\'")}')" style="cursor:pointer; transition:border-color 0.15s, opacity 0.15s;">
+                    <div class="exercise-item flex items-center justify-between" id="ex-item-${idx}" data-category="${ex.category}" draggable="${!isExerciseSelectMode}" ondragstart="onExerciseDragStart(event, ${idx})" ondragover="onExerciseDragOver(event, ${idx})" ondragleave="onExerciseDragLeave(event, ${idx})" ondrop="onExerciseDrop(event, ${idx})" ondragend="onExerciseDragEnd(event)" onmousedown="if(event.shiftKey) event.preventDefault()" onclick="handleExerciseItemClick('${ex.name.replace(/'/g, "\\'")}', event)" style="cursor:pointer; transition:border-color 0.15s, opacity 0.15s;">
                         <div class="flex items-center gap-2" style="flex:1; overflow:hidden;">
                             ${!isExerciseSelectMode ? `
                                 <div class="drag-handle text-muted" title="Drag to reorder" onclick="event.stopPropagation()">
@@ -7235,12 +7242,35 @@
             showAppToast(`Deleted "${name}"`, 'info');
         };
 
+        // Re-render the exercise list without losing the user's place: scroll position,
+        // search text, category filter and the exercise open on the right all survive
+        function refreshExerciseList() {
+            const listCard = document.querySelector('.progress-exercise-list > .card');
+            const scrollTop = listCard ? listCard.scrollTop : 0;
+            const search = document.getElementById('search-ex')?.value || '';
+            const cat = document.getElementById('filter-cat')?.value || 'All';
+
+            renderProgressView();
+
+            const searchEl = document.getElementById('search-ex');
+            const catEl = document.getElementById('filter-cat');
+            if (searchEl) searchEl.value = search;
+            if (catEl) catEl.value = cat;
+            if (search || cat !== 'All') filterExercises();
+            if (currentSelectedExerciseName && appState.exercises.some(e => e.name.toLowerCase() === currentSelectedExerciseName.toLowerCase())) {
+                showExerciseDetail(currentSelectedExerciseName);
+            }
+            const newCard = document.querySelector('.progress-exercise-list > .card');
+            if (newCard) newCard.scrollTop = scrollTop;
+            if (isExerciseSelectMode) updateExerciseSelectionUI();
+        }
+
         window.toggleExerciseSelectMode = () => {
             isExerciseSelectMode = !isExerciseSelectMode;
             if (!isExerciseSelectMode) {
                 selectedExerciseNames.clear();
             }
-            renderProgressView();
+            refreshExerciseList();
         };
 
         window.toggleSelectAllExercises = (checked) => {
@@ -7269,7 +7299,21 @@
             updateExerciseSelectionUI();
         };
 
-        window.handleExerciseItemClick = (name) => {
+        window.handleExerciseItemClick = (name, evt) => {
+            const multiSelectClick = evt && (evt.shiftKey || evt.metaKey || evt.ctrlKey);
+            if (multiSelectClick && !isExerciseSelectMode) {
+                // Shift-click from the normal list jumps into Select mode. The exercise already open
+                // on the right counts as the first pick (click one, Shift-click the others).
+                isExerciseSelectMode = true;
+                selectedExerciseNames.clear();
+                const open = currentSelectedExerciseName && appState.exercises.find(e => e.name.toLowerCase() === currentSelectedExerciseName.toLowerCase());
+                const openVisible = open && [...document.querySelectorAll('.exercise-item')].some(el =>
+                    el.style.display !== 'none' && el.querySelector('.font-bold')?.innerText.toLowerCase() === open.name.toLowerCase());
+                if (openVisible && open.name.toLowerCase() !== name.toLowerCase()) selectedExerciseNames.add(open.name);
+                selectedExerciseNames.add(name);
+                refreshExerciseList();
+                return;
+            }
             if (isExerciseSelectMode) {
                 const cb = document.querySelector(`.ex-select-checkbox[data-name="${name.replace(/"/g, '\\"')}"]`);
                 if (cb) {
