@@ -389,6 +389,28 @@
         .trend-table-wrap td, .trend-table-wrap th { padding: 0.5rem; }
         @media (max-width: 600px) { .trend-stats { gap: 0.4rem; } .trend-stat { padding: 0.55rem 0.6rem; } .trend-stat-value { font-size: 1.15rem; } .trend-stat-label { font-size: 0.62rem; } .trend-stat-sub { font-size: 0.65rem; } .trend-chart-wrap { height: 240px; } }
 
+
+        /* Exercise detail header */
+        .exh { display: flex; flex-direction: column; gap: 1rem; width: 100%; }
+        .exh-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+        .exh-title-wrap { min-width: 0; flex: 1; }
+        .exh-title-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.3rem; }
+        .exh-title { margin: 0; font-size: 1.4rem; line-height: 1.2; overflow-wrap: anywhere; }
+        .exh-sub { font-size: 0.85rem; color: var(--text-muted); }
+        .exh-sub strong { color: var(--text); font-weight: 600; }
+        .exh-actions { display: inline-flex; gap: 2px; padding: 2px; border: 1px solid var(--border); border-radius: var(--radius-base); background: var(--surface-2); flex-shrink: 0; }
+        .exh-actions .icon-btn { padding: 0.35rem; color: var(--text-muted); border-radius: var(--radius-tight); display: inline-flex; }
+        .exh-actions .icon-btn:hover { color: var(--text); background: var(--surface-offset); }
+        .exh-actions .icon-btn.danger:hover { color: #f87171; }
+        .exh-bottom { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid var(--border); }
+        .exh-stats { display: flex; gap: 1.75rem; }
+        .exh-stat-value { font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800; line-height: 1; color: var(--primary); }
+        .exh-stat-value.muted { color: var(--text-muted); }
+        .exh-stat-label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-top: 0.3rem; }
+        .exh-views { display: flex; align-items: center; gap: 0.4rem; min-width: 0; max-width: 100%; }
+        .exh-views .icon-btn { padding: 0.35rem; color: var(--text-muted); display: inline-flex; border-radius: var(--radius-pill); }
+        .exh-views .icon-btn:hover { color: var(--text); background: var(--surface-offset); }
+
         /* Workout Types Colors */
         .type-push { background-color: color-mix(in srgb, var(--workout-push) 15%, transparent); color: var(--workout-push); border: 1px solid var(--workout-push); }
         .type-pull { background-color: color-mix(in srgb, var(--workout-pull) 15%, transparent); color: var(--workout-pull); border: 1px solid var(--workout-pull); }
@@ -8371,17 +8393,51 @@
                 `;
             });
 
-            const viewsControlHtml = `
-                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.4rem; flex-shrink: 0;">
-                    <button type="button" class="btn btn-sm" onclick="openExerciseViewsModal('${name.replace(/'/g, "\\'")}')" title="Configure Views" style="padding: 0.28rem 0.7rem; font-size: 0.75rem; background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-pill); display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600; color: var(--text); cursor: pointer; white-space: nowrap; transition: all 0.2s;">
-                        <i data-lucide="layers" style="width: 12px; height: 12px; color: var(--primary);"></i>
-                        <span>View Selection</span>
+            const escapedNameJs = name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const viewsControlHtml = views.length > 1 ? `
+                <div class="exh-views">
+                    <div class="view-pills-container" id="exercise-views-pills">${pillsHtml}</div>
+                    <button type="button" class="icon-btn" onclick="openExerciseViewsModal('${escapedNameJs}')" title="Manage gym views" aria-label="Manage gym views">
+                        <i data-lucide="settings-2" style="width: 16px; height: 16px;"></i>
                     </button>
-                    <div class="view-pills-container" id="exercise-views-pills">
-                        ${pillsHtml}
+                </div>
+            ` : `
+                <button type="button" class="btn btn-sm" onclick="openExerciseViewsModal('${escapedNameJs}')" title="Split this exercise's history by gym" style="padding: 0.3rem 0.7rem; font-size: 0.75rem; background: var(--surface-offset); border: 1px solid var(--border); border-radius: var(--radius-pill); display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600; color: var(--text-muted);">
+                    <i data-lucide="layers" style="width: 12px; height: 12px;"></i> Gym views
+                </button>
+            `;
+
+            // One header layout for every state: title/category/actions on top, stats + views below
+            const nameAttr = name.replace(/"/g, '&quot;');
+            const buildHeader = (subtitleHtml, stats) => `
+                <div class="exh">
+                    <div class="exh-top">
+                        <div class="exh-title-wrap">
+                            <div class="exh-title-row">
+                                <h2 class="exh-title">${name}</h2>
+                                <span class="badge type-${exInfo.category.toLowerCase().replace(/[^a-z0-9]/g, '')}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${nameAttr}" onclick="editExerciseCategory(this.dataset.name)" title="Change category">${exInfo.category} <i data-lucide="edit-2" style="width:11px;height:11px;"></i></span>
+                            </div>
+                            <div class="exh-sub">${subtitleHtml}</div>
+                        </div>
+                        <div class="exh-actions">
+                            <button class="icon-btn" data-name="${nameAttr}" onclick="editExerciseName(this.dataset.name)" title="Rename" aria-label="Rename"><i data-lucide="edit-2" style="width:15px;height:15px;"></i></button>
+                            <button class="icon-btn" data-name="${nameAttr}" onclick="openMergeExercises([this.dataset.name])" title="Merge with another exercise" aria-label="Merge"><i data-lucide="merge" style="width:15px;height:15px;"></i></button>
+                            <button class="icon-btn ex-delete-btn danger" data-name="${nameAttr}" onclick="deleteExerciseFromLibrary(this.dataset.name)" title="Delete exercise" aria-label="Delete"><i data-lucide="trash-2" style="width:15px;height:15px;"></i></button>
+                        </div>
+                    </div>
+                    <div class="exh-bottom">
+                        <div class="exh-stats">
+                            ${stats.map(st => `
+                                <div>
+                                    <div class="exh-stat-value ${st.muted ? 'muted' : ''}">${st.value}</div>
+                                    <div class="exh-stat-label">${st.label}</div>
+                                </div>`).join('')}
+                        </div>
+                        ${viewsControlHtml}
                     </div>
                 </div>
             `;
+            const fmtSessionDate = d => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
             // Gather all session data for this exercise
             const allSessions = [];
@@ -8419,18 +8475,10 @@
             if (allSessions.length === 0) {
                 infoPanel.classList.remove('items-center', 'justify-center', 'text-muted');
                 infoPanel.style.display = 'block';
-                infoPanel.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.25rem; width:100%;">
-                        <div style="display:flex; align-items:center; gap:0.75rem;">
-                            <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
-                            <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button><button class="icon-btn" style="padding:0.2rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="openMergeExercises([this.dataset.name])" title="Merge with another exercise"><i data-lucide="merge" style="width:18px;height:18px;"></i></button>
-                            <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${name.replace(/"/g, '&quot;')}" onclick="deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:18px;height:18px;"></i></button>
-                            <span class="badge type-${exInfo.category.toLowerCase().replace(/[^a-z0-9]/g, '')}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
-                        </div>
-                        <div class="text-muted" style="font-size:0.875rem;">No sessions logged yet.</div>
-                        <div style="display:flex; align-items:center; justify-content:flex-end;">${viewsControlHtml}</div>
-                    </div>
-                `;
+                infoPanel.innerHTML = buildHeader('No sessions logged yet.', [
+                    { value: '0', label: 'Sessions', muted: true },
+                    { value: '—', label: 'Best', muted: true }
+                ]);
                 chartSection.classList.add('hidden');
                 historySection.classList.add('hidden');
                 lucide.createIcons();
@@ -8442,35 +8490,12 @@
                 const gymNamesStr = (activeView.gyms && activeView.gyms.length > 0) ? activeView.gyms.join(', ') : 'selected gym';
                 infoPanel.classList.remove('items-center', 'justify-center', 'text-muted');
                 infoPanel.style.display = 'block';
-                infoPanel.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:1.25rem; flex-wrap:wrap; width:100%;">
-                        <div style="min-width: 200px; flex: 1;">
-                            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.4rem;">
-                                <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
-                                <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button><button class="icon-btn" style="padding:0.2rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="openMergeExercises([this.dataset.name])" title="Merge with another exercise"><i data-lucide="merge" style="width:18px;height:18px;"></i></button>
-                                <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${name.replace(/"/g, '&quot;')}" onclick="deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:18px;height:18px;"></i></button>
-                                <span class="badge type-${exInfo.category.toLowerCase().replace(/[^a-z0-9]/g, '')}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
-                            </div>
-                            <div class="text-muted" style="font-size:0.875rem;">
-                                No sessions logged at <strong>${gymNamesStr}</strong> yet (${allSessions.length} total logged in other views).
-                            </div>
-                        </div>
-                        <div style="display:flex; gap:1.5rem; align-items:center; justify-content:center; flex-shrink:0;">
-                            <div style="text-align:center;">
-                                <div style="font-size:2rem; font-weight:800; color:var(--text-muted); line-height:1;">0</div>
-                                <div class="text-muted" style="font-size:0.7rem; letter-spacing:0.05em; margin-top:0.3rem;">SESSIONS</div>
-                            </div>
-                            <div style="width:1px; height:36px; background:var(--border);"></div>
-                            <div style="text-align:center;">
-                                <div style="font-size:2rem; font-weight:800; color:var(--text-muted); line-height:1;">—</div>
-                                <div class="text-muted" style="font-size:0.7rem; letter-spacing:0.05em; margin-top:0.3rem;">VIEW BEST</div>
-                            </div>
-                        </div>
-                        <div style="flex: 1; display:flex; align-items:center; justify-content:flex-end; min-width:160px;">
-                            ${viewsControlHtml}
-                        </div>
-                    </div>
-                `;
+                infoPanel.innerHTML = buildHeader(
+                    `No sessions at <strong>${gymNamesStr}</strong> yet · ${allSessions.length} logged elsewhere`,
+                    [
+                        { value: '0', label: 'Sessions', muted: true },
+                        { value: '—', label: 'Best here', muted: true }
+                    ]);
 
                 chartSection.classList.remove('hidden');
                 chartSection.innerHTML = `
@@ -8514,39 +8539,13 @@
 
             // Update info panel
             infoPanel.classList.remove('items-center', 'justify-center', 'text-muted');
-            infoPanel.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:1.25rem; flex-wrap:wrap; width:100%;">
-                    <div style="min-width: 200px; flex: 1;">
-                        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.4rem;">
-                            <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
-                            <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button><button class="icon-btn" style="padding:0.2rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="openMergeExercises([this.dataset.name])" title="Merge with another exercise"><i data-lucide="merge" style="width:18px;height:18px;"></i></button>
-                            <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${name.replace(/"/g, '&quot;')}" onclick="deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:18px;height:18px;"></i></button>
-                            <span class="badge type-${exInfo.category.toLowerCase().replace(/[^a-z0-9]/g, '')}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
-                        </div>
-                        <div class="text-muted" style="font-size:0.875rem; display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
-                            <span>
-                                Last session: <strong style="color:var(--text);">${lastSession.date}</strong>
-                                &mdash; ${lastSession.isBodyweight ? `BW &times; ${lastSession.bestSet.reps}` : `${lastSession.bestSet.weight}${appState.unit} &times; ${lastSession.bestSet.reps}`}
-                                <span style="opacity:0.6;">(best set)</span>
-                            </span>
-                        </div>
-                    </div>
-                    <div style="display:flex; gap:1.5rem; align-items:center; justify-content:center; flex-shrink:0;">
-                        <div style="text-align:center;">
-                            <div style="font-size:2rem; font-weight:800; color:var(--primary); line-height:1;">${filteredSessions.length}</div>
-                            <div class="text-muted" style="font-size:0.7rem; letter-spacing:0.05em; margin-top:0.3rem;">SESSIONS</div>
-                        </div>
-                        <div style="width:1px; height:36px; background:var(--border);"></div>
-                        <div style="text-align:center;">
-                            <div style="font-size:2rem; font-weight:800; color:var(--primary); line-height:1;">${isAllTimeBw ? allTimeBestSet.reps + ' reps' : allTimeBestSet.weight + appState.unit}</div>
-                            <div class="text-muted" style="font-size:0.7rem; letter-spacing:0.05em; margin-top:0.3rem;">VIEW BEST</div>
-                        </div>
-                    </div>
-                    <div style="flex: 1; display:flex; align-items:center; justify-content:flex-end; min-width:160px;">
-                        ${viewsControlHtml}
-                    </div>
-                </div>
-            `;
+            const isFilteredView = activeView.gyms && activeView.gyms.length > 0;
+            infoPanel.innerHTML = buildHeader(
+                `Last session <strong>${fmtSessionDate(lastSession.date)}</strong> · best set ${lastSession.isBodyweight ? `BW &times; ${lastSession.bestSet.reps}` : `${lastSession.bestSet.weight} ${appState.unit} &times; ${lastSession.bestSet.reps}`}`,
+                [
+                    { value: filteredSessions.length, label: 'Sessions' },
+                    { value: isAllTimeBw ? `${allTimeBestSet.reps} reps` : `${allTimeBestSet.weight}<span style="font-size:0.95rem; font-weight:700; margin-left:0.15rem;">${appState.unit}</span>`, label: isFilteredView ? 'Best here' : 'Best' }
+                ]);
 
             // Show chart section
             chartSection.classList.remove('hidden');
