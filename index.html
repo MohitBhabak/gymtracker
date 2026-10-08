@@ -2013,6 +2013,21 @@
         </div>
 
         <!-- Search & Quick Presets Modal (Spotlight / Command Palette) -->
+        <!-- Merge Exercises Modal -->
+        <div id="modal-merge-exercises" class="modal-overlay" onclick="if(event.target===this) closeModal('modal-merge-exercises')">
+            <div class="modal-content" style="max-width: 520px;" onclick="event.stopPropagation()">
+                <div class="modal-header" style="margin-bottom: 1rem; align-items: flex-start;">
+                    <div>
+                        <div style="font-size: 0.72rem; color: var(--primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.15rem;">Exercise Library</div>
+                        <h2 style="margin: 0; font-size: 1.25rem;" id="merge-modal-title">Merge Exercises</h2>
+                    </div>
+                    <button class="icon-btn" onclick="closeModal('modal-merge-exercises')" aria-label="Close"><i data-lucide="x"></i></button>
+                </div>
+                <div id="merge-modal-body"></div>
+                <div id="merge-modal-footer" class="flex justify-end gap-2" style="margin-top: 1.25rem;"></div>
+            </div>
+        </div>
+
         <!-- Monthly Sessions Trend Modal -->
         <div id="modal-monthly-trend" class="modal-overlay" onclick="if(event.target===this) closeModal('modal-monthly-trend')">
             <div class="modal-content" style="max-width: 760px;" onclick="event.stopPropagation()">
@@ -2540,6 +2555,8 @@
             targetEmail: '',
             fontTheme: 'cabinet-satoshi',
             appearance: null,
+            exerciseAliases: {},
+            dismissedDuplicates: [],
             scheduledWorkouts: {},
             calendarViewMode: 'default'
         };
@@ -2561,12 +2578,17 @@
                 appState.targetEmail = parsed.targetEmail || '';
                 appState.fontTheme = parsed.fontTheme || 'cabinet-satoshi';
                 appState.appearance = parsed.appearance || null;
+                appState.exerciseAliases = (parsed.exerciseAliases && typeof parsed.exerciseAliases === 'object') ? parsed.exerciseAliases : {};
+                appState.dismissedDuplicates = Array.isArray(parsed.dismissedDuplicates) ? parsed.dismissedDuplicates : [];
                 appState.scheduledWorkouts = (parsed.scheduledWorkouts && typeof parsed.scheduledWorkouts === 'object') ? parsed.scheduledWorkouts : {};
                 appState.calendarViewMode = parsed.calendarViewMode || 'default';
             } catch (e) {
                 console.error('Failed to parse saved state', e);
             }
         }
+
+        // Apply exercise merges (aliases) before anything reads exercise names
+        canonicalizeExerciseData(appState);
 
         // Ensure all logged exercises are in the library and have matching case
         Object.values(appState.workoutLogs).forEach(log => {
@@ -2598,6 +2620,8 @@
                 targetEmail: appState.targetEmail,
                 fontTheme: appState.fontTheme || 'cabinet-satoshi',
                 appearance: appState.appearance,
+                exerciseAliases: appState.exerciseAliases || {},
+                dismissedDuplicates: appState.dismissedDuplicates || [],
                 scheduledWorkouts: appState.scheduledWorkouts || {},
                 calendarViewMode: appState.calendarViewMode || 'default'
             }));
@@ -2825,6 +2849,8 @@
                 targetEmail: appState.targetEmail,
                 fontTheme: appState.fontTheme || 'cabinet-satoshi',
                 appearance: appState.appearance,
+                exerciseAliases: appState.exerciseAliases || {},
+                dismissedDuplicates: appState.dismissedDuplicates || [],
                 scheduledWorkouts: appState.scheduledWorkouts || {},
                 updatedAt: Date.now()
             };
@@ -2832,6 +2858,18 @@
 
         function mergeAppState(remoteData) {
             if (!remoteData) return;
+
+            // Exercise merges must win over the union-style merge below, otherwise a merged-away
+            // name would come straight back from another device's copy of the data.
+            if (remoteData.exerciseAliases && typeof remoteData.exerciseAliases === 'object') {
+                appState.exerciseAliases = { ...remoteData.exerciseAliases, ...(appState.exerciseAliases || {}) };
+            }
+            if (Array.isArray(remoteData.dismissedDuplicates)) {
+                const known = new Set(appState.dismissedDuplicates || []);
+                remoteData.dismissedDuplicates.forEach(k => known.add(k));
+                appState.dismissedDuplicates = [...known];
+            }
+            canonicalizeExerciseData(remoteData, appState.exerciseAliases);
 
             if (remoteData.unit) appState.unit = remoteData.unit;
             if (remoteData.targetEmail) appState.targetEmail = remoteData.targetEmail;
@@ -2914,6 +2952,7 @@
                     if (!exists) appState.exercises.push(remoteEx);
                 });
             }
+            canonicalizeExerciseData(appState);
 
             if (remoteData.weightLogs && Array.isArray(remoteData.weightLogs)) {
                 if (!appState.weightLogs) appState.weightLogs = [];
@@ -4440,6 +4479,12 @@
         document.addEventListener('keydown', (e) => {
             // ESC key to close search modal
             if (e.key === 'Escape') {
+                const mergeModal = document.getElementById('modal-merge-exercises');
+                if (mergeModal && mergeModal.classList.contains('open')) {
+                    closeModal('modal-merge-exercises');
+                    e.preventDefault();
+                    return;
+                }
                 const trendModal = document.getElementById('modal-monthly-trend');
                 if (trendModal && trendModal.classList.contains('open')) {
                     closeModal('modal-monthly-trend');
@@ -4657,6 +4702,8 @@
                 scheduledWorkouts: appState.scheduledWorkouts || {},
                 fontTheme: appState.fontTheme || 'cabinet-satoshi',
                 appearance: appState.appearance,
+                exerciseAliases: appState.exerciseAliases || {},
+                dismissedDuplicates: appState.dismissedDuplicates || [],
                 targetEmail: appState.targetEmail || ''
             }));
             const downloadAnchorNode = document.createElement('a');
@@ -4692,6 +4739,10 @@
                             appState.appearance = parsed.appearance;
                             applyAppearance(false);
                         }
+                        // Keep merges made on this device, and apply any the backup carries
+                        appState.exerciseAliases = { ...(parsed.exerciseAliases || {}), ...(appState.exerciseAliases || {}) };
+                        if (Array.isArray(parsed.dismissedDuplicates)) appState.dismissedDuplicates = parsed.dismissedDuplicates;
+                        canonicalizeExerciseData(appState);
                         if (parsed.targetEmail) appState.targetEmail = parsed.targetEmail;
                         saveState();
                         closeModal('modal-settings');
@@ -6901,11 +6952,13 @@
             }
             
             finalExercises.forEach(fex => {
+                fex.name = resolveExerciseName(fex.name);
                 appState.workoutLogs[dateStr].exercises.push(fex);
                 if(!appState.exercises.find(e => e.name.toLowerCase() === fex.name.toLowerCase())) {
                     appState.exercises.push({ name: fex.name, category: appState.workoutLogs[dateStr].type, isBodyweight: fex.sets[0].isBodyweight });
                 }
             });
+            canonicalizeLogExercises(appState.workoutLogs[dateStr], appState.exerciseAliases); // combine if two names now map to one exercise
             
             saveState();
             
@@ -6938,13 +6991,27 @@
                         <div id="exercise-bulk-bar" class="flex justify-between items-center" style="padding:0.5rem 0.75rem; background:var(--surface-offset); border-radius:var(--radius-tight); margin-bottom:0.75rem; font-size:0.8rem;">
                             <div class="flex items-center gap-2">
                                 <input type="checkbox" id="bulk-select-all" onchange="toggleSelectAllExercises(this.checked)" style="cursor:pointer; width:16px; height:16px; margin:0;">
-                                <span id="bulk-selected-count" style="font-weight:600;">${selectedExerciseNames.size} selected</span>
+                                <span id="bulk-selected-count" style="font-weight:600; white-space:nowrap;">${selectedExerciseNames.size} selected</span>
                             </div>
-                            <button class="btn" id="btn-bulk-delete" onclick="deleteSelectedExercises()" style="padding:0.25rem 0.6rem; font-size:0.75rem; background:#ef4444; color:#fff; border:none; display:${selectedExerciseNames.size > 0 ? 'inline-flex' : 'none'}; align-items:center;">
-                                <i data-lucide="trash-2" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:0.25rem;"></i> Delete Selected (${selectedExerciseNames.size})
+                            <div class="flex gap-2">
+                            <button class="btn btn-primary" id="btn-bulk-merge" onclick="openMergeSelected()" style="white-space:nowrap; padding:0.25rem 0.6rem; font-size:0.75rem; border:none; display:${selectedExerciseNames.size >= 2 ? 'inline-flex' : 'none'}; align-items:center;">
+                                <i data-lucide="merge" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:0.25rem;"></i> Merge (${selectedExerciseNames.size})
                             </button>
+                            <button class="btn" id="btn-bulk-delete" onclick="deleteSelectedExercises()" style="white-space:nowrap; padding:0.25rem 0.6rem; font-size:0.75rem; background:#ef4444; color:#fff; border:none; display:${selectedExerciseNames.size > 0 ? 'inline-flex' : 'none'}; align-items:center;">
+                                <i data-lucide="trash-2" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:0.25rem;"></i> Delete (${selectedExerciseNames.size})
+                            </button>
+                            </div>
                         </div>
                     ` : ''}
+                    ${(() => {
+                        const dupGroups = findLikelyDuplicateGroups();
+                        return dupGroups.length ? `
+                        <button type="button" onclick="openDuplicateSuggestions()" style="width:100%; display:flex; align-items:center; gap:0.5rem; padding:0.5rem 0.7rem; margin-bottom:0.75rem; border:1px solid rgba(251,191,36,0.4); background:rgba(251,191,36,0.08); color:var(--text); border-radius:var(--radius-tight); font-size:0.8rem; cursor:pointer; font-family:inherit; text-align:left;">
+                            <i data-lucide="copy" style="width:14px;height:14px;color:#fbbf24;flex-shrink:0;"></i>
+                            <span style="flex:1;"><b>${dupGroups.length}</b> possible duplicate${dupGroups.length === 1 ? '' : 's'} found</span>
+                            <span style="color:var(--text-muted); font-weight:600;">Review</span>
+                        </button>` : '';
+                    })()}
                     <div class="flex gap-2" style="margin-bottom:0.5rem;">
                         <input type="text" placeholder="Search..." id="search-ex" onkeyup="filterExercises()" style="flex:1;">
                     </div>
@@ -7093,8 +7160,25 @@
             if (!newName || newName.trim() === '' || newName.trim() === oldName) return;
             const trimmedNewName = newName.trim();
             
-            if (appState.exercises.some(e => e.name.toLowerCase() === trimmedNewName.toLowerCase() && e.name.toLowerCase() !== oldName.toLowerCase())) {
-                return showAppAlert('An exercise with this name already exists.', 'Duplicate Exercise', 'warning');
+            const clash = appState.exercises.find(e => e.name.toLowerCase() === trimmedNewName.toLowerCase() && e.name.toLowerCase() !== oldName.toLowerCase());
+            if (clash) {
+                const merge = await showAppConfirm(`"${clash.name}" already exists. Merge "${oldName}" into it? All of its logged sets will move to "${clash.name}".`, 'Exercise Already Exists', { confirmText: 'Merge' });
+                if (merge) {
+                    window.openMergeExercises([oldName, clash.name]);
+                    setMergeTarget(1); // keep the existing exercise's name
+                }
+                return;
+            }
+
+            if (trimmedNewName.toLowerCase() !== oldName.toLowerCase()) {
+                // A real rename (not just a case change) is recorded like a merge so Drive sync
+                // doesn't bring the old name back, and saved views move with it
+                mergeExercisesInto([oldName], trimmedNewName);
+                saveState();
+                renderProgressView();
+                showExerciseDetail(trimmedNewName);
+                showAppToast(`Renamed to "${trimmedNewName}"`, 'success');
+                return;
             }
 
             const exIndex = appState.exercises.findIndex(e => e.name === oldName);
@@ -7205,9 +7289,15 @@
             const count = selectedExerciseNames.size;
             if (countEl) countEl.innerText = `${count} selected`;
 
+            const mergeBtn = document.getElementById('btn-bulk-merge');
+            if (mergeBtn) {
+                mergeBtn.style.display = count >= 2 ? 'inline-flex' : 'none';
+                mergeBtn.innerHTML = `<i data-lucide="merge" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:0.25rem;"></i> Merge (${count})`;
+            }
+
             if (deleteBtn) {
                 deleteBtn.style.display = count > 0 ? 'inline-flex' : 'none';
-                deleteBtn.innerHTML = `<i data-lucide="trash-2" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:0.25rem;"></i> Delete Selected (${count})`;
+                deleteBtn.innerHTML = `<i data-lucide="trash-2" style="width:13px;height:13px;display:inline-block;vertical-align:middle;margin-right:0.25rem;"></i> Delete (${count})`;
                 lucide.createIcons();
             }
 
@@ -7252,6 +7342,337 @@
             saveState();
             renderProgressView();
             showAppToast(`Deleted ${count} exercise(s)`, 'info');
+        };
+
+        // ==========================================
+        // EXERCISE MERGING & DUPLICATE DETECTION
+        // ==========================================
+        // appState.exerciseAliases maps a merged-away name (lowercase) to the name that was kept.
+        // Every place exercise data enters the app (load, Drive sync, backup import, logging)
+        // runs it through canonicalizeExerciseData so a merge sticks on every device.
+
+        function resolveExerciseName(name, aliases = appState.exerciseAliases) {
+            if (!name || !aliases) return name;
+            let current = name;
+            const seen = new Set();
+            while (true) {
+                const key = current.trim().toLowerCase();
+                const next = aliases[key];
+                if (!next || seen.has(key) || next.trim().toLowerCase() === key) return current;
+                seen.add(key);
+                current = next;
+            }
+        }
+
+        function sanitizeExerciseAliases(aliases) {
+            // Drop entries that would form a loop (e.g. A->B on one device, B->A on another)
+            Object.keys(aliases).sort().forEach(start => {
+                let key = start;
+                const seen = new Set();
+                while (aliases[key]) {
+                    if (seen.has(key)) { delete aliases[start]; return; }
+                    seen.add(key);
+                    key = aliases[key].trim().toLowerCase();
+                }
+            });
+            return aliases;
+        }
+
+        function combineExerciseEntries(entries, name) {
+            // Several entries on the same day that are really one exercise: keep set order, join notes
+            const notes = [...new Set(entries.map(e => (e.notes || '').trim()).filter(Boolean))].join(' / ');
+            return { ...entries[0], name, notes, sets: entries.flatMap(e => e.sets || []) };
+        }
+
+        function canonicalizeLogExercises(log, aliases) {
+            if (!log || !Array.isArray(log.exercises)) return;
+            const groups = new Map();
+            log.exercises.forEach(ex => {
+                if (!ex || !ex.name) return;
+                const canonical = resolveExerciseName(ex.name, aliases);
+                const key = canonical.toLowerCase();
+                if (!groups.has(key)) groups.set(key, { name: canonical, entries: [] });
+                groups.get(key).entries.push(ex);
+            });
+            log.exercises = [...groups.values()].map(g =>
+                g.entries.length === 1 ? { ...g.entries[0], name: g.name } : combineExerciseEntries(g.entries, g.name)
+            );
+        }
+
+        function canonicalizeExerciseData(data, aliases = appState.exerciseAliases) {
+            if (!data || !aliases || Object.keys(aliases).length === 0) return;
+            sanitizeExerciseAliases(aliases);
+
+            if (data.workoutLogs && typeof data.workoutLogs === 'object') {
+                Object.values(data.workoutLogs).forEach(log => canonicalizeLogExercises(log, aliases));
+            }
+
+            if (Array.isArray(data.exercises)) {
+                const kept = [];
+                const byKey = new Map();
+                data.exercises.forEach(ex => {
+                    if (!ex || !ex.name) return;
+                    const canonical = resolveExerciseName(ex.name, aliases);
+                    const key = canonical.toLowerCase();
+                    if (byKey.has(key)) {
+                        // Prefer the entry that already carries the kept name (its category & settings)
+                        if (ex.name.toLowerCase() === key && byKey.get(key).name.toLowerCase() !== key) {
+                            Object.assign(byKey.get(key), ex, { name: canonical });
+                        }
+                        return;
+                    }
+                    const entry = { ...ex, name: canonical };
+                    byKey.set(key, entry);
+                    kept.push(entry);
+                });
+                data.exercises = kept;
+            }
+
+            if (data.exerciseViews && typeof data.exerciseViews === 'object') {
+                const merged = {};
+                Object.entries(data.exerciseViews).forEach(([name, views]) => {
+                    const canonical = resolveExerciseName(name, aliases);
+                    const existingKey = Object.keys(merged).find(k => k.toLowerCase() === canonical.toLowerCase()) || canonical;
+                    const list = merged[existingKey] || (merged[existingKey] = []);
+                    const ids = new Set(list.map(v => v.id));
+                    (Array.isArray(views) ? views : []).forEach(v => { if (!ids.has(v.id)) { list.push(v); ids.add(v.id); } });
+                });
+                data.exerciseViews = merged;
+            }
+
+            if (data.exerciseDefaultViews && typeof data.exerciseDefaultViews === 'object') {
+                const merged = {};
+                // Entries already under the kept name win over ones carried across from merged names
+                const entries = Object.entries(data.exerciseDefaultViews).sort(([a], [b]) =>
+                    (resolveExerciseName(a, aliases).toLowerCase() === a.toLowerCase() ? 0 : 1) -
+                    (resolveExerciseName(b, aliases).toLowerCase() === b.toLowerCase() ? 0 : 1));
+                entries.forEach(([name, viewId]) => {
+                    const canonical = resolveExerciseName(name, aliases);
+                    if (!Object.keys(merged).some(k => k.toLowerCase() === canonical.toLowerCase())) merged[canonical] = viewId;
+                });
+                data.exerciseDefaultViews = merged;
+            }
+        }
+
+        function mergeExercisesInto(sourceNames, targetName) {
+            const aliases = appState.exerciseAliases || (appState.exerciseAliases = {});
+            const targetKey = targetName.trim().toLowerCase();
+            const sourceKeys = new Set(sourceNames.map(n => n.trim().toLowerCase()).filter(k => k !== targetKey));
+
+            // The kept name must never itself point elsewhere (e.g. merging B back into A after A->B)
+            delete aliases[targetKey];
+            sourceKeys.forEach(k => { aliases[k] = targetName; });
+            // Older merges that pointed at a now-merged name follow it to the new target
+            Object.keys(aliases).forEach(k => {
+                if (sourceKeys.has(aliases[k].trim().toLowerCase())) aliases[k] = targetName;
+            });
+
+            canonicalizeExerciseData(appState, aliases);
+            (appState.dismissedDuplicates || []).length && (appState.dismissedDuplicates = appState.dismissedDuplicates.filter(pair =>
+                !pair.split('|').some(n => sourceKeys.has(n))));
+            sourceNames.forEach(n => selectedExerciseNames.delete(n));
+            selectedExerciseNames.delete(targetName);
+        }
+
+        function getExerciseUsageStats(name) {
+            const key = name.toLowerCase();
+            let sessions = 0, sets = 0, last = null;
+            Object.entries(appState.workoutLogs).forEach(([date, log]) => {
+                const matches = (log.exercises || []).filter(e => e.name && e.name.toLowerCase() === key);
+                if (!matches.length) return;
+                sessions++;
+                sets += matches.reduce((n, e) => n + (e.sets || []).length, 0);
+                if (!last || date > last) last = date;
+            });
+            return { sessions, sets, last };
+        }
+
+        // --- Likely-duplicate detection ---
+        function normalizeExerciseKey(name) {
+            return name.toLowerCase().replace(/[^a-z0-9]/g, '').replace(/(es|s)$/, '');
+        }
+
+        function editDistanceAtMostOne(a, b) {
+            if (Math.abs(a.length - b.length) > 1) return false;
+            let i = 0, j = 0, edits = 0;
+            while (i < a.length && j < b.length) {
+                if (a[i] === b[j]) { i++; j++; continue; }
+                if (++edits > 1) return false;
+                if (a.length > b.length) i++;
+                else if (b.length > a.length) j++;
+                else { i++; j++; }
+            }
+            return edits + (a.length - i) + (b.length - j) <= 1;
+        }
+
+        function duplicatePairKey(a, b) {
+            return [a.toLowerCase(), b.toLowerCase()].sort().join('|');
+        }
+
+        function wordInitials(name) {
+            return name.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean).map(w => w[0]).join('');
+        }
+
+        // Look-alike names that are genuinely different exercises
+        const DISTINCT_EXERCISE_STEMS = [['adduct', 'abduct'], ['pronat', 'supinat']];
+        function isKnownDistinctPair(a, b) {
+            return DISTINCT_EXERCISE_STEMS.some(([x, y]) => (a.includes(x) && b.includes(y)) || (a.includes(y) && b.includes(x)));
+        }
+
+        function findLikelyDuplicateGroups() {
+            const seenNames = new Set();
+            const names = (appState.exercises || []).map(e => e.name).filter(n => {
+                const k = n.toLowerCase();
+                if (seenNames.has(k)) return false;
+                seenNames.add(k);
+                return true;
+            });
+            const dismissed = new Set(appState.dismissedDuplicates || []);
+            const parent = names.map((_, i) => i);
+            const find = i => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+            const keys = names.map(normalizeExerciseKey);
+
+            for (let i = 0; i < names.length; i++) {
+                for (let j = i + 1; j < names.length; j++) {
+                    if (dismissed.has(duplicatePairKey(names[i], names[j]))) continue;
+                    // Same name once spacing/punctuation/plurals are ignored ("Pullups" / "Pull-ups"),
+                    // or a one-letter typo in a reasonably long name ("Lay Pullover" / "Lat Pullover")
+                    // (typos must keep each word's first letter, so "Hack squat" / "Back squat" stay apart)
+                    const similar = keys[i] === keys[j] ||
+                        (Math.min(keys[i].length, keys[j].length) >= 6 &&
+                         wordInitials(names[i]) === wordInitials(names[j]) &&
+                         !isKnownDistinctPair(keys[i], keys[j]) &&
+                         editDistanceAtMostOne(keys[i], keys[j]));
+                    if (similar) parent[find(i)] = find(j);
+                }
+            }
+
+            const groups = {};
+            names.forEach((n, i) => { (groups[find(i)] = groups[find(i)] || []).push(n); });
+            return Object.values(groups).filter(g => g.length > 1);
+        }
+
+        // --- Merge modal ---
+        let mergeModalNames = [];
+        let mergeModalTarget = null;
+
+        function renderMergeSuggestions() {
+            const body = document.getElementById('merge-modal-body');
+            const groups = findLikelyDuplicateGroups();
+            document.getElementById('merge-modal-title').textContent = 'Possible Duplicates';
+            document.getElementById('merge-modal-footer').innerHTML = `<button class="btn" onclick="closeModal('modal-merge-exercises')">Close</button>`;
+            if (!groups.length) {
+                body.innerHTML = `<div class="text-muted" style="text-align:center; padding:1.5rem 0;">No likely duplicates found. You can still merge any exercises from <b>Select</b> mode.</div>`;
+                return;
+            }
+            body.innerHTML = `<p class="text-muted" style="font-size:0.85rem; margin-bottom:0.85rem;">These names look like the same exercise. Review a group to merge it, or mark it as not a duplicate.</p>` +
+                groups.map((g, gi) => `
+                    <div style="display:flex; align-items:center; justify-content:space-between; gap:0.75rem; padding:0.7rem 0.85rem; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-base); margin-bottom:0.5rem;">
+                        <div style="min-width:0;">
+                            <div style="font-weight:600; font-size:0.9rem;">${g.map(n => escapeHtml(n)).join(' <span class="text-muted">·</span> ')}</div>
+                            <div class="text-muted" style="font-size:0.75rem;">${g.map(n => getExerciseUsageStats(n).sessions).reduce((a, b) => a + b, 0)} sessions between them</div>
+                        </div>
+                        <div class="flex gap-2" style="flex-shrink:0;">
+                            <button class="btn btn-sm" style="font-size:0.75rem;" onclick="dismissDuplicateGroup(${gi})">Not duplicates</button>
+                            <button class="btn btn-sm btn-primary" style="font-size:0.75rem;" onclick="reviewDuplicateGroup(${gi})">Review</button>
+                        </div>
+                    </div>`).join('');
+            window._duplicateGroups = groups;
+        }
+
+        function renderMergeForm() {
+            const body = document.getElementById('merge-modal-body');
+            document.getElementById('merge-modal-title').textContent = 'Merge Exercises';
+            const names = mergeModalNames;
+            if (!names.some(n => n === mergeModalTarget)) {
+                // Default to a name from the built-in library (known spelling), then the most-logged one
+                const builtIn = new Set((typeof defaultExercises !== 'undefined' ? defaultExercises : []).map(e => e.name.toLowerCase()));
+                mergeModalTarget = names.slice().sort((a, b) =>
+                    (builtIn.has(b.toLowerCase()) - builtIn.has(a.toLowerCase())) ||
+                    (getExerciseUsageStats(b).sessions - getExerciseUsageStats(a).sessions))[0] || null;
+            }
+
+            const fmtDate = d => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'never';
+            const rows = names.map((n, i) => {
+                const st = getExerciseUsageStats(n);
+                const isTarget = n === mergeModalTarget;
+                return `
+                    <label style="display:flex; align-items:center; gap:0.75rem; padding:0.65rem 0.8rem; border:2px solid ${isTarget ? 'var(--primary)' : 'var(--border)'}; border-radius:var(--radius-base); margin-bottom:0.45rem; cursor:pointer; background:${isTarget ? 'rgba(var(--primary-rgb), 0.06)' : 'var(--surface-2)'};">
+                        <input type="radio" name="merge-target" ${isTarget ? 'checked' : ''} onchange="setMergeTarget(${i})" style="width:16px; height:16px; margin:0; accent-color:var(--primary); flex-shrink:0;">
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(n)} ${isTarget ? '<span class="badge" style="background:rgba(var(--primary-rgb),0.15); color:var(--primary); font-size:0.65rem; margin-left:0.25rem;">KEEP</span>' : ''}</div>
+                            <div class="text-muted" style="font-size:0.75rem;">${st.sessions} session${st.sessions === 1 ? '' : 's'} · ${st.sets} set${st.sets === 1 ? '' : 's'} · last ${fmtDate(st.last)}</div>
+                        </div>
+                        ${names.length > 1 ? `<button type="button" class="icon-btn" style="padding:0.2rem;" title="Remove from merge" onclick="event.preventDefault(); removeFromMerge(${i})"><i data-lucide="x" style="width:14px; height:14px;"></i></button>` : ''}
+                    </label>`;
+            }).join('');
+
+            const others = (appState.exercises || []).map(e => e.name).filter(n => !names.some(m => m.toLowerCase() === n.toLowerCase()))
+                .sort((a, b) => a.localeCompare(b));
+            const sourceCount = names.length - 1;
+            const movedSessions = names.filter(n => n !== mergeModalTarget).reduce((sum, n) => sum + getExerciseUsageStats(n).sessions, 0);
+
+            body.innerHTML = `
+                <p class="text-muted" style="font-size:0.85rem; margin-bottom:0.85rem;">Pick the name to keep. Everything logged under the other name${sourceCount === 1 ? '' : 's'} moves to it, and sets logged on the same day are combined.</p>
+                ${rows}
+                <select onchange="if(this.value){ addToMerge(this.value); }" style="margin-top:0.35rem; font-size:0.85rem; padding:0.55rem;">
+                    <option value="">+ Add ${names.length ? 'another' : 'an'} exercise to merge…</option>
+                    ${others.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('')}
+                </select>
+                ${names.length >= 2 ? `<div style="margin-top:0.85rem; padding:0.65rem 0.8rem; border-radius:var(--radius-base); background:var(--surface-offset); font-size:0.82rem;">
+                    <b>${movedSessions}</b> session${movedSessions === 1 ? '' : 's'} will move to <b>${escapeHtml(mergeModalTarget)}</b>. ${escapeHtml(names.filter(n => n !== mergeModalTarget).join(', '))} will be removed from your library. Synced devices pick up the merge too.
+                </div>` : ''}
+            `;
+            document.getElementById('merge-modal-footer').innerHTML = `
+                <button class="btn" onclick="closeModal('modal-merge-exercises')">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmMergeExercises()" ${names.length < 2 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : ''}>
+                    Merge ${names.length >= 2 ? names.length + ' exercises' : ''}
+                </button>`;
+            lucide.createIcons({ root: document.getElementById('modal-merge-exercises') });
+        }
+
+        window.openMergeExercises = (names) => {
+            mergeModalNames = [...new Set(names)];
+            mergeModalTarget = null;
+            renderMergeForm();
+            openModal('modal-merge-exercises');
+        };
+        window.openMergeSelected = () => window.openMergeExercises(Array.from(selectedExerciseNames));
+        window.openDuplicateSuggestions = () => {
+            renderMergeSuggestions();
+            openModal('modal-merge-exercises');
+            lucide.createIcons({ root: document.getElementById('modal-merge-exercises') });
+        };
+        window.reviewDuplicateGroup = (i) => window.openMergeExercises(window._duplicateGroups[i]);
+        window.dismissDuplicateGroup = (i) => {
+            const g = window._duplicateGroups[i];
+            const dismissed = new Set(appState.dismissedDuplicates || []);
+            for (let a = 0; a < g.length; a++) for (let b = a + 1; b < g.length; b++) dismissed.add(duplicatePairKey(g[a], g[b]));
+            appState.dismissedDuplicates = [...dismissed];
+            saveState();
+            renderMergeSuggestions();
+            if (window.location.hash === '#progress') renderProgressView();
+        };
+        window.setMergeTarget = (i) => { mergeModalTarget = mergeModalNames[i]; renderMergeForm(); };
+        window.addToMerge = (name) => { mergeModalNames.push(name); renderMergeForm(); };
+        window.removeFromMerge = (i) => { mergeModalNames.splice(i, 1); renderMergeForm(); };
+
+        window.confirmMergeExercises = () => {
+            if (mergeModalNames.length < 2 || !mergeModalTarget) return;
+            const target = mergeModalTarget;
+            const sources = mergeModalNames.filter(n => n !== target);
+            mergeExercisesInto(sources, target);
+            saveState();
+            closeModal('modal-merge-exercises');
+            isExerciseSelectMode = false;
+            selectedExerciseNames.clear();
+            if (window.location.hash === '#progress') {
+                renderProgressView();
+                showExerciseDetail(target);
+            } else {
+                handleRoute();
+            }
+            showAppToast(`Merged ${sources.length} exercise${sources.length === 1 ? '' : 's'} into "${target}"`, 'success');
         };
 
         // --- EXERCISE REORDERING & SORTING HANDLERS ---
@@ -7958,7 +8379,7 @@
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.25rem; width:100%;">
                         <div style="display:flex; align-items:center; gap:0.75rem;">
                             <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
-                            <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
+                            <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button><button class="icon-btn" style="padding:0.2rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="openMergeExercises([this.dataset.name])" title="Merge with another exercise"><i data-lucide="merge" style="width:18px;height:18px;"></i></button>
                             <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${name.replace(/"/g, '&quot;')}" onclick="deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:18px;height:18px;"></i></button>
                             <span class="badge type-${exInfo.category.toLowerCase().replace(/[^a-z0-9]/g, '')}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
                         </div>
@@ -7982,7 +8403,7 @@
                         <div style="min-width: 200px; flex: 1;">
                             <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.4rem;">
                                 <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
-                                <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
+                                <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button><button class="icon-btn" style="padding:0.2rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="openMergeExercises([this.dataset.name])" title="Merge with another exercise"><i data-lucide="merge" style="width:18px;height:18px;"></i></button>
                                 <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${name.replace(/"/g, '&quot;')}" onclick="deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:18px;height:18px;"></i></button>
                                 <span class="badge type-${exInfo.category.toLowerCase().replace(/[^a-z0-9]/g, '')}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
                             </div>
@@ -8054,7 +8475,7 @@
                     <div style="min-width: 200px; flex: 1;">
                         <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.4rem;">
                             <h2 style="margin:0; font-size:1.4rem;">${name}</h2>
-                            <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button>
+                            <button class="icon-btn" style="padding:0.2rem; margin-left:-0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseName(this.dataset.name)" title="Edit Name"><i data-lucide="edit-2" style="width:18px;height:18px;"></i></button><button class="icon-btn" style="padding:0.2rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="openMergeExercises([this.dataset.name])" title="Merge with another exercise"><i data-lucide="merge" style="width:18px;height:18px;"></i></button>
                             <button class="icon-btn ex-delete-btn" style="padding:0.2rem; color:var(--text-muted);" data-name="${name.replace(/"/g, '&quot;')}" onclick="deleteExerciseFromLibrary(this.dataset.name)" title="Delete Exercise"><i data-lucide="trash-2" style="width:18px;height:18px;"></i></button>
                             <span class="badge type-${exInfo.category.toLowerCase().replace(/[^a-z0-9]/g, '')}" style="cursor:pointer; display:inline-flex; align-items:center; gap:0.25rem;" data-name="${name.replace(/"/g, '&quot;')}" onclick="editExerciseCategory(this.dataset.name)" title="Edit Category">${exInfo.category} <i data-lucide="edit-2" style="width:12px;height:12px;"></i></span>
                         </div>
