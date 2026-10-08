@@ -411,6 +411,41 @@
         .exh-views .icon-btn { padding: 0.35rem; color: var(--text-muted); display: inline-flex; border-radius: var(--radius-pill); }
         .exh-views .icon-btn:hover { color: var(--text); background: var(--surface-offset); }
 
+
+        /* Weight & Bench PR tracker pages */
+        .trk-head { margin-bottom: 1.5rem; }
+        .trk-form { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .trk-form input[type="date"] { width: 160px; padding: 0.5rem 0.6rem; font-size: 0.85rem; }
+        .trk-input-unit { position: relative; width: 130px; }
+        .trk-input-unit input { padding: 0.5rem 2.6rem 0.5rem 0.7rem; font-size: 0.9rem; font-weight: 600; }
+        .trk-input-unit span { position: absolute; right: 0.7rem; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: var(--text-muted); pointer-events: none; }
+        .trk-form .btn { padding: 0.5rem 1rem; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem; }
+        .trk-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+        .trk-stat-sub { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.15rem; }
+        .trk-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 1.5rem; align-items: start; }
+        .trk-card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .trk-card-head h3 { margin: 0; font-size: 1.05rem; }
+        .trk-legend { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; color: var(--text-muted); }
+        .trk-legend i { display: inline-block; width: 18px; border-top: 2px dashed var(--text-muted); }
+        .trk-history { padding: 0; overflow: hidden; }
+        .trk-history .trk-card-head { padding: 1.1rem 1.25rem 0; }
+        .trk-rows { max-height: 360px; overflow-y: auto; }
+        .trk-row { display: grid; grid-template-columns: 1fr auto 64px 28px; align-items: center; gap: 0.75rem; padding: 0.6rem 1.25rem; border-top: 1px solid var(--border); font-size: 0.88rem; }
+        .trk-row:hover { background: var(--surface-2); }
+        .trk-row-date { color: var(--text-muted); }
+        .trk-row-val { font-weight: 700; text-align: right; white-space: nowrap; }
+        .trk-row-delta { font-size: 0.75rem; font-weight: 600; text-align: right; white-space: nowrap; }
+        .trk-row .icon-btn { padding: 0.2rem; color: var(--text-muted); opacity: 0; transition: opacity 0.15s; display: inline-flex; }
+        .trk-row:hover .icon-btn, .trk-row .icon-btn:focus-visible { opacity: 1; }
+        .trk-row .icon-btn:hover { color: #f87171; }
+        @media (hover: none) { .trk-row .icon-btn { opacity: 0.6; } }
+        @media (max-width: 900px) { .trk-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 600px) {
+            .trk-form { width: 100%; }
+            .trk-form input[type="date"], .trk-input-unit { flex: 1; width: auto; min-width: 0; }
+            .trk-stats { gap: 1.25rem 1.75rem; }
+        }
+
         /* Workout Types Colors */
         .type-push { background-color: color-mix(in srgb, var(--workout-push) 15%, transparent); color: var(--workout-push); border: 1px solid var(--workout-push); }
         .type-pull { background-color: color-mix(in srgb, var(--workout-pull) 15%, transparent); color: var(--workout-pull); border: 1px solid var(--workout-pull); }
@@ -695,7 +730,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 1px rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            color: var(--text);
+            color: #f4f4f5; /* the toast is always dark, so its text stays light in every theme */
             font-size: 0.875rem;
             font-weight: 500;
             opacity: 0;
@@ -8626,127 +8661,163 @@
         };
 
         // Weight Render
-        window.renderWeightView = () => {
-            const view = document.getElementById('view-weight');
-            const sortedLogs = [...appState.weightLogs].sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+        // ==========================================
+        // WEIGHT & BENCH PR PAGES (shared layout)
+        // ==========================================
+        const trackerRange = { weight: '3m', bench: 'all' };
+        const TRACKER_RANGES = [['1m', '1M', 30], ['3m', '3M', 91], ['1y', '1Y', 365], ['all', 'All', Infinity]];
 
-            // Chart Data
-            const chartData = sortedLogs.slice(-30); // Last 30 entries
-            
+        const fmtTrackerDate = (d, withYear = true) => new Date(d + 'T00:00:00').toLocaleDateString('en-US', withYear ? { month: 'short', day: 'numeric', year: 'numeric' } : { month: 'short', day: 'numeric' });
+        const daysBetween = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000);
+        const fmtNum = v => (Math.round(v * 10) / 10).toLocaleString('en-US', { maximumFractionDigits: 1 });
+        const fmtSigned = v => `${v > 0 ? '+' : v < 0 ? '−' : '±'}${fmtNum(Math.abs(v))}`;
+
+        function renderTrackerPage(cfg) {
+            const view = document.getElementById(cfg.viewId);
+            const logs = [...(cfg.logs || [])].sort((a, b) => a.date.localeCompare(b.date));
+            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+            const unit = appState.unit;
+            const last = logs[logs.length - 1];
+
+            const subtitle = last
+                ? `Last logged <strong>${fmtTrackerDate(last.date)}</strong> · ${logs.length} entr${logs.length === 1 ? 'y' : 'ies'}`
+                : cfg.emptySubtitle;
+            const stats = logs.length ? cfg.stats(logs) : [];
+
             let html = `
-                <div class="card card-form-row" style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 200px;">
-                        <label class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem; display: block;">Date</label>
-                        <input type="date" id="weight-input-date" value="${todayStr}">
+                <div class="card trk-head">
+                    <div class="exh">
+                        <div class="exh-top" style="flex-wrap: wrap;">
+                            <div class="exh-title-wrap">
+                                <div class="exh-title-row">
+                                    <i data-lucide="${cfg.icon}" style="width:20px; height:20px; color:var(--primary);"></i>
+                                    <h2 class="exh-title">${cfg.title}</h2>
+                                </div>
+                                <div class="exh-sub">${subtitle}</div>
+                            </div>
+                            <div class="trk-form">
+                                <input type="date" id="${cfg.inputPrefix}-input-date" value="${todayStr}" aria-label="Date">
+                                <div class="trk-input-unit">
+                                    <input type="number" step="${cfg.step}" id="${cfg.inputPrefix}-input-val" placeholder="${cfg.placeholder}" aria-label="${cfg.valueLabel} (${unit})" onkeydown="if(event.key==='Enter') ${cfg.saveFn}()">
+                                    <span>${unit}</span>
+                                </div>
+                                <button class="btn btn-primary" onclick="${cfg.saveFn}()"><i data-lucide="plus" style="width:14px; height:14px;"></i> Log</button>
+                            </div>
+                        </div>
+                        ${stats.length ? `
+                        <div class="exh-bottom">
+                            <div class="trk-stats">
+                                ${stats.map(st => `
+                                    <div>
+                                        <div class="exh-stat-value ${st.muted ? 'muted' : ''}" ${st.color ? `style="color:${st.color};"` : ''}>${st.value}</div>
+                                        <div class="exh-stat-label">${st.label}</div>
+                                        ${st.sub ? `<div class="trk-stat-sub">${st.sub}</div>` : ''}
+                                    </div>`).join('')}
+                            </div>
+                        </div>` : ''}
                     </div>
-                    <div style="flex: 1; min-width: 200px;">
-                        <label class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem; display: block;">Weight (${appState.unit})</label>
-                        <input type="number" step="0.1" id="weight-input-val" placeholder="e.g. 150">
-                    </div>
-                    <button class="btn btn-primary" onclick="logWeight()">Save Weight</button>
                 </div>
             `;
-            
-            if (sortedLogs.length === 0) {
+
+            if (!logs.length) {
                 html += `
-                    <div class="card flex items-center justify-center text-muted" style="min-height:200px;">
-                        <div style="text-align:center;">
-                            <i data-lucide="scale" style="width:36px;height:36px;margin-bottom:0.75rem;opacity:0.5;"></i>
-                            <p>Log your weight to see your progress</p>
+                    <div class="card flex items-center justify-center text-muted" style="min-height:220px;">
+                        <div style="text-align:center; max-width: 320px;">
+                            <i data-lucide="${cfg.icon}" style="width:36px;height:36px;margin-bottom:0.75rem;opacity:0.4;"></i>
+                            <p style="margin:0 0 0.25rem 0; color:var(--text); font-weight:600;">${cfg.emptyTitle}</p>
+                            <p style="margin:0; font-size:0.85rem;">${cfg.emptyText}</p>
                         </div>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3 style="margin-bottom: 1rem;">Progress</h3>
-                            <div style="height:320px; width:100%;">
-                                <canvas id="weightChart"></canvas>
-                            </div>
-                        </div>
-                        <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
-                            <div style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);">
-                                <h3 style="margin: 0;">History</h3>
-                            </div>
-                            <div style="overflow-y: auto; max-height: 320px;">
-                                <table style="width: 100%; border-collapse: collapse;">
-                                    <thead>
-                                        <tr>
-                                            <th style="padding-left: 1.5rem; text-align: left;">Date</th>
-                                            <th style="text-align: left;">Weight</th>
-                                            <th style="text-align: right; padding-right: 1.5rem;">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                `;
-                
-                // Reverse for history table
-                [...sortedLogs].reverse().forEach(log => {
-                    html += `
-                        <tr>
-                            <td style="padding-left: 1.5rem;">${log.date}</td>
-                            <td class="font-bold">${log.weight} ${appState.unit}</td>
-                            <td style="text-align: right; padding-right: 1.5rem;">
-                                <button class="icon-btn" style="display: inline-flex;" onclick="deleteWeightLog('${log.date}')"><i data-lucide="trash-2" style="width:16px;"></i></button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                html += `
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                    </div>`;
+                view.innerHTML = html;
+                lucide.createIcons();
+                return;
             }
-            
+
+            // Chart range
+            const range = TRACKER_RANGES.find(r => r[0] === trackerRange[cfg.key]) || TRACKER_RANGES[TRACKER_RANGES.length - 1];
+            let chartLogs = range[2] === Infinity ? logs : logs.filter(l => daysBetween(l.date, last.date) <= range[2]);
+            if (chartLogs.length < 2) chartLogs = logs.slice(-2);
+
+            // History rows (newest first) with change vs the previous entry
+            let runningBest = -Infinity;
+            const isBestAt = logs.map(l => { const best = l.weight > runningBest; runningBest = Math.max(runningBest, l.weight); return best; });
+            const rows = logs.map((l, i) => {
+                const delta = i > 0 ? l.weight - logs[i - 1].weight : null;
+                const deltaColor = delta === null || delta === 0 ? 'var(--text-muted)' : cfg.deltaColor(delta);
+                const badge = cfg.markBests && i > 0 && isBestAt[i] ? ' <i data-lucide="trophy" style="width:12px; height:12px; color:#fbbf24; vertical-align:-1px;" title="New best"></i>' : '';
+                return `
+                    <div class="trk-row">
+                        <span class="trk-row-date">${fmtTrackerDate(l.date)}</span>
+                        <span class="trk-row-val">${fmtNum(l.weight)} <span style="font-weight:500; color:var(--text-muted); font-size:0.78rem;">${unit}</span>${badge}</span>
+                        <span class="trk-row-delta" style="color:${deltaColor};">${delta === null ? '—' : fmtSigned(delta)}</span>
+                        <button class="icon-btn" onclick="${cfg.deleteFn}('${l.date}')" title="Delete entry" aria-label="Delete entry for ${fmtTrackerDate(l.date)}"><i data-lucide="trash-2" style="width:14px; height:14px;"></i></button>
+                    </div>`;
+            }).reverse().join('');
+
+            html += `
+                <div class="trk-grid">
+                    <div class="card">
+                        <div class="trk-card-head">
+                            <h3>Progress</h3>
+                            <div class="flex items-center gap-2" style="gap:0.75rem;">
+                                ${cfg.trendline && chartLogs.length >= 3 ? `<span class="trk-legend"><i></i>Trend</span>` : ''}
+                                <div class="segmented">
+                                    ${TRACKER_RANGES.map(([k, label]) => `<button type="button" class="${k === range[0] ? 'active' : ''}" onclick="setTrackerRange('${cfg.key}', '${k}')">${label}</button>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="height:300px; width:100%;"><canvas id="${cfg.canvasId}"></canvas></div>
+                    </div>
+                    <div class="card trk-history">
+                        <div class="trk-card-head"><h3>History</h3><span class="text-muted" style="font-size:0.75rem;">Change vs previous</span></div>
+                        <div class="trk-rows" style="margin-top:0.75rem;">${rows}</div>
+                    </div>
+                </div>
+            `;
+
             view.innerHTML = html;
             lucide.createIcons();
-            
-            if (sortedLogs.length > 0) {
-                const ctx = document.getElementById('weightChart').getContext('2d');
-                if(window.weightChartInstance) window.weightChartInstance.destroy();
 
-                const n = chartData.length;
-                const datasets = [{
-                    label: `Weight (${appState.unit})`,
-                    data: chartData.map(s => s.weight),
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    fill: true,
-                    pointBackgroundColor: getThemeColor('--surface', '#161616'),
-                    pointBorderColor: '#3b82f6',
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }];
+            // Chart
+            const instanceKey = cfg.chartInstanceKey;
+            if (window[instanceKey]) window[instanceKey].destroy();
+            const primary = getThemeColor('--primary', '#4ade80');
+            const primaryRgb = getThemeColor('--primary-rgb', '74, 222, 128');
+            const muted = getThemeColor('--text-muted', '#888888');
+            const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.06)';
+            const multiYear = chartLogs[0].date.slice(0, 4) !== chartLogs[chartLogs.length - 1].date.slice(0, 4);
 
-                if (n >= 2) {
-                    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
-                    chartData.forEach((s, i) => {
-                        const x = i;
-                        const y = s.weight;
-                        sumX += x;
-                        sumY += y;
-                        sumXY += x * y;
-                        sumXX += x * x;
-                    });
-                    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-                    const intercept = (sumY - slope * sumX) / n;
+            const datasets = [{
+                label: cfg.valueLabel,
+                data: chartLogs.map(l => l.weight),
+                borderColor: primary,
+                backgroundColor: `rgba(${primaryRgb}, 0.08)`,
+                borderWidth: 2,
+                tension: 0.25,
+                fill: true,
+                stepped: cfg.stepped ? 'before' : false,
+                pointBackgroundColor: getThemeColor('--surface', '#161616'),
+                pointBorderColor: primary,
+                pointBorderWidth: 2,
+                pointRadius: chartLogs.length > 40 ? 0 : 3.5,
+                pointHoverRadius: 6
+            }];
 
-                    const trendlineData = chartData.map((_, i) => parseFloat((slope * i + intercept).toFixed(2)));
-
+            if (cfg.trendline && chartLogs.length >= 3) {
+                // Least-squares fit on real day offsets so uneven logging gaps don't skew the line
+                const xs = chartLogs.map(l => daysBetween(chartLogs[0].date, l.date));
+                const ys = chartLogs.map(l => l.weight);
+                const n = xs.length;
+                const sx = xs.reduce((a, b) => a + b, 0), sy = ys.reduce((a, b) => a + b, 0);
+                const sxy = xs.reduce((a, x, i) => a + x * ys[i], 0), sxx = xs.reduce((a, x) => a + x * x, 0);
+                const denom = n * sxx - sx * sx;
+                if (denom !== 0) {
+                    const slope = (n * sxy - sx * sy) / denom, intercept = (sy - slope * sx) / n;
                     datasets.push({
-                        label: `Trendline`,
-                        data: trendlineData,
+                        label: 'Trend',
+                        data: xs.map(x => Math.round((slope * x + intercept) * 100) / 100),
                         borderColor: isDark ? 'rgba(255, 255, 255, 0.35)' : 'rgba(0, 0, 0, 0.35)',
-                        borderWidth: 2,
+                        borderWidth: 1.5,
                         borderDash: [5, 5],
                         tension: 0,
                         fill: false,
@@ -8754,27 +8825,96 @@
                         pointHoverRadius: 0
                     });
                 }
-                
-                window.weightChartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: chartData.map(s => s.date.substring(5)), // MM-DD
-                        datasets: datasets
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' } },
-                            y: { 
-                                grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
-                                beginAtZero: false 
+            }
+
+            window[instanceKey] = new Chart(document.getElementById(cfg.canvasId).getContext('2d'), {
+                type: 'line',
+                data: { labels: chartLogs.map(l => fmtTrackerDate(l.date, multiYear)), datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    animation: appState.appearance && appState.appearance.reduceMotion ? false : { duration: 250 },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            displayColors: false,
+                            filter: item => item.datasetIndex === 0,
+                            callbacks: {
+                                title: items => fmtTrackerDate(chartLogs[items[0].dataIndex].date),
+                                label: item => {
+                                    const i = item.dataIndex;
+                                    const lines = [`${fmtNum(item.parsed.y)} ${unit}`];
+                                    if (i > 0) lines.push(`${fmtSigned(chartLogs[i].weight - chartLogs[i - 1].weight)} ${unit} vs previous`);
+                                    return lines;
+                                }
                             }
                         }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { color: muted, maxRotation: 0, autoSkip: true, maxTicksLimit: 7 } },
+                        y: { grid: { color: gridColor }, border: { display: false }, ticks: { color: muted, maxTicksLimit: 6, callback: v => fmtNum(v) }, beginAtZero: false, grace: '5%' }
                     }
-                });
-            }
+                }
+            });
+        }
+
+        window.setTrackerRange = (key, range) => {
+            trackerRange[key] = range;
+            if (key === 'weight') renderWeightView(); else renderBenchView();
+        };
+
+        window.renderWeightView = () => {
+            renderTrackerPage({
+                key: 'weight',
+                viewId: 'view-weight',
+                title: 'Body Weight',
+                icon: 'scale',
+                logs: appState.weightLogs,
+                inputPrefix: 'weight',
+                saveFn: 'logWeight',
+                deleteFn: 'deleteWeightLog',
+                step: '0.1',
+                placeholder: '150',
+                valueLabel: 'Weight',
+                canvasId: 'weightChart',
+                chartInstanceKey: 'weightChartInstance',
+                trendline: true,
+                // Up or down isn't good or bad for body weight without a goal, so keep changes neutral
+                deltaColor: () => 'var(--text)',
+                emptySubtitle: 'Track your body weight over time.',
+                emptyTitle: 'No weigh-ins yet',
+                emptyText: 'Log your weight above. Once you have a few entries you\'ll see your trend and weekly rate of change.',
+                stats: (logs) => {
+                    const last = logs[logs.length - 1];
+                    const unit = appState.unit;
+                    // Change over ~30 days: compare with the latest entry at least 30 days old (or the first one)
+                    const baseline = [...logs].reverse().find(l => daysBetween(l.date, last.date) >= 30) || logs[0];
+                    const change = last.weight - baseline.weight;
+                    const spanDays = daysBetween(baseline.date, last.date);
+                    // Weekly rate from a fit over the last 90 days
+                    const recent = logs.filter(l => daysBetween(l.date, last.date) <= 90);
+                    let rate = null;
+                    if (recent.length >= 3 && daysBetween(recent[0].date, last.date) >= 7) {
+                        const xs = recent.map(l => daysBetween(recent[0].date, l.date)), ys = recent.map(l => l.weight), n = xs.length;
+                        const sx = xs.reduce((a, b) => a + b, 0), sy = ys.reduce((a, b) => a + b, 0);
+                        const sxy = xs.reduce((a, x, i) => a + x * ys[i], 0), sxx = xs.reduce((a, x) => a + x * x, 0);
+                        rate = (n * sxy - sx * sy) / (n * sxx - sx * sx) * 7;
+                    }
+                    const values = logs.map(l => l.weight);
+                    const small = s => `<span style="font-size:0.95rem; font-weight:700; margin-left:0.15rem;">${s}</span>`;
+                    return [
+                        { value: `${fmtNum(last.weight)}${small(unit)}`, label: 'Current' },
+                        logs.length > 1
+                            ? { value: `${fmtSigned(change)}${small(unit)}`, label: spanDays >= 30 ? '30-day change' : `Since ${fmtTrackerDate(baseline.date, false)}`, color: 'var(--text)' }
+                            : { value: '—', label: '30-day change', muted: true },
+                        rate !== null
+                            ? { value: `${fmtSigned(rate)}${small(unit + '/wk')}`, label: 'Trend', color: 'var(--text)', sub: 'last 90 days' }
+                            : { value: '—', label: 'Trend', muted: true, sub: 'needs a week of data' },
+                        { value: `${fmtNum(Math.min(...values))}–${fmtNum(Math.max(...values))}`, label: 'Low – High', color: 'var(--text-muted)' }
+                    ];
+                }
+            });
         };
 
         window.logWeight = () => {
@@ -8808,123 +8948,46 @@
 
         // Bench PR Render
         window.renderBenchView = () => {
-            const view = document.getElementById('view-bench');
-            const sortedLogs = [...(appState.benchLogs || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
-            
-            const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-
-            // Chart Data
-            const chartData = sortedLogs.slice(-30); // Last 30 entries
-            
-            let html = `
-                <div class="card card-form-row" style="margin-bottom: 2rem; display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 200px;">
-                        <label class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem; display: block;">Date</label>
-                        <input type="date" id="bench-input-date" value="${todayStr}">
-                    </div>
-                    <div style="flex: 1; min-width: 200px;">
-                        <label class="text-muted" style="font-size: 0.85rem; margin-bottom: 0.25rem; display: block;">Bench PR (${appState.unit})</label>
-                        <input type="number" step="0.5" id="bench-input-val" placeholder="e.g. 225">
-                    </div>
-                    <button class="btn btn-primary" onclick="logBenchPR()">Save Bench PR</button>
-                </div>
-            `;
-            
-            if (sortedLogs.length === 0) {
-                html += `
-                    <div class="card flex items-center justify-center text-muted" style="min-height:200px;">
-                        <div style="text-align:center;">
-                            <i data-lucide="trophy" style="width:36px;height:36px;margin-bottom:0.75rem;opacity:0.5;"></i>
-                            <p>Log your Bench Press PR to track your growth over time</p>
-                        </div>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <div class="grid-2">
-                        <div class="card">
-                            <h3 style="margin-bottom: 1rem;">Progress</h3>
-                            <div style="height:320px; width:100%;">
-                                <canvas id="benchChart"></canvas>
-                            </div>
-                        </div>
-                        <div class="card" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
-                            <div style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--border);">
-                                <h3 style="margin: 0;">History</h3>
-                            </div>
-                            <div style="overflow-y: auto; max-height: 320px;">
-                                <table style="width: 100%; border-collapse: collapse;">
-                                    <thead>
-                                        <tr>
-                                            <th style="padding-left: 1.5rem; text-align: left;">Date</th>
-                                            <th style="text-align: left;">Bench PR</th>
-                                            <th style="text-align: right; padding-right: 1.5rem;">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                `;
-                
-                // Reverse for history table
-                [...sortedLogs].reverse().forEach(log => {
-                    html += `
-                        <tr>
-                            <td style="padding-left: 1.5rem;">${log.date}</td>
-                            <td class="font-bold">${log.weight} ${appState.unit}</td>
-                            <td style="text-align: right; padding-right: 1.5rem;">
-                                <button class="icon-btn" style="display: inline-flex;" onclick="deleteBenchLog('${log.date}')"><i data-lucide="trash-2" style="width:16px;"></i></button>
-                            </td>
-                        </tr>
-                    `;
-                });
-                
-                html += `
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            view.innerHTML = html;
-            lucide.createIcons();
-            
-            if (sortedLogs.length > 0) {
-                const ctx = document.getElementById('benchChart').getContext('2d');
-                if(window.benchChartInstance) window.benchChartInstance.destroy();
-                
-                window.benchChartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: chartData.map(s => s.date.substring(5)), // MM-DD
-                        datasets: [{
-                            label: `Bench PR (${appState.unit})`,
-                            data: chartData.map(s => s.weight),
-                            borderColor: getThemeColor('--primary', '#4ade80'),
-                            backgroundColor: getThemeRgba('--primary-rgb', 0.1, '74, 222, 128'),
-                            borderWidth: 2,
-                            tension: 0.4,
-                            fill: true,
-                            pointBackgroundColor: getThemeColor('--surface', '#161616'),
-                            pointBorderColor: getThemeColor('--primary', '#4ade80'),
-                            pointRadius: 4,
-                            pointHoverRadius: 6
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                            x: { grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' } },
-                            y: { 
-                                grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
-                                beginAtZero: false 
-                            }
-                        }
-                    }
-                });
-            }
+            renderTrackerPage({
+                key: 'bench',
+                viewId: 'view-bench',
+                title: 'Bench Press PR',
+                icon: 'trophy',
+                logs: appState.benchLogs,
+                inputPrefix: 'bench',
+                saveFn: 'logBenchPR',
+                deleteFn: 'deleteBenchLog',
+                step: '0.5',
+                placeholder: '225',
+                valueLabel: 'Bench PR',
+                canvasId: 'benchChart',
+                chartInstanceKey: 'benchChartInstance',
+                trendline: false,
+                stepped: true, // a PR holds until it's beaten
+                markBests: true,
+                deltaColor: d => d > 0 ? 'var(--primary)' : '#f87171',
+                emptySubtitle: 'Track your bench press one-rep max over time.',
+                emptyTitle: 'No PRs logged yet',
+                emptyText: 'Log your current bench PR above, then add a new entry every time you beat it.',
+                stats: (logs) => {
+                    const unit = appState.unit;
+                    const small = s => `<span style="font-size:0.95rem; font-weight:700; margin-left:0.15rem;">${s}</span>`;
+                    const best = logs.reduce((b, l) => (l.weight > b.weight ? l : b), logs[0]);
+                    const first = logs[0];
+                    const gain = best.weight - first.weight;
+                    let runningBest = -Infinity, prCount = 0;
+                    logs.forEach(l => { if (l.weight > runningBest) { prCount++; runningBest = l.weight; } });
+                    const daysSince = daysBetween(best.date, new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' }));
+                    return [
+                        { value: `${fmtNum(best.weight)}${small(unit)}`, label: 'Best', sub: fmtTrackerDate(best.date) },
+                        logs.length > 1
+                            ? { value: `${fmtSigned(gain)}${small(unit)}`, label: 'Total gain', sub: `since ${fmtTrackerDate(first.date)}`, color: gain > 0 ? 'var(--primary)' : 'var(--text-muted)' }
+                            : { value: '—', label: 'Total gain', muted: true },
+                        { value: prCount, label: prCount === 1 ? 'PR set' : 'PRs set', color: 'var(--text)' },
+                        { value: daysSince <= 0 ? 'Today' : `${daysSince}${small(daysSince === 1 ? 'day' : 'days')}`, label: 'Since last PR', color: 'var(--text-muted)' }
+                    ];
+                }
+            });
         };
 
         window.logBenchPR = () => {
