@@ -1781,8 +1781,16 @@
                             <span id="email-auto-badge" class="badge-disconnected" style="padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Compose Fallback</span>
                         </div>
                         <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.85rem; line-height: 1.4;">
-                            Configure automatic 1-click delivery when clicking <strong>Email Targets</strong> so targets email you directly without opening a Gmail compose tab.
+                            Configure automatic 1-click delivery when clicking <strong>Email Targets</strong>, or turn it off to open Gmail compose and review before clicking Send.
                         </p>
+
+                        <div class="flex items-center justify-between" style="padding: 0.75rem 0.85rem; margin-bottom: 1rem; background: var(--surface-2); border-radius: var(--radius-tight); border: 1px solid var(--border); gap: 0.75rem;">
+                            <div>
+                                <label for="settings-auto-email-enabled" style="font-weight: 600; font-size: 0.85rem; cursor: pointer; display: block; margin-bottom: 0.15rem;">Enable Auto-Send</label>
+                                <div class="text-muted" style="font-size: 0.75rem; line-height: 1.35;">When off, "Email Targets" pivots back to opening Gmail compose so you can review and manually click Send.</div>
+                            </div>
+                            <input type="checkbox" id="settings-auto-email-enabled" onchange="updateAutoEmailEnabled(this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); flex-shrink: 0;">
+                        </div>
 
                         <div style="margin-bottom: 0.9rem;">
                             <label for="settings-email" style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Target Email</label>
@@ -2683,6 +2691,7 @@
             currentMonth: new Date(),
             targetEmail: '',
             emailWebhookUrl: '',
+            autoEmailEnabled: true,
             fontTheme: 'cabinet-satoshi',
             appearance: null,
             exerciseAliases: {},
@@ -2707,6 +2716,7 @@
                 appState.benchLogs = parsed.benchLogs || [];
                 appState.targetEmail = parsed.targetEmail || '';
                 appState.emailWebhookUrl = parsed.emailWebhookUrl || '';
+                appState.autoEmailEnabled = parsed.autoEmailEnabled !== undefined ? Boolean(parsed.autoEmailEnabled) : true;
                 appState.fontTheme = parsed.fontTheme || 'cabinet-satoshi';
                 appState.appearance = parsed.appearance || null;
                 appState.exerciseAliases = (parsed.exerciseAliases && typeof parsed.exerciseAliases === 'object') ? parsed.exerciseAliases : {};
@@ -2750,6 +2760,7 @@
                 benchLogs: appState.benchLogs,
                 targetEmail: appState.targetEmail,
                 emailWebhookUrl: appState.emailWebhookUrl || '',
+                autoEmailEnabled: appState.autoEmailEnabled !== undefined ? appState.autoEmailEnabled : true,
                 fontTheme: appState.fontTheme || 'cabinet-satoshi',
                 appearance: appState.appearance,
                 exerciseAliases: appState.exerciseAliases || {},
@@ -2981,6 +2992,7 @@
                 benchLogs: appState.benchLogs,
                 targetEmail: appState.targetEmail,
                 emailWebhookUrl: appState.emailWebhookUrl || '',
+                autoEmailEnabled: appState.autoEmailEnabled !== undefined ? appState.autoEmailEnabled : true,
                 fontTheme: appState.fontTheme || 'cabinet-satoshi',
                 appearance: appState.appearance,
                 exerciseAliases: appState.exerciseAliases || {},
@@ -3008,6 +3020,7 @@
             if (remoteData.unit) appState.unit = remoteData.unit;
             if (remoteData.targetEmail) appState.targetEmail = remoteData.targetEmail;
             if (remoteData.emailWebhookUrl) appState.emailWebhookUrl = remoteData.emailWebhookUrl;
+            if (remoteData.autoEmailEnabled !== undefined) appState.autoEmailEnabled = Boolean(remoteData.autoEmailEnabled);
             if (remoteData.fontTheme && typeof remoteData.fontTheme === 'string') {
                 appState.fontTheme = remoteData.fontTheme;
                 applyFontTheme(appState.fontTheme, false);
@@ -4662,6 +4675,8 @@
             }
             const webhookEl = document.getElementById('settings-email-webhook');
             if (webhookEl) webhookEl.value = appState.emailWebhookUrl || '';
+            const toggleEl = document.getElementById('settings-auto-email-enabled');
+            if (toggleEl) toggleEl.checked = Boolean(appState.autoEmailEnabled);
             updateAutoEmailUI();
             renderSettingsGyms();
             renderAppearanceSettings();
@@ -4672,6 +4687,24 @@
         if (btnSettingsEl) {
             btnSettingsEl.onclick = window.openSettingsModal;
         }
+
+        window.updateAutoEmailEnabled = (enabled) => {
+            appState.autoEmailEnabled = Boolean(enabled);
+            saveState();
+            updateAutoEmailUI();
+            const resultsEl = document.getElementById('po-results');
+            if (resultsEl && (resultsEl.children.length > 0 || resultsEl.innerHTML.trim().length > 0)) {
+                poSubmit();
+            }
+            showAppToast(
+                appState.autoEmailEnabled ? 'Auto-send enabled' : 'Auto-send turned off — pivoting to manual Gmail compose',
+                'info'
+            );
+        };
+
+        window.toggleAutoEmailFromDrawer = (enable) => {
+            window.updateAutoEmailEnabled(enable);
+        };
 
         window.updateEmail = (newEmail) => {
             appState.targetEmail = (newEmail || '').trim();
@@ -4729,6 +4762,7 @@
 
         function updateAutoEmailUI() {
             const badge = document.getElementById('email-auto-badge');
+            const toggleEl = document.getElementById('settings-auto-email-enabled');
             const gmailStatus = document.getElementById('gmail-send-status');
             const connectBtn = document.getElementById('btn-connect-gmail-send');
             const disconnectBtn = document.getElementById('btn-disconnect-gmail-send');
@@ -4737,9 +4771,16 @@
                 emailEl.placeholder = gdriveUserEmail || gmailUserEmail || 'e.g. you@gmail.com';
             }
 
+            if (toggleEl) {
+                toggleEl.checked = Boolean(appState.autoEmailEnabled);
+            }
+
             const method = getAutoEmailMethod();
             if (badge) {
-                if (method === 'webhook') {
+                if (!appState.autoEmailEnabled) {
+                    badge.className = 'badge-disconnected';
+                    badge.innerText = 'Disabled (Manual)';
+                } else if (method === 'webhook') {
                     badge.className = 'badge-synced';
                     badge.innerText = 'Apps Script Ready';
                 } else if (method === 'gmail') {
@@ -5218,7 +5259,8 @@
                 exerciseAliases: appState.exerciseAliases || {},
                 dismissedDuplicates: appState.dismissedDuplicates || [],
                 targetEmail: appState.targetEmail || '',
-                emailWebhookUrl: appState.emailWebhookUrl || ''
+                emailWebhookUrl: appState.emailWebhookUrl || '',
+                autoEmailEnabled: appState.autoEmailEnabled !== undefined ? appState.autoEmailEnabled : true
             }));
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
@@ -5259,6 +5301,7 @@
                         canonicalizeExerciseData(appState);
                         if (parsed.targetEmail) appState.targetEmail = parsed.targetEmail;
                         if (parsed.emailWebhookUrl) appState.emailWebhookUrl = parsed.emailWebhookUrl;
+                        if (parsed.autoEmailEnabled !== undefined) appState.autoEmailEnabled = Boolean(parsed.autoEmailEnabled);
                         saveState();
                         closeModal('modal-settings');
                         handleRoute(); // re-render current view
@@ -6242,6 +6285,12 @@
                 return;
             }
 
+            // If auto-email is turned off, pivot directly to manual Gmail compose (original path)
+            if (!appState.autoEmailEnabled) {
+                openGmailComposeFallback(payload);
+                return;
+            }
+
             if (getAutoEmailMethod() === 'none') {
                 const setupNow = await showAppConfirm(
                     'No auto-send method is configured yet. Set up Auto-Email Targets in Settings (Google Apps Script or Gmail API) for 1-click sending, or open Gmail compose for now?',
@@ -6552,19 +6601,34 @@
                 html += `<p class="text-muted" style="font-size:0.85rem;">No logged sessions found for the entered exercises${gymMsg}.</p>`;
             }
             if (anyFound) {
-                const method = getAutoEmailMethod();
                 const target = resolveTargetEmail();
-                if (method !== 'none' && target) {
-                    const viaLabel = method === 'webhook' ? 'Apps Script' : 'Gmail API';
+                if (!appState.autoEmailEnabled) {
                     html += `<div class="text-muted" style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap; font-size:0.75rem; margin-top:0.5rem;">
-                        <span>Auto-sends to <strong style="color:var(--text);">${escapeHtml(target)}</strong> via ${viaLabel}</span>
-                        <button type="button" onclick="poOpenGmailFallback()" style="background:none; border:none; padding:0; color:var(--primary); cursor:pointer; font-size:0.75rem; text-decoration:underline;">Open in Gmail</button>
+                        <span>Mode: <strong>Manual Send</strong> (opens Gmail compose${target ? ` to ${escapeHtml(target)}` : ''})</span>
+                        <button type="button" onclick="toggleAutoEmailFromDrawer(true)" style="background:none; border:none; padding:0; color:var(--primary); cursor:pointer; font-size:0.75rem; font-weight:600; text-decoration:underline;">Turn on auto-send</button>
                     </div>`;
                 } else {
-                    html += `<div class="text-muted" style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap; font-size:0.75rem; margin-top:0.5rem;">
-                        <span>${target ? 'Auto-email not set up yet' : 'Set Target Email & auto-send in Settings'}</span>
-                        <button type="button" onclick="openAutoEmailSettings()" style="background:none; border:none; padding:0; color:var(--primary); cursor:pointer; font-size:0.75rem; font-weight:600; text-decoration:underline;">Configure 1-Click Auto-Send</button>
-                    </div>`;
+                    const method = getAutoEmailMethod();
+                    if (method !== 'none' && target) {
+                        const viaLabel = method === 'webhook' ? 'Apps Script' : 'Gmail API';
+                        html += `<div class="text-muted" style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap; font-size:0.75rem; margin-top:0.5rem;">
+                            <span>Auto-sends to <strong style="color:var(--text);">${escapeHtml(target)}</strong> via ${viaLabel}</span>
+                            <div style="display:flex; gap:0.6rem; align-items:center;">
+                                <button type="button" onclick="poOpenGmailFallback()" style="background:none; border:none; padding:0; color:var(--primary); cursor:pointer; font-size:0.75rem; text-decoration:underline;">Open in Gmail</button>
+                                <span style="opacity:0.4;">&bull;</span>
+                                <button type="button" onclick="toggleAutoEmailFromDrawer(false)" style="background:none; border:none; padding:0; color:var(--text-muted); cursor:pointer; font-size:0.75rem; text-decoration:underline;">Turn off auto-send</button>
+                            </div>
+                        </div>`;
+                    } else {
+                        html += `<div class="text-muted" style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap; font-size:0.75rem; margin-top:0.5rem;">
+                            <span>${target ? 'Auto-email not set up yet' : 'Set Target Email & auto-send in Settings'}</span>
+                            <div style="display:flex; gap:0.6rem; align-items:center;">
+                                <button type="button" onclick="openAutoEmailSettings()" style="background:none; border:none; padding:0; color:var(--primary); cursor:pointer; font-size:0.75rem; font-weight:600; text-decoration:underline;">Configure 1-Click Auto-Send</button>
+                                <span style="opacity:0.4;">&bull;</span>
+                                <button type="button" onclick="toggleAutoEmailFromDrawer(false)" style="background:none; border:none; padding:0; color:var(--text-muted); cursor:pointer; font-size:0.75rem; text-decoration:underline;">Keep manual</button>
+                            </div>
+                        </div>`;
+                    }
                 }
             }
             html += '</div>';
