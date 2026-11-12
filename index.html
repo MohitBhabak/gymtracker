@@ -38,6 +38,7 @@
             --workout-lower: #2dd4bf;
             --workout-abs: #f472b6;
             --workout-arms: #84cc16;
+            --workout-cardio: #fb7185;
             --workout-rest: #4b5563;
 
             --time-earlymorning: #14b8a6;
@@ -454,6 +455,7 @@
         .type-lower { background-color: color-mix(in srgb, var(--workout-lower) 15%, transparent); color: var(--workout-lower); border: 1px solid var(--workout-lower); }
         .type-abs { background-color: color-mix(in srgb, var(--workout-abs) 15%, transparent); color: var(--workout-abs); border: 1px solid var(--workout-abs); }
         .type-arms, .type-armsdelts, .type-arms-delts { background-color: color-mix(in srgb, var(--workout-arms) 15%, transparent); color: var(--workout-arms); border: 1px solid var(--workout-arms); }
+        .type-cardio { background-color: color-mix(in srgb, var(--workout-cardio) 15%, transparent); color: var(--workout-cardio); border: 1px solid var(--workout-cardio); }
         .type-rest { background-color: color-mix(in srgb, var(--workout-rest) 15%, transparent); color: var(--workout-rest); border: 1px solid var(--workout-rest); }
         
         .time-earlymorning { background-color: rgba(20, 184, 166, 0.15); color: var(--time-earlymorning); border: 1px solid var(--time-earlymorning); }
@@ -495,6 +497,7 @@
         .bg-lower { background-color: var(--workout-lower); }
         .bg-abs { background-color: var(--workout-abs); }
         .bg-arms, .bg-armsdelts, .bg-arms-delts { background-color: var(--workout-arms); }
+        .bg-cardio { background-color: var(--workout-cardio); }
         .bg-rest { background-color: var(--workout-rest); }
 
         .bg-time-earlymorning { background-color: var(--time-earlymorning); }
@@ -1489,7 +1492,7 @@
                     </div>
                     
                     <div style="margin: 1.5rem 0;">
-                        <button class="btn" style="width: 100%; border: 1px dashed var(--border); background: transparent;" onclick="addExerciseToLog()">+ Add Another Exercise</button>
+                        <button type="button" id="btn-add-exercise" class="btn" style="width: 100%; border: 1px dashed var(--border); background: transparent;" onclick="addExerciseToLog()">+ Add Another Exercise</button>
                     </div>
 
                     <div class="form-row" style="margin-top: 1.5rem;">
@@ -3117,9 +3120,9 @@
         ];
         const SPLIT_COLOR_DEFAULTS = {
             push: '#f97316', pull: '#60a5fa', legs: '#a78bfa', upper: '#fbbf24',
-            lower: '#2dd4bf', abs: '#f472b6', arms: '#84cc16', rest: '#4b5563'
+            lower: '#2dd4bf', abs: '#f472b6', arms: '#84cc16', cardio: '#fb7185', rest: '#4b5563'
         };
-        const SPLIT_COLOR_LABELS = { push: 'Push', pull: 'Pull', legs: 'Legs', upper: 'Upper', lower: 'Lower', abs: 'Abs', arms: 'Arms & Delts', rest: 'Rest' };
+        const SPLIT_COLOR_LABELS = { push: 'Push', pull: 'Pull', legs: 'Legs', upper: 'Upper', lower: 'Lower', abs: 'Abs', arms: 'Arms & Delts', cardio: 'Cardio', rest: 'Rest' };
         const RADIUS_PRESETS = {
             sharp:   { name: 'Sharp',   tight: '2px', base: '3px' },
             default: { name: 'Default', tight: '4px', base: '6px' },
@@ -3708,7 +3711,7 @@
                                 <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:0.72rem; flex-shrink:0;">${log.type}</span>
                                 <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                                     <div style="font-weight:600; font-size:0.85rem;">${formattedDate}</div>
-                                    <div class="text-muted" style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(exNames) || 'No exercises listed'}</div>
+                                    <div class="text-muted" style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(exNames) || (log.notes ? `📝 ${escapeHtml(log.notes)}` : 'No exercises listed')}</div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2" style="flex-shrink:0;">
@@ -4041,7 +4044,7 @@
                                 <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:0.72rem; flex-shrink:0;">${log.type}</span>
                                 <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                                     <div style="font-weight:600; font-size:0.85rem;">${formattedDate}</div>
-                                    <div class="text-muted" style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(exPreview) || 'No exercises logged'}</div>
+                                    <div class="text-muted" style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(exPreview) || (log.notes ? `📝 ${escapeHtml(log.notes)}` : 'No exercises logged')}</div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2" style="flex-shrink:0;">
@@ -4102,7 +4105,7 @@
         // 4. Split Filter Preset
         function renderPresetSplitFilter(selectedSplit = 'Push') {
             const body = document.getElementById('search-modal-body');
-            const splits = ['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Arms & Delts', 'Abs', 'Rest'];
+            const splits = ['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Arms & Delts', 'Abs', 'Cardio', 'Rest'];
             const activeSplit = selectedSplit || 'Push';
 
             const logs = appState.workoutLogs || {};
@@ -4150,7 +4153,7 @@
                                     ${log.gym ? `<span class="text-muted" style="font-size:0.75rem;">• ${escapeHtml(log.gym)}</span>` : ''}
                                 </div>
                                 <div class="text-muted" style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                                    ${exCount > 0 ? escapeHtml(exNames) : 'No exercises logged'}
+                                    ${exCount > 0 ? escapeHtml(exNames) : (log.notes ? `📝 ${escapeHtml(log.notes)}` : 'No exercises logged')}
                                 </div>
                             </div>
                             <i data-lucide="chevron-right" class="text-muted" style="width:14px;height:14px;flex-shrink:0;"></i>
@@ -4838,7 +4841,7 @@
             { name: 'Lower', colorClass: 'type-lower', display: 'Lower' },
             { name: 'Arms & Delts', colorClass: 'type-armsdelts', display: 'A & D' },
             { name: 'Abs', colorClass: 'type-abs', display: 'Abs' },
-            { name: 'Cardio', colorClass: 'type-lower', display: 'Cardio' },
+            { name: 'Cardio', colorClass: 'type-cardio', display: 'Cardio' },
             { name: 'Rest', colorClass: 'type-rest', display: 'Rest' }
         ];
 
@@ -5388,7 +5391,7 @@
                     }
                 });
                 
-                let summaryHTML = `<div class="card"><div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;"><h3 style="margin:0;">Monthly Breakdown</h3><button type="button" class="icon-btn" onclick="openMonthlyTrend()" title="Monthly sessions over time" aria-label="Monthly sessions over time" style="padding:0.3rem;"><i data-lucide="bar-chart-3" style="width:18px; height:18px;"></i></button></div>`;
+                let summaryHTML = `<div class="card"><div style="display:flex; align-items:center; justify-content:space-between; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;"><h3 style="margin:0;">Monthly Breakdown</h3><div style="display:flex; align-items:center; gap:0.4rem; flex-shrink:0;"><button type="button" class="icon-btn" onclick="openMonthlyTrend()" title="Monthly sessions over time" aria-label="Monthly sessions over time" style="padding:0.3rem;"><i data-lucide="bar-chart-3" style="width:18px; height:18px;"></i></button><button type="button" class="btn btn-primary" onclick="openLogSession(null, { skipInitialExercise: true })" style="padding:0.35rem 0.75rem; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:0.3rem; flex-shrink:0;"><i data-lucide="plus" style="width:14px;height:14px;"></i> Log Workout</button></div></div>`;
                 // Month-over-month comparison. For the month in progress, compare against the same
                 // point last month (e.g. Oct 1–12 vs Sep 1–12) so a half-finished month isn't judged unfairly.
                 const prevMonthDate = new Date(year, month - 1, 1);
@@ -5901,7 +5904,7 @@
 
                 Object.keys(appState.workoutLogs).sort().forEach(date => {
                     const log = appState.workoutLogs[date];
-                    log.exercises.filter(e => e.name.toLowerCase() === name.toLowerCase()).forEach(ex => {
+                    (log.exercises || []).filter(e => e.name.toLowerCase() === name.toLowerCase()).forEach(ex => {
                         if (!ex.sets || ex.sets.length === 0) return;
                         const isBw = ex.sets[0].isBodyweight || ex.sets[0].weight === 0;
                         let bestSet;
@@ -6041,14 +6044,19 @@
             document.getElementById('modal-day-title').innerText = formattedDate;
             
             if(!log) {
-                const types = ['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Arms & Delts', 'Abs'];
+                const types = ['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Arms & Delts', 'Abs', 'Cardio', 'Rest'];
                 let html = `<p style="margin-bottom:1rem;">What did you do today?</p><div class="flex" style="flex-wrap:wrap; gap:0.5rem;">`;
                 types.forEach(t => {
-                    html += `<button class="btn ${getWorkoutColorClass(t)}" onclick="selectTimeOfDay('${dateStr}', '${t}')">${t}</button>`;
+                    const safeType = t.replace(/'/g, "\\'");
+                    if (t === 'Rest') {
+                        html += `<button class="btn ${getWorkoutColorClass(t)}" onclick="quickLog('${dateStr}', 'Rest', '')">${escapeHtml(t)}</button>`;
+                    } else {
+                        html += `<button class="btn ${getWorkoutColorClass(t)}" onclick="selectTimeOfDay('${dateStr}', '${safeType}')">${escapeHtml(t)}</button>`;
+                    }
                 });
                 html += `</div>`;
                 html += `
-                    <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border);">
+                    <div style="margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border); display:flex; flex-direction:column; gap:0.5rem;">
                         <button class="btn" onclick="openQuickPasteModal('${dateStr}')" style="width:100%; display:flex; justify-content:center; align-items:center; gap:0.5rem; background:var(--surface-offset); border:1px solid var(--border); font-weight:600; font-size:0.85rem;">
                             <i data-lucide="clipboard-paste" style="width:16px;height:16px;color:var(--primary);"></i> Or Quick Paste Workout Notes
                         </button>
@@ -6056,12 +6064,13 @@
                 `;
                 modalBody.innerHTML = html;
             } else {
+                const exercises = log.exercises || [];
                 let html = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                         <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
-                            <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:1rem;">${log.type} Day</span>
-                            ${log.gym ? `<span class="badge" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: var(--text); font-size:0.8rem; vertical-align:middle;"><i data-lucide="map-pin" style="width:12px;height:12px;margin-right:4px;display:inline-block;vertical-align:middle;"></i>${log.gym}</span>` : ''}
-                            ${log.timeOfDay ? `<span class="badge ${getTimeColorClass(log.timeOfDay)}" style="font-size:0.8rem; vertical-align:middle;">${log.timeOfDay}</span>` : ''}
+                            <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:1rem;">${escapeHtml(log.type)} Day</span>
+                            ${log.gym ? `<span class="badge" style="background: rgba(255,255,255,0.08); border: 1px solid var(--border); color: var(--text); font-size:0.8rem; vertical-align:middle;"><i data-lucide="map-pin" style="width:12px;height:12px;margin-right:4px;display:inline-block;vertical-align:middle;"></i>${escapeHtml(log.gym)}</span>` : ''}
+                            ${log.timeOfDay ? `<span class="badge ${getTimeColorClass(log.timeOfDay)}" style="font-size:0.8rem; vertical-align:middle;">${escapeHtml(log.timeOfDay)}</span>` : ''}
                         </div>
                         <div style="display:flex; gap:0.5rem;">
                             <button class="btn" style="padding:0.25rem 0.5rem;" onclick="swapLog('${dateStr}')" title="Move / Swap to another day"><i data-lucide="arrow-left-right" style="width:16px;"></i></button>
@@ -6069,14 +6078,22 @@
                         </div>
                     </div>
                 `;
+
+                if (log.notes && log.notes.trim()) {
+                    html += `
+                        <div style="margin-bottom:1rem; padding:0.75rem 1rem; border-radius:var(--radius-base); background:var(--surface-offset); border:1px solid var(--border); font-size:0.875rem; color:var(--text);">
+                            <span class="text-muted" style="font-weight:600; margin-right:0.35rem;">Notes:</span>${escapeHtml(log.notes.trim())}
+                        </div>
+                    `;
+                }
                 
-                if(log.type !== 'Rest' && log.exercises.length > 0) {
+                if(log.type !== 'Rest' && exercises.length > 0) {
                     html += `<h4 style="margin-bottom:0.5rem;">Exercises:</h4><div class="card" style="padding:0;">`;
-                    log.exercises.forEach(ex => {
+                    exercises.forEach(ex => {
                         html += `<div style="padding:1rem; border-bottom:1px solid var(--border);">
-                            <div class="font-bold">${ex.name}</div>
+                            <div class="font-bold">${escapeHtml(ex.name)}</div>
                             <div class="set-chips">
-                                ${ex.sets.map((s, idx) => {
+                                ${(ex.sets || []).map((s, idx) => {
                                     if (s.isBodyweight || s.weight === 0) {
                                         return `<span class="set-chip">Set ${idx+1}: BW × ${s.reps}</span>`;
                                     } else {
@@ -6087,15 +6104,28 @@
                         </div>`;
                     });
                     html += `</div>`;
+                } else if (log.type !== 'Rest') {
+                    html += `
+                        <div style="padding:0.9rem 1rem; border-radius:var(--radius-base); background:var(--surface-offset); border:1px dashed var(--border); color:var(--text-muted); font-size:0.85rem; text-align:center;">
+                            No exercises logged for this workout.
+                        </div>
+                    `;
                 }
                 
                 if(log.type !== 'Rest') {
+                    const editBtnLabel = exercises.length > 0 ? '+ Add / Edit Exercises' : 'Edit Workout / + Add Exercises';
                     html += `
                         <div style="margin-top:1.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
-                            <button class="btn" onclick="openLogSession('${dateStr}')">+ Add / Edit Exercises</button>
+                            <button class="btn" onclick="openLogSession('${dateStr}')">${editBtnLabel}</button>
                             <button class="btn" onclick="openQuickPasteModal('${dateStr}')" style="background:var(--surface-offset); border:1px solid var(--border);">
                                 <i data-lucide="clipboard-paste" style="width:16px;height:16px;color:var(--primary);"></i> Quick Paste
                             </button>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div style="margin-top:1.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+                            <button class="btn" onclick="openLogSession('${dateStr}', { skipInitialExercise: true })">Edit Session</button>
                         </div>
                     `;
                 }
@@ -6106,49 +6136,146 @@
             openModal('modal-day');
         };
 
+        let pendingQuickLogTime = '';
+
+        window.toggleQuickTimeChip = (btnEl, time) => {
+            const container = document.getElementById('quick-log-time-chips');
+            if (!container) return;
+            const isAlreadySelected = (pendingQuickLogTime === time);
+            pendingQuickLogTime = isAlreadySelected ? '' : time;
+
+            container.querySelectorAll('button[data-time]').forEach(chip => {
+                const chipTime = chip.getAttribute('data-time');
+                const timeClass = getTimeColorClass(chipTime);
+                chip.classList.remove(timeClass);
+                chip.style.background = 'var(--surface-offset)';
+                chip.style.color = 'var(--text-muted)';
+                chip.style.border = '1px solid var(--border)';
+                chip.style.fontWeight = '500';
+            });
+
+            if (!isAlreadySelected && btnEl) {
+                btnEl.classList.add(getTimeColorClass(time));
+                btnEl.style.background = '';
+                btnEl.style.color = '';
+                btnEl.style.border = '';
+                btnEl.style.fontWeight = '700';
+            }
+        };
+
         window.selectTimeOfDay = (dateStr, type) => {
+            pendingQuickLogTime = '';
             const modalBody = document.getElementById('modal-day-body');
             const times = ['Early Morning', 'Morning', 'Afternoon', 'Evening'];
-            let html = `<p style="margin-bottom:1rem;">What time did you workout?</p><div class="flex" style="flex-wrap:wrap; gap:0.5rem;">`;
+            const safeType = type.replace(/'/g, "\\'");
+
+            const prevWithGym = Object.entries(appState.workoutLogs)
+                .filter(([d, s]) => s.type === type && d < dateStr && s.gym)
+                .sort((a, b) => b[0].localeCompare(a[0]));
+            const defaultGym = prevWithGym.length > 0
+                ? prevWithGym[0][1].gym
+                : ((appState.gyms && appState.gyms[0]) || '');
+
+            let html = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+                    <span class="badge ${getWorkoutColorClass(type)}" style="font-size:0.95rem;">${escapeHtml(type)} Day</span>
+                    <button type="button" class="btn" style="padding:0.3rem 0.65rem; font-size:0.8rem;" onclick="openDayDetail('${dateStr}')">← Back</button>
+                </div>
+
+                <div style="margin-bottom:1.1rem;">
+                    <label class="text-muted" style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:0.5rem;">Time of Day (optional)</label>
+                    <div class="flex" id="quick-log-time-chips" style="flex-wrap:wrap; gap:0.5rem;">
+            `;
             times.forEach(time => {
-                html += `<button class="btn ${getTimeColorClass(time)}" onclick="quickLog('${dateStr}', '${type}', '${time}')">${time}</button>`;
+                html += `<button type="button" class="btn" data-time="${escapeHtml(time)}" style="background:var(--surface-offset); color:var(--text-muted); border:1px solid var(--border); font-weight:500;" onclick="toggleQuickTimeChip(this, '${time}')">${time}</button>`;
             });
-            html += `</div>`;
+            html += `
+                    </div>
+                </div>
+
+                <div style="margin-bottom:1.1rem;">
+                    <label class="text-muted" style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:0.4rem;">Gym Location (optional)</label>
+                    <div style="display:flex; gap:0.5rem;">
+                        <select id="quick-log-gym" style="flex:1;"></select>
+                        <button type="button" class="btn" onclick="promptAddGymInline('quick-log-gym')" title="Add New Gym" style="padding:0.5rem 0.75rem; font-size:0.8rem; background:var(--surface-offset); border:1px solid var(--border); border-radius:var(--radius-tight); flex-shrink:0;">
+                            <i data-lucide="plus" style="width:14px;height:14px;"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:1.35rem;">
+                    <label class="text-muted" style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; display:block; margin-bottom:0.4rem;">Notes (optional)</label>
+                    <input type="text" id="quick-log-notes" placeholder="Optional workout notes...">
+                </div>
+
+                <div style="display:flex; gap:0.65rem; flex-wrap:wrap;">
+                    <button type="button" class="btn" onclick="saveWorkoutOnly('${dateStr}', '${safeType}')" style="flex:1; min-width:160px; justify-content:center; padding:0.7rem 1rem; font-weight:600; background:var(--surface-offset); border:1px solid var(--border); display:inline-flex; align-items:center; gap:0.4rem;">
+                        <i data-lucide="check" style="width:16px;height:16px;color:var(--primary);"></i> Save Workout Only
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="proceedToLogExercises('${dateStr}', '${safeType}')" style="flex:1; min-width:160px; justify-content:center; padding:0.7rem 1rem; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
+                        <i data-lucide="dumbbell" style="width:16px;height:16px;"></i> Add Exercises →
+                    </button>
+                </div>
+            `;
             modalBody.innerHTML = html;
+            populateGymSelect('quick-log-gym', defaultGym);
+            lucide.createIcons({ root: modalBody });
+        };
+
+        window.saveWorkoutOnly = (dateStr, type) => {
+            const gym = document.getElementById('quick-log-gym')?.value || '';
+            const notes = document.getElementById('quick-log-notes')?.value.trim() || '';
+            const timeOfDay = pendingQuickLogTime || '';
+
+            const entry = {
+                type: type,
+                gym: gym,
+                timeOfDay: timeOfDay,
+                exercises: []
+            };
+            if (notes) entry.notes = notes;
+
+            appState.workoutLogs[dateStr] = entry;
+            saveState();
+            renderCalendarView();
+            closeModal('modal-day');
+            showAppToast(`Logged ${type} Day`, 'success');
+        };
+
+        window.proceedToLogExercises = (dateStr, type) => {
+            const gym = document.getElementById('quick-log-gym')?.value || '';
+            const notes = document.getElementById('quick-log-notes')?.value.trim() || '';
+            const timeOfDay = pendingQuickLogTime || '';
+            closeModal('modal-day');
+            openLogSession(dateStr, {
+                type: type,
+                gym: gym,
+                timeOfDay: timeOfDay,
+                notes: notes,
+                autofill: true
+            });
         };
 
         window.quickLog = (dateStr, type, timeOfDay = '') => {
-            let autofillExercises = [];
             let autofillGym = '';
-            const previousSessions = Object.entries(appState.workoutLogs)
-                .filter(([d, s]) => s.type === type && d < dateStr)
-                .sort((a, b) => b[0].localeCompare(a[0]));
-            if (previousSessions.length > 0) {
-                const session = previousSessions[0][1];
-                if (session.gym) autofillGym = session.gym;
-                if (session.exercises && session.exercises.length > 0) {
-                    autofillExercises = session.exercises.map(ex => {
-                        return {
-                            name: ex.name,
-                            sets: ex.sets.map(s => ({
-                                weight: s.weight === 0 ? '' : s.weight,
-                                reps: '',
-                                isBodyweight: s.isBodyweight || s.weight === 0
-                            }))
-                        };
-                    });
+            if (type !== 'Rest') {
+                const previousSessions = Object.entries(appState.workoutLogs)
+                    .filter(([d, s]) => s.type === type && d < dateStr)
+                    .sort((a, b) => b[0].localeCompare(a[0]));
+                if (previousSessions.length > 0 && previousSessions[0][1].gym) {
+                    autofillGym = previousSessions[0][1].gym;
                 }
             }
             appState.workoutLogs[dateStr] = {
                 type: type,
-                gym: autofillGym || (appState.gyms && appState.gyms[0]) || '',
+                gym: type === 'Rest' ? '' : (autofillGym || (appState.gyms && appState.gyms[0]) || ''),
                 timeOfDay: timeOfDay,
-                exercises: autofillExercises
+                exercises: []
             };
             saveState();
             renderCalendarView();
             closeModal('modal-day');
-            if(type !== 'Rest') openLogSession(dateStr);
+            showAppToast(`Logged ${type} Day`, 'success');
         };
         
         // ==========================================
@@ -6772,8 +6899,9 @@
             const logTypeEl = document.getElementById('log-type');
             if (logTypeEl) logTypeEl.value = workoutType;
             populateGymSelect('log-gym', selectedGym);
-            if (timeOfDay) {
-                document.getElementById('log-time').value = timeOfDay;
+            document.getElementById('log-time').value = timeOfDay || '';
+            if (!isAppend) {
+                document.getElementById('log-notes').value = appState.workoutLogs[dateStr]?.notes || '';
             }
             
             renderLogExercises();
@@ -6784,45 +6912,77 @@
         let logSessionData = [];
         let logExCounter = 0;
 
-        window.openLogSession = (dateStr) => {
-            document.getElementById('log-date').value = dateStr || new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+        window.openLogSession = (dateStr, draftOptions = null) => {
+            const resolvedDate = dateStr || new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+            document.getElementById('log-date').value = resolvedDate;
             
             logSessionData = [];
             document.getElementById('multi-exercise-container').innerHTML = '';
             
-            let existingNotes = '';
-            const existingLog = appState.workoutLogs[dateStr];
+            const existingLog = appState.workoutLogs[resolvedDate];
+            let existingNotes = existingLog?.notes || '';
             
+            const targetType = draftOptions?.type || (existingLog ? existingLog.type : 'Push');
             const logTypeEl = document.getElementById('log-type');
             if (logTypeEl) {
-                logTypeEl.value = existingLog ? existingLog.type : 'Push';
+                logTypeEl.value = targetType;
             }
 
-            const currentGym = existingLog ? (existingLog.gym || '') : (appState.gyms && appState.gyms[0] ? appState.gyms[0] : '');
+            const currentGym = draftOptions && draftOptions.gym !== undefined
+                ? draftOptions.gym
+                : (existingLog ? (existingLog.gym || '') : (appState.gyms && appState.gyms[0] ? appState.gyms[0] : ''));
             populateGymSelect('log-gym', currentGym);
 
-            if (existingLog && existingLog.timeOfDay) {
-                document.getElementById('log-time').value = existingLog.timeOfDay;
-            } else {
-                document.getElementById('log-time').value = '';
+            const targetTime = draftOptions && draftOptions.timeOfDay !== undefined
+                ? draftOptions.timeOfDay
+                : (existingLog?.timeOfDay || '');
+            document.getElementById('log-time').value = targetTime;
+
+            if (draftOptions && draftOptions.notes !== undefined && draftOptions.notes !== '') {
+                existingNotes = draftOptions.notes;
             }
             
-            if (existingLog && existingLog.exercises && existingLog.exercises.length > 0) {
+            if (existingLog && existingLog.exercises && existingLog.exercises.length > 0 && !draftOptions?.autofill) {
                 existingLog.exercises.forEach(ex => {
-                    if (ex.notes) {
+                    if (ex.notes && ex.notes !== existingNotes) {
                         existingNotes += (existingNotes ? ' | ' : '') + ex.notes;
                     }
                     const newEx = {
                         id: logExCounter++,
                         name: ex.name,
                         sets: [],
-                        isBodyweight: ex.sets[0] ? (ex.sets[0].isBodyweight || ex.sets[0].weight === 0) : false
+                        isBodyweight: ex.sets && ex.sets[0] ? (ex.sets[0].isBodyweight || ex.sets[0].weight === 0) : false
                     };
-                    ex.sets.forEach(set => {
+                    (ex.sets || []).forEach(set => {
                         newEx.sets.push({ weight: set.weight === 0 ? '' : set.weight, reps: set.reps || '' });
                     });
                     logSessionData.push(newEx);
                 });
+                renderLogExercises();
+            } else if (draftOptions?.autofill && targetType !== 'Rest') {
+                const prevWithExercises = Object.entries(appState.workoutLogs)
+                    .filter(([d, s]) => s.type === targetType && d < resolvedDate && s.exercises && s.exercises.length > 0)
+                    .sort((a, b) => b[0].localeCompare(a[0]));
+                if (prevWithExercises.length > 0) {
+                    prevWithExercises[0][1].exercises.forEach(ex => {
+                        const isBw = ex.sets && ex.sets[0] ? (ex.sets[0].isBodyweight || ex.sets[0].weight === 0) : false;
+                        logSessionData.push({
+                            id: logExCounter++,
+                            name: ex.name,
+                            sets: (ex.sets || []).map(s => ({
+                                weight: s.weight === 0 ? '' : s.weight,
+                                reps: ''
+                            })),
+                            isBodyweight: isBw,
+                            isAutofillDraft: true,
+                            autofillSourceName: ex.name
+                        });
+                    });
+                    renderLogExercises();
+                } else {
+                    addExerciseToLog();
+                }
+            } else if (draftOptions?.skipInitialExercise || targetType === 'Rest') {
                 renderLogExercises();
             } else {
                 addExerciseToLog();
@@ -6894,7 +7054,12 @@
             logSessionData.forEach(ex => {
                 const nameInput = document.getElementById(`log-ex-${ex.id}-name`);
                 const bwInput = document.getElementById(`log-ex-${ex.id}-bw`);
-                if(nameInput) ex.name = nameInput.value;
+                if(nameInput) {
+                    ex.name = nameInput.value;
+                    if (ex.isAutofillDraft && ex.autofillSourceName !== undefined && ex.name.trim() !== ex.autofillSourceName.trim()) {
+                        ex.isAutofillDraft = false;
+                    }
+                }
                 if(bwInput) ex.isBodyweight = bwInput.checked;
                 ex.sets.forEach((set, idx) => {
                     const wInput = document.getElementById(`log-ex-${ex.id}-w-${idx}`);
@@ -6907,9 +7072,17 @@
 
         window.renderLogExercises = (focusInfo = null) => {
             const container = document.getElementById('multi-exercise-container');
-            const datalistHtml = appState.exercises.map(e => `<option value="${e.name}">`).join('');
+            const datalistHtml = appState.exercises.map(e => `<option value="${escapeHtml(e.name).replace(/"/g, '&quot;')}">`).join('');
             
             let html = `<datalist id="exercise-datalist">${datalistHtml}</datalist>`;
+
+            if (logSessionData.length === 0) {
+                html += `
+                    <div style="padding: 1rem; border-radius: var(--radius-base); background: var(--surface-offset); border: 1px dashed var(--border); color: var(--text-muted); font-size: 0.85rem; text-align: center;">
+                        No exercises added. You can save this workout without exercises or click <strong>+ Add Exercise</strong> below.
+                    </div>
+                `;
+            }
             
             logSessionData.forEach((ex, exIdx) => {
                 html += `
@@ -6919,7 +7092,7 @@
                             <button class="icon-btn" style="padding:0.25rem; color:var(--text-muted);" onclick="removeExerciseFromLog(${ex.id})"><i data-lucide="trash-2" style="width:16px;"></i></button>
                         </div>
                         <div class="flex justify-between items-center gap-4" style="margin-bottom:1rem;">
-                            <input type="text" id="log-ex-${ex.id}-name" placeholder="Search or type exercise name..." list="exercise-datalist" value="${ex.name}" style="flex:1; font-weight:bold; margin-bottom:0;" onchange="checkAutoBodyweight(${ex.id})">
+                            <input type="text" id="log-ex-${ex.id}-name" placeholder="Search or type exercise name..." list="exercise-datalist" value="${escapeHtml(ex.name).replace(/"/g, '&quot;')}" style="flex:1; font-weight:bold; margin-bottom:0;" onchange="checkAutoBodyweight(${ex.id})">
                             <label class="flex items-center gap-2" style="font-size: 0.85rem; color: var(--text-muted); cursor: pointer; white-space: nowrap;">
                                 <input type="checkbox" id="log-ex-${ex.id}-bw" ${ex.isBodyweight ? 'checked' : ''} onchange="toggleBodyweight(${ex.id})" style="width: auto;"> Bodyweight
                             </label>
@@ -6950,6 +7123,10 @@
             });
             
             container.innerHTML = html;
+            const addExBtn = document.getElementById('btn-add-exercise');
+            if (addExBtn) {
+                addExBtn.textContent = logSessionData.length === 0 ? '+ Add Exercise' : '+ Add Another Exercise';
+            }
             lucide.createIcons();
 
             if (focusInfo) {
@@ -6964,7 +7141,7 @@
             }
         };
 
-        document.getElementById('btn-save-session').onclick = () => {
+        document.getElementById('btn-save-session').onclick = async () => {
             saveCurrentInputs();
             
             const dateStr = document.getElementById('log-date').value;
@@ -6976,12 +7153,20 @@
             if(!dateStr) return showAppAlert('Date is required.', 'Missing Date', 'warning');
             
             const finalExercises = [];
+            let hasPartialManualExercise = false;
             
             logSessionData.forEach(ex => {
-                if(!ex.name.trim()) return;
+                const trimmedName = ex.name.trim();
+                const hasAnySetInput = ex.sets.some(set => String(set.weight).trim() !== '' || String(set.reps).trim() !== '');
+
+                if (!trimmedName) {
+                    if (hasAnySetInput) hasPartialManualExercise = true;
+                    return;
+                }
+
                 const validSets = [];
                 ex.sets.forEach(set => {
-                    const r = parseInt(set.reps);
+                    const r = parseInt(set.reps, 10);
                     if (ex.isBodyweight) {
                         if (!isNaN(r) && r > 0) {
                             validSets.push({ weight: 0, reps: r, isBodyweight: true });
@@ -6994,11 +7179,20 @@
                     }
                 });
                 if(validSets.length > 0) {
-                    finalExercises.push({ name: ex.name.trim(), sets: validSets, notes: '' });
+                    finalExercises.push({ name: trimmedName, sets: validSets, notes: '' });
+                } else if (!ex.isAutofillDraft) {
+                    hasPartialManualExercise = true;
                 }
             });
             
-            if(finalExercises.length === 0) return showAppAlert('At least one valid exercise with sets is required.', 'Workout Incomplete', 'warning');
+            if (finalExercises.length === 0 && hasPartialManualExercise) {
+                const confirmed = await showAppConfirm(
+                    'Some entered exercises are missing valid weights or reps and will not be saved. Save this workout without any exercises?',
+                    'Save Without Exercises',
+                    { confirmText: 'Save Workout' }
+                );
+                if (!confirmed) return;
+            }
             
             if(!appState.workoutLogs[dateStr]) {
                 appState.workoutLogs[dateStr] = { type: workoutType, gym: gym, timeOfDay: timeOfDay, exercises: [] }; 
@@ -7010,9 +7204,17 @@
             
             appState.workoutLogs[dateStr].exercises = [];
             
-            // Apply general notes if provided
-            if(notes.trim() && finalExercises.length > 0) {
-                finalExercises[0].notes = notes.trim();
+            // Apply general notes cleanly
+            const trimmedNotes = notes.trim();
+            if (trimmedNotes) {
+                if (finalExercises.length > 0) {
+                    finalExercises[0].notes = trimmedNotes;
+                    delete appState.workoutLogs[dateStr].notes;
+                } else {
+                    appState.workoutLogs[dateStr].notes = trimmedNotes;
+                }
+            } else {
+                delete appState.workoutLogs[dateStr].notes;
             }
             
             finalExercises.forEach(fex => {
@@ -7029,6 +7231,12 @@
             closeModal('modal-log');
             if(window.location.hash === '#progress') renderProgressView();
             else renderCalendarView();
+            showAppToast(
+                finalExercises.length > 0
+                    ? `Saved ${workoutType} Day (${finalExercises.length} exercise${finalExercises.length === 1 ? '' : 's'})`
+                    : `Saved ${workoutType} Day`,
+                'success'
+            );
         };
 
         // Progress Render
@@ -7251,7 +7459,7 @@
             }
 
             Object.values(appState.workoutLogs).forEach(log => {
-                log.exercises.forEach(ex => {
+                (log.exercises || []).forEach(ex => {
                     if (ex.name === oldName) {
                         ex.name = trimmedNewName;
                     }
@@ -8480,6 +8688,7 @@
                 const log = appState.workoutLogs[date];
                 const exs = (log.exercises || []).filter(e => e.name.toLowerCase() === name.toLowerCase());
                 exs.forEach(e => {
+                    if (!e.sets || e.sets.length === 0) return;
                     const isBw = e.sets[0] ? (e.sets[0].isBodyweight || e.sets[0].weight === 0) : false;
                     let bestSet = e.sets[0];
                     if (isBw) {
