@@ -1772,6 +1772,75 @@
                         </div>
                     </div>
 
+                    <div id="settings-auto-email" style="margin-bottom: 2rem; padding: 1.25rem; background-color: var(--surface-offset); border-radius: var(--radius-base); border: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; gap: 0.5rem; flex-wrap: wrap;">
+                            <h4 style="margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
+                                <i data-lucide="mail" style="width: 18px; height: 18px; color: var(--primary);"></i>
+                                Auto-Email Targets
+                            </h4>
+                            <span id="email-auto-badge" class="badge-disconnected" style="padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">Compose Fallback</span>
+                        </div>
+                        <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.85rem; line-height: 1.4;">
+                            Configure automatic 1-click delivery when clicking <strong>Email Targets</strong> so targets email you directly without opening a Gmail compose tab.
+                        </p>
+
+                        <div style="margin-bottom: 0.9rem;">
+                            <label for="settings-email" style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.25rem;">Target Email</label>
+                            <input type="email" id="settings-email" placeholder="e.g. you@gmail.com" style="width: 100%; font-size: 0.85rem; padding: 0.55rem 0.75rem; border-radius: var(--radius-tight); border: 1px solid var(--border); background: var(--surface);" onchange="updateEmail(this.value)">
+                        </div>
+
+                        <div style="margin-bottom: 0.9rem; padding: 0.85rem; background: var(--surface-2); border-radius: var(--radius-tight); border: 1px solid var(--border);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                                <label for="settings-email-webhook" style="font-size: 0.82rem; font-weight: 600;">Option 1: Google Apps Script Webhook <span style="color: var(--primary); font-weight: 500;">(Recommended)</span></label>
+                            </div>
+                            <input type="url" id="settings-email-webhook" placeholder="https://script.google.com/macros/s/.../exec" style="width: 100%; font-size: 0.8rem; font-family: monospace; padding: 0.5rem 0.6rem; border-radius: var(--radius-tight); border: 1px solid var(--border); background: var(--surface); margin-bottom: 0.5rem;" onchange="updateEmailWebhook(this.value)">
+                            <details style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.45;">
+                                <summary style="cursor: pointer; color: var(--primary); font-weight: 500;">60-Second Setup (Sends from your Gmail, Never Expires)</summary>
+                                <div style="margin-top: 0.5rem;">
+                                    <pre id="apps-script-snippet" style="margin: 0 0 0.5rem 0; padding: 0.6rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-tight); font-size: 0.72rem; overflow-x: auto; color: var(--text); white-space: pre-wrap;">function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+  MailApp.sendEmail(data.to, data.subject, data.body);
+  return ContentService.createTextOutput(JSON.stringify({ ok: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+                                    <button type="button" class="btn" onclick="copyAppsScriptCode()" style="font-size: 0.75rem; padding: 0.3rem 0.65rem; margin-bottom: 0.5rem;">
+                                        <i data-lucide="copy" style="width: 12px; height: 12px;"></i> Copy Script
+                                    </button>
+                                    <ol style="padding-left: 1.2rem; margin: 0;">
+                                        <li>Open <a href="https://script.google.com" target="_blank" rel="noopener noreferrer" style="color: var(--primary);">script.google.com</a> &rarr; <strong>New project</strong> and paste the code above.</li>
+                                        <li>Click <strong>Deploy &gt; New deployment &gt; Web app</strong>.</li>
+                                        <li>Set <strong>Execute as: Me</strong> and <strong>Who has access: Anyone</strong>, then authorize &amp; deploy.</li>
+                                        <li>Paste the generated <strong>Web app URL</strong> (<code>.../exec</code>) above.</li>
+                                    </ol>
+                                </div>
+                            </details>
+                        </div>
+
+                        <div style="margin-bottom: 0.9rem; padding: 0.85rem; background: var(--surface-2); border-radius: var(--radius-tight); border: 1px solid var(--border);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.45rem;">
+                                <div>
+                                    <div style="font-size: 0.82rem; font-weight: 600;">Option 2: Gmail API (Google Sign-In)</div>
+                                    <div id="gmail-send-status" class="text-muted" style="font-size: 0.75rem;">Not connected</div>
+                                </div>
+                                <div style="display: flex; gap: 0.4rem;">
+                                    <button type="button" class="btn" id="btn-connect-gmail-send" onclick="connectGmailSend()" style="font-size: 0.78rem; padding: 0.4rem 0.75rem; background: var(--surface); border: 1px solid var(--border);">
+                                        <i data-lucide="key-round" style="width: 13px; height: 13px;"></i> Authorize Gmail
+                                    </button>
+                                    <button type="button" class="btn hidden" id="btn-disconnect-gmail-send" onclick="disconnectGmailSend()" style="font-size: 0.78rem; padding: 0.4rem 0.65rem; background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.3);">
+                                        Disconnect
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="text-muted" style="font-size: 0.73rem; line-height: 1.35;">
+                                Uses your Google OAuth Client ID above. Requires the <strong>Gmail API</strong> to be enabled in your Google Cloud Console project.
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn" id="btn-test-email-targets" onclick="testAutoEmail()" style="width: 100%; justify-content: center; gap: 0.4rem; background: var(--surface-2); border: 1px solid var(--border); font-size: 0.82rem; font-weight: 600;">
+                            <i data-lucide="send" style="width: 14px; height: 14px;"></i> Send Test Email
+                        </button>
+                    </div>
+
                     <div style="margin-bottom: 2rem;">
                         <h4 style="margin-bottom: 0.5rem;">Local Data Backup</h4>
                         <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.9rem;">Export your workout data to a file to keep it safe, or import a previous backup.</p>
@@ -2613,6 +2682,7 @@
             benchLogs: [],
             currentMonth: new Date(),
             targetEmail: '',
+            emailWebhookUrl: '',
             fontTheme: 'cabinet-satoshi',
             appearance: null,
             exerciseAliases: {},
@@ -2636,6 +2706,7 @@
                 appState.weightLogs = parsed.weightLogs || [];
                 appState.benchLogs = parsed.benchLogs || [];
                 appState.targetEmail = parsed.targetEmail || '';
+                appState.emailWebhookUrl = parsed.emailWebhookUrl || '';
                 appState.fontTheme = parsed.fontTheme || 'cabinet-satoshi';
                 appState.appearance = parsed.appearance || null;
                 appState.exerciseAliases = (parsed.exerciseAliases && typeof parsed.exerciseAliases === 'object') ? parsed.exerciseAliases : {};
@@ -2678,6 +2749,7 @@
                 weightLogs: appState.weightLogs,
                 benchLogs: appState.benchLogs,
                 targetEmail: appState.targetEmail,
+                emailWebhookUrl: appState.emailWebhookUrl || '',
                 fontTheme: appState.fontTheme || 'cabinet-satoshi',
                 appearance: appState.appearance,
                 exerciseAliases: appState.exerciseAliases || {},
@@ -2766,6 +2838,7 @@
             if (clientIdInput && !clientIdInput.value) {
                 clientIdInput.value = localStorage.getItem('gymlog_gdrive_client_id') || '';
             }
+            if (typeof updateAutoEmailUI === 'function') updateAutoEmailUI();
         }
 
         window.initGDriveGIS = function() {
@@ -2907,6 +2980,7 @@
                 weightLogs: appState.weightLogs,
                 benchLogs: appState.benchLogs,
                 targetEmail: appState.targetEmail,
+                emailWebhookUrl: appState.emailWebhookUrl || '',
                 fontTheme: appState.fontTheme || 'cabinet-satoshi',
                 appearance: appState.appearance,
                 exerciseAliases: appState.exerciseAliases || {},
@@ -2933,6 +3007,7 @@
 
             if (remoteData.unit) appState.unit = remoteData.unit;
             if (remoteData.targetEmail) appState.targetEmail = remoteData.targetEmail;
+            if (remoteData.emailWebhookUrl) appState.emailWebhookUrl = remoteData.emailWebhookUrl;
             if (remoteData.fontTheme && typeof remoteData.fontTheme === 'string') {
                 appState.fontTheme = remoteData.fontTheme;
                 applyFontTheme(appState.fontTheme, false);
@@ -4581,7 +4656,13 @@
             const fontEl = document.getElementById('settings-font');
             if (fontEl) fontEl.value = appState.fontTheme || 'cabinet-satoshi';
             const emailEl = document.getElementById('settings-email');
-            if (emailEl) emailEl.value = appState.targetEmail || '';
+            if (emailEl) {
+                emailEl.value = appState.targetEmail || '';
+                emailEl.placeholder = gdriveUserEmail || gmailUserEmail || 'e.g. you@gmail.com';
+            }
+            const webhookEl = document.getElementById('settings-email-webhook');
+            if (webhookEl) webhookEl.value = appState.emailWebhookUrl || '';
+            updateAutoEmailUI();
             renderSettingsGyms();
             renderAppearanceSettings();
             openModal('modal-settings');
@@ -4593,8 +4674,373 @@
         }
 
         window.updateEmail = (newEmail) => {
-            appState.targetEmail = newEmail;
+            appState.targetEmail = (newEmail || '').trim();
             saveState();
+            updateAutoEmailUI();
+        };
+
+        window.updateEmailWebhook = (newUrl) => {
+            const trimmed = (newUrl || '').trim();
+            if (trimmed && !isValidWebhookUrl(trimmed)) {
+                showAppAlert('Webhook URL must start with https:// (for example, your Google Apps Script /exec URL).', 'Invalid Webhook URL', 'warning');
+                const webhookEl = document.getElementById('settings-email-webhook');
+                if (webhookEl) webhookEl.value = appState.emailWebhookUrl || '';
+                return;
+            }
+            appState.emailWebhookUrl = trimmed;
+            saveState();
+            updateAutoEmailUI();
+            if (trimmed) {
+                showAppToast('Apps Script webhook saved! Auto-email is ready.', 'success');
+            }
+        };
+
+        // --- AUTO-EMAIL ENGINE (Apps Script Webhook + Gmail API + Compose Fallback) ---
+        const GMAIL_SEND_SCOPE = 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email';
+        let gmailTokenClient = null;
+        let gmailToken = localStorage.getItem('gymlog_gmail_token') || null;
+        let gmailTokenExp = parseInt(localStorage.getItem('gymlog_gmail_token_exp') || '0', 10);
+        let gmailAuthorized = localStorage.getItem('gymlog_gmail_authorized') === '1';
+        let gmailUserEmail = localStorage.getItem('gymlog_gmail_user_email') || null;
+
+        function isValidWebhookUrl(url) {
+            if (!url || typeof url !== 'string') return false;
+            const trimmed = url.trim();
+            return /^https:\/\/[^\s/$.?#].[^\s]*$/i.test(trimmed);
+        }
+
+        function hasValidGmailToken() {
+            return Boolean(gmailToken && Date.now() < (gmailTokenExp - 60000));
+        }
+
+        function isGmailSendReady() {
+            return hasValidGmailToken() || gmailAuthorized;
+        }
+
+        function getAutoEmailMethod() {
+            if (isValidWebhookUrl(appState.emailWebhookUrl)) return 'webhook';
+            if (isGmailSendReady()) return 'gmail';
+            return 'none';
+        }
+
+        function resolveTargetEmail() {
+            return (appState.targetEmail || gmailUserEmail || gdriveUserEmail || '').trim();
+        }
+
+        function updateAutoEmailUI() {
+            const badge = document.getElementById('email-auto-badge');
+            const gmailStatus = document.getElementById('gmail-send-status');
+            const connectBtn = document.getElementById('btn-connect-gmail-send');
+            const disconnectBtn = document.getElementById('btn-disconnect-gmail-send');
+            const emailEl = document.getElementById('settings-email');
+            if (emailEl && !emailEl.value) {
+                emailEl.placeholder = gdriveUserEmail || gmailUserEmail || 'e.g. you@gmail.com';
+            }
+
+            const method = getAutoEmailMethod();
+            if (badge) {
+                if (method === 'webhook') {
+                    badge.className = 'badge-synced';
+                    badge.innerText = 'Apps Script Ready';
+                } else if (method === 'gmail') {
+                    badge.className = 'badge-synced';
+                    badge.innerText = 'Gmail API Ready';
+                } else {
+                    badge.className = 'badge-disconnected';
+                    badge.innerText = 'Compose Fallback';
+                }
+            }
+
+            if (gmailStatus) {
+                if (hasValidGmailToken()) {
+                    const who = gmailUserEmail || gdriveUserEmail;
+                    gmailStatus.innerText = who ? `Connected (${who})` : 'Authorized (token active)';
+                    gmailStatus.style.color = 'var(--primary)';
+                } else if (gmailAuthorized) {
+                    const who = gmailUserEmail || gdriveUserEmail;
+                    gmailStatus.innerText = who ? `Authorized (${who} · auto-refreshes on send)` : 'Authorized (auto-refreshes on send)';
+                    gmailStatus.style.color = 'var(--primary)';
+                } else {
+                    gmailStatus.innerText = 'Not connected';
+                    gmailStatus.style.color = '';
+                }
+            }
+
+            if (connectBtn) {
+                connectBtn.innerHTML = isGmailSendReady()
+                    ? '<i data-lucide="refresh-cw" style="width: 13px; height: 13px;"></i> Re-authorize'
+                    : '<i data-lucide="key-round" style="width: 13px; height: 13px;"></i> Authorize Gmail';
+            }
+            if (disconnectBtn) {
+                disconnectBtn.classList.toggle('hidden', !isGmailSendReady());
+            }
+            if (window.lucide) lucide.createIcons({ root: document.getElementById('settings-auto-email') });
+        }
+
+        window.openAutoEmailSettings = () => {
+            openSettingsModal();
+            setTimeout(() => {
+                const section = document.getElementById('settings-auto-email');
+                if (section && typeof section.scrollIntoView === 'function') {
+                    section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 60);
+        };
+
+        window.copyAppsScriptCode = async () => {
+            const snippet = document.getElementById('apps-script-snippet')?.textContent || '';
+            if (!snippet) return;
+            try {
+                await navigator.clipboard.writeText(snippet);
+                showAppToast('Apps Script code copied to clipboard!', 'success');
+            } catch (e) {
+                showAppAlert('Could not access clipboard automatically. Please select and copy the code snippet manually.', 'Copy Script', 'info');
+            }
+        };
+
+        function requestGmailSendToken({ forceConsent = false, silentOnly = false } = {}) {
+            if (!forceConsent && hasValidGmailToken()) {
+                return Promise.resolve(gmailToken);
+            }
+            const clientId = getClientId();
+            if (!clientId) {
+                return Promise.reject(new Error('Google OAuth Client ID is missing in Settings.'));
+            }
+            if (!(window.google && window.google.accounts && window.google.accounts.oauth2)) {
+                return Promise.reject(new Error('Google Sign-In is unavailable or blocked offline.'));
+            }
+            return new Promise((resolve, reject) => {
+                let settled = false;
+                const finish = (err, token) => {
+                    if (settled) return;
+                    settled = true;
+                    if (err) reject(err);
+                    else resolve(token);
+                };
+                try {
+                    gmailTokenClient = google.accounts.oauth2.initTokenClient({
+                        client_id: clientId,
+                        scope: GMAIL_SEND_SCOPE,
+                        include_granted_scopes: true,
+                        callback: async (resp) => {
+                            if (resp.error) {
+                                finish(new Error(resp.error_description || resp.error || 'Gmail authorization failed.'));
+                                return;
+                            }
+                            gmailToken = resp.access_token;
+                            gmailTokenExp = Date.now() + (parseInt(resp.expires_in || '3600', 10) * 1000);
+                            gmailAuthorized = true;
+                            localStorage.setItem('gymlog_gmail_token', gmailToken);
+                            localStorage.setItem('gymlog_gmail_token_exp', String(gmailTokenExp));
+                            localStorage.setItem('gymlog_gmail_authorized', '1');
+                            try {
+                                const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                                    headers: { Authorization: `Bearer ${gmailToken}` }
+                                });
+                                if (userRes.ok) {
+                                    const userData = await userRes.json();
+                                    if (userData.email) {
+                                        gmailUserEmail = userData.email;
+                                        localStorage.setItem('gymlog_gmail_user_email', gmailUserEmail);
+                                    }
+                                }
+                            } catch (_) {}
+                            updateAutoEmailUI();
+                            finish(null, gmailToken);
+                        },
+                        error_callback: (err) => {
+                            const msg = err?.type === 'popup_closed'
+                                ? 'Google sign-in popup was closed before finishing.'
+                                : err?.type === 'popup_failed_to_open'
+                                    ? 'Popup was blocked by your browser. Please allow popups for this site.'
+                                    : (err?.message || 'Google authorization could not be completed.');
+                            finish(new Error(msg));
+                        }
+                    });
+                    const promptMode = forceConsent ? 'consent' : (silentOnly ? 'none' : (gmailAuthorized ? '' : 'consent'));
+                    gmailTokenClient.requestAccessToken({ prompt: promptMode });
+                } catch (err) {
+                    finish(err instanceof Error ? err : new Error('Failed to initialize Gmail authorization.'));
+                }
+            });
+        }
+
+        window.connectGmailSend = async () => {
+            const inputVal = document.getElementById('gdrive-client-id-input')?.value?.trim();
+            if (inputVal) saveCustomClientId(inputVal);
+            try {
+                await requestGmailSendToken({ forceConsent: true });
+                updateAutoEmailUI();
+                showAppToast('Gmail API authorized! Email Targets can now auto-send.', 'success');
+            } catch (err) {
+                showAppAlert(err.message || 'Could not authorize Gmail API.', 'Gmail Authorization Failed', 'error');
+            }
+        };
+
+        window.disconnectGmailSend = async () => {
+            const confirmed = await showAppConfirm('Disconnect Gmail API sending? You can re-authorize or use Apps Script anytime.', 'Disconnect Gmail API', { danger: true, confirmText: 'Disconnect' });
+            if (!confirmed) return;
+            gmailToken = null;
+            gmailTokenExp = 0;
+            gmailAuthorized = false;
+            gmailUserEmail = null;
+            localStorage.removeItem('gymlog_gmail_token');
+            localStorage.removeItem('gymlog_gmail_token_exp');
+            localStorage.removeItem('gymlog_gmail_authorized');
+            localStorage.removeItem('gymlog_gmail_user_email');
+            updateAutoEmailUI();
+            showAppToast('Gmail API sending disconnected', 'info');
+        };
+
+        function encodeBase64Url(str) {
+            const bytes = new TextEncoder().encode(str);
+            let binary = '';
+            bytes.forEach(b => { binary += String.fromCharCode(b); });
+            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+
+        function encodeMimeSubject(subject) {
+            const clean = String(subject || '').replace(/[\r\n]+/g, ' ').trim();
+            if (/^[\x20-\x7E]*$/.test(clean)) return clean;
+            const bytes = new TextEncoder().encode(clean);
+            let binary = '';
+            bytes.forEach(b => { binary += String.fromCharCode(b); });
+            return `=?UTF-8?B?${btoa(binary)}?=`;
+        }
+
+        async function sendViaGmailApiOnce(token, { to, subject, body }) {
+            const safeTo = String(to || '').replace(/[\r\n]+/g, ' ').trim();
+            const mime = [
+                `To: ${safeTo}`,
+                `Subject: ${encodeMimeSubject(subject)}`,
+                'MIME-Version: 1.0',
+                'Content-Type: text/plain; charset="UTF-8"',
+                'Content-Transfer-Encoding: 8bit',
+                '',
+                String(body || '').replace(/\r?\n/g, '\r\n')
+            ].join('\r\n');
+
+            const res = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ raw: encodeBase64Url(mime) })
+            });
+
+            if (!res.ok) {
+                const errBody = await res.json().catch(() => ({}));
+                const msg = errBody.error?.message || `Gmail API error (${res.status})`;
+                const err = new Error(msg);
+                err.status = res.status;
+                throw err;
+            }
+            return res.json().catch(() => ({}));
+        }
+
+        async function sendViaGmailApi(payload) {
+            let token = await requestGmailSendToken({ forceConsent: false });
+            try {
+                return await sendViaGmailApiOnce(token, payload);
+            } catch (err) {
+                if (err && err.status === 401) {
+                    gmailToken = null;
+                    gmailTokenExp = 0;
+                    localStorage.removeItem('gymlog_gmail_token');
+                    localStorage.removeItem('gymlog_gmail_token_exp');
+                    token = await requestGmailSendToken({ forceConsent: true });
+                    return await sendViaGmailApiOnce(token, payload);
+                }
+                throw err;
+            }
+        }
+
+        async function sendViaAppsScriptWebhook(url, { to, subject, body }) {
+            if (!isValidWebhookUrl(url)) {
+                throw new Error('Invalid Apps Script webhook URL.');
+            }
+            const res = await fetch(url.trim(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ to, subject, body })
+            });
+            const contentType = res.headers?.get ? (res.headers.get('content-type') || '') : '';
+            const text = await res.text().catch(() => '');
+            if (contentType.includes('text/html') && /ServiceLogin|accounts\.google\.com/i.test(text)) {
+                throw new Error('Apps Script needs "Who has access: Anyone" in its Web App deployment settings.');
+            }
+            if (!res.ok) {
+                throw new Error(`Webhook returned HTTP ${res.status}`);
+            }
+            if (text) {
+                try {
+                    const parsed = JSON.parse(text);
+                    if (parsed && parsed.ok === false) {
+                        throw new Error(parsed.error || 'Apps Script reported an error.');
+                    }
+                } catch (e) {
+                    if (e && e.message && e.message !== 'Unexpected token' && !(e instanceof SyntaxError)) {
+                        throw e;
+                    }
+                }
+            }
+            return { ok: true };
+        }
+
+        async function sendAutoEmail(payload) {
+            const method = getAutoEmailMethod();
+            if (method === 'webhook') {
+                await sendViaAppsScriptWebhook(appState.emailWebhookUrl, payload);
+                return 'Apps Script';
+            }
+            if (method === 'gmail') {
+                await sendViaGmailApi(payload);
+                return 'Gmail API';
+            }
+            throw new Error('AUTO_EMAIL_NOT_CONFIGURED');
+        }
+
+        function openGmailComposeFallback({ to, subject, body }) {
+            const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            window.open(gmailLink, '_blank', 'noopener,noreferrer');
+        }
+
+        window.testAutoEmail = async () => {
+            const targetEmail = resolveTargetEmail();
+            if (!targetEmail) {
+                showAppAlert('Please enter your Target Email above first.', 'Target Email Missing', 'warning');
+                document.getElementById('settings-email')?.focus();
+                return;
+            }
+            const method = getAutoEmailMethod();
+            if (method === 'none') {
+                showAppAlert('Please paste a Google Apps Script Webhook URL or click Authorize Gmail above first.', 'Auto-Email Not Configured', 'info');
+                return;
+            }
+            const btn = document.getElementById('btn-test-email-targets');
+            const origHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader-2" style="width: 14px; height: 14px;"></i> Sending Test Email...';
+                lucide.createIcons({ root: btn });
+            }
+            try {
+                const via = await sendAutoEmail({
+                    to: targetEmail,
+                    subject: `GymLog Auto-Email Test - ${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
+                    body: 'Your GymLog auto-email setup is working! Clicking "Email Targets" will now send targets straight to this inbox.'
+                });
+                showAppToast(`Test email sent to ${targetEmail} via ${via}!`, 'success');
+            } catch (err) {
+                showAppAlert(err.message || 'Test email failed.', 'Auto-Email Error', 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                    lucide.createIcons({ root: btn });
+                }
+            }
         };
 
         window.updateUnit = (newUnit) => {
@@ -4771,7 +5217,8 @@
                 appearance: appState.appearance,
                 exerciseAliases: appState.exerciseAliases || {},
                 dismissedDuplicates: appState.dismissedDuplicates || [],
-                targetEmail: appState.targetEmail || ''
+                targetEmail: appState.targetEmail || '',
+                emailWebhookUrl: appState.emailWebhookUrl || ''
             }));
             const downloadAnchorNode = document.createElement('a');
             downloadAnchorNode.setAttribute("href", dataStr);
@@ -4811,6 +5258,7 @@
                         if (Array.isArray(parsed.dismissedDuplicates)) appState.dismissedDuplicates = parsed.dismissedDuplicates;
                         canonicalizeExerciseData(appState);
                         if (parsed.targetEmail) appState.targetEmail = parsed.targetEmail;
+                        if (parsed.emailWebhookUrl) appState.emailWebhookUrl = parsed.emailWebhookUrl;
                         saveState();
                         closeModal('modal-settings');
                         handleRoute(); // re-render current view
@@ -5704,10 +6152,37 @@
         let poRows = [''];
         let poSelectedGym = '';
         let lastPoEmailBody = '';
+        let poEmailInFlight = false;
+        let poEmailResetTimer = null;
+
+        function poSetEmailBtn(state = 'ready') {
+            const btn = document.getElementById('po-submit-btn');
+            if (!btn) return;
+            if (state === 'sending') {
+                btn.disabled = true;
+                btn.innerHTML = '<i data-lucide="loader-2" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:0.25rem;"></i> Sending...';
+                btn.onclick = poEmailTargets;
+            } else if (state === 'sent') {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="check" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:0.25rem;"></i> Sent!';
+                btn.onclick = poEmailTargets;
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="mail" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:0.25rem;"></i> Email Targets';
+                btn.onclick = poEmailTargets;
+            }
+            if (window.lucide) lucide.createIcons({ root: btn });
+        }
 
         function poResetBtn() {
+            if (poEmailResetTimer) {
+                clearTimeout(poEmailResetTimer);
+                poEmailResetTimer = null;
+            }
+            poEmailInFlight = false;
             const btn = document.getElementById('po-submit-btn');
             if (btn) {
+                btn.disabled = false;
                 btn.innerHTML = 'Show Targets';
                 btn.onclick = poSubmit;
             }
@@ -5736,20 +6211,78 @@
             }
         };
 
-        window.poEmailTargets = () => {
-            if (!lastPoEmailBody) return;
-            if (!appState.targetEmail) {
-                showAppAlert('Please set a Target Email in Settings to email targets.', 'Target Email Missing', 'info');
-                document.getElementById('btn-settings').click();
-                return;
-            }
+        function getPoEmailPayload() {
+            const targetEmail = resolveTargetEmail();
             const todayStr = new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric' }).format(new Date());
             const selectedGym = document.getElementById('po-gym-select')?.value || '';
-            const subject = selectedGym 
+            const subject = selectedGym
                 ? `Workout Targets to Beat (${selectedGym}) - ${todayStr}`
                 : `Workout Targets to Beat - ${todayStr}`;
-            const gmailLink = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(appState.targetEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(lastPoEmailBody)}`;
-            window.open(gmailLink, '_blank', 'noopener,noreferrer');
+            return { to: targetEmail, subject, body: lastPoEmailBody };
+        }
+
+        window.poOpenGmailFallback = async () => {
+            if (!lastPoEmailBody) return;
+            const payload = getPoEmailPayload();
+            if (!payload.to) {
+                await showAppAlert('Please set a Target Email in Settings to email targets.', 'Target Email Missing', 'info');
+                openAutoEmailSettings();
+                return;
+            }
+            openGmailComposeFallback(payload);
+        };
+
+        window.poEmailTargets = async () => {
+            if (!lastPoEmailBody || poEmailInFlight) return;
+            const payload = getPoEmailPayload();
+            if (!payload.to) {
+                await showAppAlert('Please set a Target Email in Settings to email targets.', 'Target Email Missing', 'info');
+                openAutoEmailSettings();
+                setTimeout(() => document.getElementById('settings-email')?.focus(), 100);
+                return;
+            }
+
+            if (getAutoEmailMethod() === 'none') {
+                const setupNow = await showAppConfirm(
+                    'No auto-send method is configured yet. Set up Auto-Email Targets in Settings (Google Apps Script or Gmail API) for 1-click sending, or open Gmail compose for now?',
+                    'Set Up 1-Click Auto-Email',
+                    { confirmText: 'Set Up Auto-Email', cancelText: 'Open Gmail Compose' }
+                );
+                if (setupNow) {
+                    openAutoEmailSettings();
+                } else {
+                    openGmailComposeFallback(payload);
+                }
+                return;
+            }
+
+            if (poEmailResetTimer) {
+                clearTimeout(poEmailResetTimer);
+                poEmailResetTimer = null;
+            }
+            poEmailInFlight = true;
+            poSetEmailBtn('sending');
+            try {
+                const via = await sendAutoEmail(payload);
+                showAppToast(`Targets emailed to ${payload.to} via ${via}!`, 'success');
+                poSetEmailBtn('sent');
+                poEmailResetTimer = setTimeout(() => {
+                    poEmailResetTimer = null;
+                    if (lastPoEmailBody) poSetEmailBtn('ready');
+                }, 2500);
+            } catch (err) {
+                poSetEmailBtn('ready');
+                const openFallback = await showAppConfirm(
+                    `Auto-email failed: ${err?.message || 'Unknown error'}.\n\nWould you like to open Gmail compose instead?`,
+                    'Auto-Email Failed',
+                    { confirmText: 'Open Gmail Compose', cancelText: 'Dismiss' }
+                );
+                if (openFallback) {
+                    openGmailComposeFallback(payload);
+                }
+            } finally {
+                poEmailInFlight = false;
+            }
         };
 
         window.poOpenDrawer = (initialGym = null) => {
@@ -6018,18 +6551,32 @@
                 const gymMsg = selectedGym ? ` at ${selectedGym} or other gyms` : '';
                 html += `<p class="text-muted" style="font-size:0.85rem;">No logged sessions found for the entered exercises${gymMsg}.</p>`;
             }
+            if (anyFound) {
+                const method = getAutoEmailMethod();
+                const target = resolveTargetEmail();
+                if (method !== 'none' && target) {
+                    const viaLabel = method === 'webhook' ? 'Apps Script' : 'Gmail API';
+                    html += `<div class="text-muted" style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap; font-size:0.75rem; margin-top:0.5rem;">
+                        <span>Auto-sends to <strong style="color:var(--text);">${escapeHtml(target)}</strong> via ${viaLabel}</span>
+                        <button type="button" onclick="poOpenGmailFallback()" style="background:none; border:none; padding:0; color:var(--primary); cursor:pointer; font-size:0.75rem; text-decoration:underline;">Open in Gmail</button>
+                    </div>`;
+                } else {
+                    html += `<div class="text-muted" style="display:flex; justify-content:space-between; align-items:center; gap:0.5rem; flex-wrap:wrap; font-size:0.75rem; margin-top:0.5rem;">
+                        <span>${target ? 'Auto-email not set up yet' : 'Set Target Email & auto-send in Settings'}</span>
+                        <button type="button" onclick="openAutoEmailSettings()" style="background:none; border:none; padding:0; color:var(--primary); cursor:pointer; font-size:0.75rem; font-weight:600; text-decoration:underline;">Configure 1-Click Auto-Send</button>
+                    </div>`;
+                }
+            }
             html += '</div>';
             resultsEl.innerHTML = html;
             lucide.createIcons();
 
             if (anyFound) {
                 lastPoEmailBody = emailBody;
-                const submitBtn = document.getElementById('po-submit-btn');
-                if (submitBtn) {
-                    submitBtn.innerHTML = '<i data-lucide="mail" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:0.25rem;"></i> Email Targets';
-                    submitBtn.onclick = poEmailTargets;
-                    lucide.createIcons();
-                }
+                poSetEmailBtn('ready');
+            } else {
+                lastPoEmailBody = '';
+                poResetBtn();
             }
         };
 
