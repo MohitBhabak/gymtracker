@@ -1367,6 +1367,223 @@
                 width: 100% !important;
             }
         }
+
+        /* Quick Paste Session Options Card */
+        .qp-options-card {
+            background: var(--surface-offset);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-base);
+            padding: 0.85rem 0.95rem;
+            margin-bottom: 1.15rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        .qp-options-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.65rem;
+            padding-bottom: 0.45rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .qp-options-title {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .qp-options-hint {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            opacity: 0.85;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .qp-options-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.65rem;
+        }
+        .qp-field {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .qp-field-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            margin-bottom: 0.35rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.3rem;
+            line-height: 1.2;
+        }
+        .qp-field-label-left {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .qp-add-gym-link {
+            font-size: 0.7rem;
+            color: var(--primary);
+            background: transparent;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.15rem;
+            font-weight: 600;
+            text-transform: none;
+            letter-spacing: normal;
+            transition: opacity 0.15s;
+        }
+        .qp-add-gym-link:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+        .qp-input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-tight);
+            height: 40px;
+            padding: 0 0.55rem;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+        }
+        .qp-input-wrap:hover {
+            border-color: rgba(255, 255, 255, 0.22);
+            background: var(--surface-2);
+        }
+        .light-theme .qp-input-wrap:hover {
+            border-color: rgba(0, 0, 0, 0.25);
+        }
+        .qp-input-wrap:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.2);
+            background: var(--surface);
+        }
+        .qp-input-icon {
+            width: 15px;
+            height: 15px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+            margin-right: 0.45rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .qp-custom-select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background: transparent;
+            border: none;
+            padding: 0 1.5rem 0 0;
+            margin: 0;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            width: 100%;
+            height: 100%;
+            outline: none;
+            cursor: pointer;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .qp-custom-select option {
+            background-color: var(--surface-offset);
+            color: var(--text);
+            padding: 0.5rem;
+            font-weight: 500;
+        }
+        .qp-select-chevron {
+            position: absolute;
+            right: 0.55rem;
+            pointer-events: none;
+            width: 14px;
+            height: 14px;
+            color: var(--text-muted);
+            transition: transform 0.15s ease;
+        }
+        .qp-input-wrap:focus-within .qp-select-chevron {
+            color: var(--primary);
+        }
+        .qp-custom-date {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin: 0;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text);
+            width: 100%;
+            height: 100%;
+            outline: none;
+            cursor: pointer;
+        }
+        .qp-custom-date::-webkit-calendar-picker-indicator {
+            filter: invert(0.7);
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.15s ease;
+            margin-left: 0.25rem;
+        }
+        .light-theme .qp-custom-date::-webkit-calendar-picker-indicator {
+            filter: none;
+            opacity: 0.6;
+        }
+        .qp-custom-date::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+        }
+        .qp-split-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-right: 0.5rem;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+        .qp-time-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-right: 0.5rem;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25);
+            transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        @media (max-width: 680px) {
+            .qp-options-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 440px) {
+            .qp-options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1526,37 +1743,98 @@
                         Paste raw notes from Apple Notes, Google Keep, or messages. Weights, reps, sets, decimals, and bodyweight exercises are automatically detected and parsed in real time.
                     </p>
 
-                    <div class="flex gap-3" style="margin-bottom: 1rem; flex-wrap: wrap;">
-                        <div style="flex: 1; min-width: 120px;">
-                            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">Workout Date</label>
-                            <input type="date" id="quick-paste-date">
+                    <!-- Modern Session Details Card -->
+                    <div class="qp-options-card">
+                        <div class="qp-options-header">
+                            <div class="qp-options-title">
+                                <i data-lucide="sliders-horizontal" style="width: 13px; height: 13px; color: var(--primary);"></i>
+                                <span>Session Details</span>
+                            </div>
+                            <div class="qp-options-hint">
+                                <i data-lucide="sparkles" style="width: 12px; height: 12px; color: var(--primary);"></i>
+                                <span>Auto-detects from notes</span>
+                            </div>
                         </div>
-                        <div style="flex: 1; min-width: 120px;">
-                            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">Workout Type</label>
-                            <select id="quick-paste-type">
-                                <option value="Push">Push</option>
-                                <option value="Pull">Pull</option>
-                                <option value="Legs">Legs</option>
-                                <option value="Upper">Upper</option>
-                                <option value="Lower">Lower</option>
-                                <option value="Arms & Delts">Arms & Delts</option>
-                                <option value="Abs">Abs</option>
-                                <option value="Cardio">Cardio</option>
-                            </select>
-                        </div>
-                        <div style="flex: 1; min-width: 120px;">
-                            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">Gym Location</label>
-                            <select id="quick-paste-gym"></select>
-                        </div>
-                        <div style="flex: 1; min-width: 120px;">
-                            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">Time of Day</label>
-                            <select id="quick-paste-time">
-                                <option value="">-- Optional --</option>
-                                <option value="Early Morning">Early Morning</option>
-                                <option value="Morning">Morning</option>
-                                <option value="Afternoon">Afternoon</option>
-                                <option value="Evening">Evening</option>
-                            </select>
+
+                        <div class="qp-options-grid">
+                            <!-- Option 1: Workout Date -->
+                            <div class="qp-field">
+                                <label class="qp-field-label" for="quick-paste-date">
+                                    <span class="qp-field-label-left">
+                                        <i data-lucide="calendar" style="width: 12px; height: 12px;"></i>
+                                        <span>Workout Date</span>
+                                    </span>
+                                </label>
+                                <div class="qp-input-wrap">
+                                    <i data-lucide="calendar" class="qp-input-icon"></i>
+                                    <input type="date" id="quick-paste-date" class="qp-custom-date" title="Workout Date">
+                                </div>
+                            </div>
+
+                            <!-- Option 2: Workout Type -->
+                            <div class="qp-field">
+                                <label class="qp-field-label" for="quick-paste-type">
+                                    <span class="qp-field-label-left">
+                                        <i data-lucide="layers" style="width: 12px; height: 12px;"></i>
+                                        <span>Workout Type</span>
+                                    </span>
+                                </label>
+                                <div class="qp-input-wrap">
+                                    <span id="quick-paste-type-dot" class="qp-split-dot bg-push" title="Workout Category Color"></span>
+                                    <select id="quick-paste-type" class="qp-custom-select" onchange="syncQuickPasteTypeDot()">
+                                        <option value="Push">Push</option>
+                                        <option value="Pull">Pull</option>
+                                        <option value="Legs">Legs</option>
+                                        <option value="Upper">Upper</option>
+                                        <option value="Lower">Lower</option>
+                                        <option value="Arms & Delts">Arms & Delts</option>
+                                        <option value="Abs">Abs</option>
+                                        <option value="Cardio">Cardio</option>
+                                        <option value="Rest">Rest</option>
+                                    </select>
+                                    <i data-lucide="chevron-down" class="qp-select-chevron"></i>
+                                </div>
+                            </div>
+
+                            <!-- Option 3: Gym Location -->
+                            <div class="qp-field">
+                                <label class="qp-field-label" for="quick-paste-gym">
+                                    <span class="qp-field-label-left">
+                                        <i data-lucide="map-pin" style="width: 12px; height: 12px;"></i>
+                                        <span>Gym Location</span>
+                                    </span>
+                                    <button type="button" class="qp-add-gym-link" onclick="promptAddGymInline('quick-paste-gym')" title="Add New Gym Location">
+                                        <i data-lucide="plus" style="width: 11px; height: 11px;"></i> Add
+                                    </button>
+                                </label>
+                                <div class="qp-input-wrap">
+                                    <i data-lucide="map-pin" class="qp-input-icon"></i>
+                                    <select id="quick-paste-gym" class="qp-custom-select"></select>
+                                    <i data-lucide="chevron-down" class="qp-select-chevron"></i>
+                                </div>
+                            </div>
+
+                            <!-- Option 4: Time of Day -->
+                            <div class="qp-field">
+                                <label class="qp-field-label" for="quick-paste-time">
+                                    <span class="qp-field-label-left">
+                                        <i data-lucide="clock" style="width: 12px; height: 12px;"></i>
+                                        <span>Time of Day</span>
+                                    </span>
+                                </label>
+                                <div class="qp-input-wrap">
+                                    <span id="quick-paste-time-dot" class="qp-time-dot" style="display: none;" title="Time of Day Indicator"></span>
+                                    <i id="quick-paste-time-icon" data-lucide="clock" class="qp-input-icon"></i>
+                                    <select id="quick-paste-time" class="qp-custom-select" onchange="syncQuickPasteTimeDot()">
+                                        <option value="">-- Optional --</option>
+                                        <option value="Early Morning">🌅 Early Morning</option>
+                                        <option value="Morning">☀️ Morning</option>
+                                        <option value="Afternoon">🌤️ Afternoon</option>
+                                        <option value="Evening">🌙 Evening</option>
+                                    </select>
+                                    <i data-lucide="chevron-down" class="qp-select-chevron"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -7352,6 +7630,31 @@
 
         let lastParsedResult = null;
 
+        window.syncQuickPasteTypeDot = () => {
+            const val = document.getElementById('quick-paste-type')?.value || 'Push';
+            const dot = document.getElementById('quick-paste-type-dot');
+            if (dot) {
+                dot.className = `qp-split-dot ${getWorkoutBgClass(val)}`;
+            }
+        };
+
+        window.syncQuickPasteTimeDot = () => {
+            const val = document.getElementById('quick-paste-time')?.value || '';
+            const dot = document.getElementById('quick-paste-time-dot');
+            const icon = document.getElementById('quick-paste-time-icon');
+            if (dot && icon) {
+                const timeKey = val.toLowerCase().replace(/\s+/g, '');
+                if (timeKey) {
+                    dot.style.display = 'inline-block';
+                    dot.className = `qp-time-dot bg-time-${timeKey}`;
+                    icon.style.display = 'none';
+                } else {
+                    dot.style.display = 'none';
+                    icon.style.display = 'inline-block';
+                }
+            }
+        };
+
         window.openQuickPasteModal = (dateStr) => {
             const currentDate = dateStr || document.getElementById('log-date')?.value || new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
             const dateInput = document.getElementById('quick-paste-date');
@@ -7369,12 +7672,17 @@
             const timeSelect = document.getElementById('quick-paste-time');
             if (timeSelect) timeSelect.value = existingTime;
 
+            syncQuickPasteTypeDot();
+            syncQuickPasteTimeDot();
+
             closeModal('modal-day');
             closeModal('modal-log');
             openModal('modal-quick-paste');
             
             handleQuickPasteInput();
-            lucide.createIcons();
+            if (window.lucide) {
+                lucide.createIcons({ root: document.getElementById('modal-quick-paste') });
+            }
 
             setTimeout(() => {
                 const inputEl = document.getElementById('quick-paste-input');
@@ -7396,7 +7704,10 @@
             }
             if (parsed.detectedType) {
                 const typeEl = document.getElementById('quick-paste-type');
-                if (typeEl) typeEl.value = parsed.detectedType;
+                if (typeEl) {
+                    typeEl.value = parsed.detectedType;
+                    syncQuickPasteTypeDot();
+                }
             }
             if (parsed.detectedGym) {
                 const gymEl = document.getElementById('quick-paste-gym');
@@ -7404,6 +7715,7 @@
             }
             if (parsed.detectedTime && !document.getElementById('quick-paste-time').value) {
                 document.getElementById('quick-paste-time').value = parsed.detectedTime;
+                syncQuickPasteTimeDot();
             }
 
             let totalSets = 0;
