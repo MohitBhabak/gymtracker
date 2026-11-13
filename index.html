@@ -6472,6 +6472,8 @@
         // --- Progressive Overload Drawer ---
         let poRows = [''];
         let poSelectedGym = '';
+        window.poRows = poRows;
+        window.poSelectedGym = poSelectedGym;
         let lastPoEmailBody = '';
         let poEmailInFlight = false;
         let poEmailResetTimer = null;
@@ -6512,18 +6514,30 @@
         function poPopulateGymSelect(selectedGym = '') {
             const selectEl = document.getElementById('po-gym-select');
             if (!selectEl) return;
-            const gyms = appState.gyms || [];
+            const gyms = [...(appState.gyms || [])];
+            const trimmedSelected = (selectedGym || '').trim();
+            if (trimmedSelected && !gyms.some(g => g.toLowerCase() === trimmedSelected.toLowerCase())) {
+                gyms.push(trimmedSelected);
+            }
+            const matchedGym = trimmedSelected 
+                ? (gyms.find(g => g.toLowerCase() === trimmedSelected.toLowerCase()) || trimmedSelected) 
+                : '';
             let html = `<option value="">All Gyms (All Locations)</option>`;
             gyms.forEach(g => {
-                const isSelected = (g === selectedGym) ? 'selected' : '';
+                const isSelected = (matchedGym && g.toLowerCase() === matchedGym.toLowerCase()) ? 'selected' : '';
                 html += `<option value="${g.replace(/"/g, '&quot;')}" ${isSelected}>${g}</option>`;
             });
             selectEl.innerHTML = html;
-            selectEl.value = selectedGym;
+            selectEl.value = matchedGym;
+            poSelectedGym = matchedGym;
+            window.poSelectedGym = matchedGym;
         }
+
+        window.poPopulateGymSelect = poPopulateGymSelect;
 
         window.poOnGymChange = () => {
             poSelectedGym = document.getElementById('po-gym-select')?.value || '';
+            window.poSelectedGym = poSelectedGym;
             const resultsEl = document.getElementById('po-results');
             if (resultsEl && resultsEl.children.length > 0) {
                 poSubmit();
@@ -6630,56 +6644,44 @@
         };
 
         window.poAutofill = (type) => {
-            const dates = Object.keys(appState.workoutLogs).sort((a, b) => b.localeCompare(a));
+            const dates = Object.keys(appState.workoutLogs || {}).sort((a, b) => b.localeCompare(a));
             let foundSession = null;
-            let isFallback = false;
             
-            const typeLower = type.toLowerCase();
-            const targetTypes = (typeLower === 'lower' || typeLower === 'legs') ? ['lower', 'legs'] : [typeLower];
-            const selectedGym = document.getElementById('po-gym-select')?.value || '';
+            const typeLower = (type || '').toLowerCase().trim();
+            const targetTypes = (typeLower === 'lower' || typeLower === 'legs') 
+                ? ['lower', 'legs'] 
+                : (typeLower.includes('arm') || typeLower.includes('delt')) 
+                    ? ['arms & delts', 'arms and delts', 'arms', 'armsdelts', 'arms & shoulders', 'arms & shoulder'] 
+                    : [typeLower];
 
-            // First search matching selected gym (if specified)
-            if (selectedGym) {
-                for (let d of dates) {
-                    const session = appState.workoutLogs[d];
-                    if (session && session.type && targetTypes.includes(session.type.toLowerCase())) {
-                        if (session.gym && session.gym.toLowerCase() === selectedGym.toLowerCase() && session.exercises && session.exercises.length > 0) {
-                            foundSession = session;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            // If not found at specific gym (or no gym filter), search across all gyms
-            if (!foundSession) {
-                for (let d of dates) {
-                    const session = appState.workoutLogs[d];
-                    if (session && session.type && targetTypes.includes(session.type.toLowerCase())) {
-                        if (session.exercises && session.exercises.length > 0) {
-                            foundSession = session;
-                            if (selectedGym) isFallback = true;
-                            break;
-                        }
+            for (let d of dates) {
+                const session = appState.workoutLogs[d];
+                if (session && session.type && targetTypes.includes(session.type.toLowerCase().trim())) {
+                    if (session.exercises && session.exercises.length > 0) {
+                        foundSession = session;
+                        break;
                     }
                 }
             }
 
             if (foundSession && foundSession.exercises && foundSession.exercises.length > 0) {
                 poRows = foundSession.exercises.map(e => e.name);
+                window.poRows = poRows;
                 poRenderInputs();
                 
                 // Clear any previous results when autofilling
                 const resultsEl = document.getElementById('po-results');
                 if (resultsEl) resultsEl.innerHTML = '';
 
-                if (isFallback) {
-                    showAppToast(`Autofilled from recent ${type} session (${foundSession.gym || 'different gym'})`, 'info');
-                }
+                // Auto-select gym location depending on where the last session of that preset was
+                const sessionGym = (foundSession.gym || '').trim();
+                poPopulateGymSelect(sessionGym);
+
+                const gymDisplay = sessionGym ? sessionGym : 'All Locations';
+                showAppToast(`Autofilled ${type} & selected ${gymDisplay}`, 'info');
             } else {
                 const displayType = (typeLower === 'lower' || typeLower === 'legs') ? 'Lower or Legs' : type;
-                const gymMsg = selectedGym ? ` at "${selectedGym}" or any other gym` : '';
-                showAppAlert(`No recent ${displayType} session found with logged exercises${gymMsg}.`, 'No Recent Session', 'info');
+                showAppAlert(`No recent ${displayType} session found with logged exercises.`, 'No Recent Session', 'info');
             }
         };
 
