@@ -9862,12 +9862,16 @@
                 const ctx = chartCanvas.getContext('2d');
                 if (window.myChart) window.myChart.destroy();
 
-                const chartData = filteredSessions.slice(-12); // Last 12 sessions for this view
+                // Plot the full history for this view, from the very first session
+                const chartData = filteredSessions;
+                const spansYears = chartData.length > 0 && chartData[0].date.substring(0, 4) !== chartData[chartData.length - 1].date.substring(0, 4);
+                const fmtChartLabel = d => new Date(d + 'T00:00:00').toLocaleDateString('en-US', spansYears ? { month: 'short', day: 'numeric', year: '2-digit' } : { month: 'short', day: 'numeric' });
+                const manyPoints = chartData.length > 40;
 
                 window.myChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: chartData.map(s => s.date.substring(5)), // MM-DD
+                        labels: chartData.map(s => fmtChartLabel(s.date)),
                         datasets: [{
                             label: filteredSessions[0] && filteredSessions[0].isBodyweight ? `Max Reps` : `Max Weight (${appState.unit})`,
                             data: chartData.map(s => s.isBodyweight ? s.bestSet.reps : s.bestSet.weight),
@@ -9878,16 +9882,26 @@
                             fill: true,
                             pointBackgroundColor: getThemeColor('--surface', '#161616'),
                             pointBorderColor: getThemeColor('--primary', '#4ade80'),
-                            pointRadius: 4,
+                            pointRadius: manyPoints ? 2 : 4,
                             pointHoverRadius: 6
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: items => items.length ? fmtSessionDate(chartData[items[0].dataIndex].date) : ''
+                                }
+                            }
+                        },
                         scales: {
-                            x: { grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' } },
+                            x: {
+                                grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                                ticks: { autoSkip: true, maxTicksLimit: 10, maxRotation: 0 }
+                            },
                             y: { 
                                 grid: { color: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
                                 beginAtZero: false 
