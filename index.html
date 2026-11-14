@@ -2207,6 +2207,23 @@
                             <i data-lucide="plus-circle" style="width: 16px; height: 16px; color: var(--primary);"></i>
                             <span id="view-editor-header-text">Create New View</span>
                         </h4>
+
+                        <!-- Auto-Create Per Gym Card -->
+                        <div id="auto-create-views-box" style="margin-bottom: 1rem; padding: 0.75rem 0.85rem; background: rgba(var(--primary-rgb), 0.06); border: 1px dashed rgba(var(--primary-rgb), 0.35); border-radius: var(--radius-tight); display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 180px;">
+                                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 0.35rem;">
+                                    <i data-lucide="sparkles" style="width: 13px; height: 13px; color: var(--primary);"></i>
+                                    <span>Auto-Create View Per Gym</span>
+                                </div>
+                                <div id="auto-create-views-hint" style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.2rem; line-height: 1.4;">
+                                    Scan past workouts and create a view for each gym logged.
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm" id="btn-auto-create-gym-views" onclick="autoCreateViewsForExerciseGyms()" style="font-size: 0.78rem; padding: 0.4rem 0.75rem; background: var(--primary); color: #fff; border: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem; border-radius: var(--radius-tight); cursor: pointer;" title="Create a different view for each gym this exercise was done at automatically">
+                                <i data-lucide="layers" style="width: 13px; height: 13px;"></i> <span id="btn-auto-create-gym-views-text">Auto-Create Per Gym</span>
+                            </button>
+                        </div>
+
                         <input type="hidden" id="view-editor-id" value="">
                         <div style="margin-bottom: 0.85rem;">
                             <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 0.3rem; font-weight: 600;">View Name</label>
@@ -9044,6 +9061,93 @@
             return [defaultView, ...customViews];
         }
 
+        function getGymsForExercise(exerciseName) {
+            if (!exerciseName) return [];
+            const targetLower = exerciseName.toLowerCase().trim();
+            const gymsMap = new Map();
+            (appState.gyms || []).forEach(g => {
+                if (typeof g === 'string' && g.trim()) {
+                    gymsMap.set(g.trim().toLowerCase(), g.trim());
+                }
+            });
+
+            const found = new Set();
+            Object.values(appState.workoutLogs || {}).forEach(log => {
+                if (!log || !log.gym || typeof log.gym !== 'string' || !log.gym.trim()) return;
+                const hasEx = Array.isArray(log.exercises) && log.exercises.some(e => e && e.name && e.name.toLowerCase().trim() === targetLower);
+                if (hasEx) {
+                    const raw = log.gym.trim();
+                    const canonical = gymsMap.get(raw.toLowerCase()) || raw;
+                    found.add(canonical);
+                }
+            });
+
+            return Array.from(found).sort((a, b) => a.localeCompare(b));
+        }
+
+        window.getGymsForExercise = getGymsForExercise;
+
+        window.autoCreateViewsForExerciseGyms = async (exerciseName) => {
+            const targetName = exerciseName || currentSelectedExerciseName;
+            if (!targetName) return;
+
+            const loggedGyms = getGymsForExercise(targetName);
+            if (loggedGyms.length === 0) {
+                return showAppAlert(
+                    `No gym locations were found in past sessions for "${targetName}".\n\nViews can only be automatically created for gyms where this exercise was performed with a gym location recorded.`,
+                    'No Logged Gyms Found',
+                    'info'
+                );
+            }
+
+            if (!appState.exerciseViews) appState.exerciseViews = {};
+            if (!appState.exerciseViews[targetName]) {
+                appState.exerciseViews[targetName] = [];
+            }
+
+            const existingViews = appState.exerciseViews[targetName];
+            const createdGyms = [];
+            const alreadyExistingGyms = [];
+
+            loggedGyms.forEach(gym => {
+                const gymLower = gym.toLowerCase();
+                const alreadyExists = existingViews.some(v => 
+                    (v.name && v.name.toLowerCase().trim() === gymLower) ||
+                    (Array.isArray(v.gyms) && v.gyms.length === 1 && v.gyms[0].toLowerCase().trim() === gymLower)
+                );
+
+                if (!alreadyExists) {
+                    const newId = 'view_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+                    existingViews.push({
+                        id: newId,
+                        name: gym,
+                        gyms: [gym]
+                    });
+                    createdGyms.push(gym);
+                } else {
+                    alreadyExistingGyms.push(gym);
+                }
+            });
+
+            if (createdGyms.length === 0) {
+                return showAppToast(
+                    `All views for logged gyms already exist for "${targetName}" (${alreadyExistingGyms.join(', ')})`,
+                    'info'
+                );
+            }
+
+            saveState();
+            renderModalViewsList(targetName);
+            resetViewEditor();
+            showExerciseDetail(targetName);
+            lucide.createIcons();
+
+            showAppToast(
+                `Created ${createdGyms.length} gym view${createdGyms.length === 1 ? '' : 's'}: ${createdGyms.join(', ')}`,
+                'success'
+            );
+        };
+
         window.switchExerciseView = (viewId) => {
             if (!currentSelectedExerciseName) return;
             activeExerciseViewMap[currentSelectedExerciseName] = viewId;
@@ -9139,6 +9243,35 @@
             });
 
             listEl.innerHTML = html;
+
+            // Update auto-create views hint and button state
+            const hintEl = document.getElementById('auto-create-views-hint');
+            const autoBtn = document.getElementById('btn-auto-create-gym-views');
+            const autoBtnText = document.getElementById('btn-auto-create-gym-views-text');
+            if (hintEl) {
+                const loggedGyms = getGymsForExercise(exerciseName);
+                if (loggedGyms.length === 0) {
+                    hintEl.innerHTML = '<span style="color:var(--text-muted);">No gym history recorded yet for this exercise.</span>';
+                    if (autoBtn) autoBtn.title = 'No gym history found yet for this exercise';
+                    if (autoBtnText) autoBtnText.innerText = 'Auto-Create Per Gym';
+                } else {
+                    const customViews = (appState.exerciseViews && appState.exerciseViews[exerciseName]) || [];
+                    const missingGyms = loggedGyms.filter(g => !customViews.some(v => 
+                        (v.name && v.name.toLowerCase().trim() === g.toLowerCase()) ||
+                        (Array.isArray(v.gyms) && v.gyms.length === 1 && v.gyms[0].toLowerCase().trim() === g.toLowerCase())
+                    ));
+                    if (missingGyms.length > 0) {
+                        hintEl.innerHTML = `<span style="color:var(--primary); font-weight:600;">⚡ Logged at:</span> ${escapeHtml(loggedGyms.join(', '))}. Click <strong>Auto-Create Per Gym</strong> to generate separate views.`;
+                        if (autoBtn) autoBtn.title = `Auto-create views for: ${missingGyms.join(', ')}`;
+                        if (autoBtnText) autoBtnText.innerText = `Auto-Create (${missingGyms.length})`;
+                    } else {
+                        hintEl.innerHTML = `<span style="color:var(--success, #10b981); font-weight:600;">✓ All logged gyms have views:</span> ${escapeHtml(loggedGyms.join(', '))}.`;
+                        if (autoBtn) autoBtn.title = 'All views for logged gyms already exist';
+                        if (autoBtnText) autoBtnText.innerText = 'Gym Views Created';
+                    }
+                }
+            }
+
             lucide.createIcons();
         }
 
@@ -9172,6 +9305,7 @@
             const saveText = document.getElementById('btn-save-view-text');
             const cancelBtn = document.getElementById('btn-cancel-edit-view');
             const isDefaultCb = document.getElementById('view-editor-is-default');
+            const autoBox = document.getElementById('auto-create-views-box');
 
             if (idInput) idInput.value = '';
             if (nameInput) nameInput.value = '';
@@ -9179,6 +9313,7 @@
             if (saveText) saveText.innerText = 'Save View';
             if (cancelBtn) cancelBtn.style.display = 'none';
             if (isDefaultCb) isDefaultCb.checked = false;
+            if (autoBox) autoBox.style.display = 'flex';
 
             renderGymCheckboxesInEditor([]);
         };
@@ -9196,12 +9331,14 @@
             const saveText = document.getElementById('btn-save-view-text');
             const cancelBtn = document.getElementById('btn-cancel-edit-view');
             const isDefaultCb = document.getElementById('view-editor-is-default');
+            const autoBox = document.getElementById('auto-create-views-box');
 
             if (idInput) idInput.value = targetView.id;
             if (nameInput) nameInput.value = targetView.name;
             if (headerText) headerText.innerText = 'Edit View';
             if (saveText) saveText.innerText = 'Update View';
             if (cancelBtn) cancelBtn.style.display = 'inline-block';
+            if (autoBox) autoBox.style.display = 'none';
             if (isDefaultCb) {
                 isDefaultCb.checked = (appState.exerciseDefaultViews?.[currentSelectedExerciseName] === targetView.id);
             }
