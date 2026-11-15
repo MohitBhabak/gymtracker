@@ -337,6 +337,22 @@
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
         
 
+        /* Settings tabs */
+        #modal-settings .modal-content { max-width: 600px; }
+        .settings-tabs { display: flex; gap: 0.25rem; overflow-x: auto; padding: 3px; margin: -0.5rem 0 1.25rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-base); scrollbar-width: none; }
+        .settings-tabs::-webkit-scrollbar { display: none; }
+        .settings-tab { flex: 1 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.5rem 0.75rem; background: none; border: none; border-radius: var(--radius-tight); color: var(--text-muted); font-family: inherit; font-size: 0.82rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .settings-tab:hover { color: var(--text); }
+        .settings-tab.active { background: var(--primary); color: var(--on-primary); }
+        .settings-panel { display: none; }
+        .settings-panel.active { display: block; }
+        .settings-panel > * { margin-bottom: 1rem !important; }
+        .settings-panel > *:last-child { margin-bottom: 0 !important; }
+        .settings-card { padding: 1.25rem; background-color: var(--surface-offset); border-radius: var(--radius-base); border: 1px solid var(--border); }
+        .settings-card-title { margin: 0 0 0.75rem; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem; }
+        .settings-card-title i { color: var(--primary); }
+        .settings-card .settings-row:last-child { border-bottom: none !important; padding-bottom: 0 !important; }
+
         /* Appearance / Theme Customization */
         .appearance-section { margin-bottom: 2rem; padding: 1.25rem; background-color: var(--surface-offset); border-radius: var(--radius-base); border: 1px solid var(--border); }
         .appearance-row { padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
@@ -1881,17 +1897,25 @@
                     <h2>Settings & Backup</h2>
                     <button class="icon-btn" onclick="closeModal('modal-settings')"><i data-lucide="x"></i></button>
                 </div>
+                <div class="settings-tabs" role="tablist" id="settings-tabs">
+                    <button type="button" class="settings-tab active" role="tab" data-tab="general" onclick="switchSettingsTab('general')"><i data-lucide="sliders-horizontal" style="width:14px;height:14px;"></i> General</button>
+                    <button type="button" class="settings-tab" role="tab" data-tab="appearance" onclick="switchSettingsTab('appearance')"><i data-lucide="palette" style="width:14px;height:14px;"></i> Appearance</button>
+                    <button type="button" class="settings-tab" role="tab" data-tab="gyms" onclick="switchSettingsTab('gyms')"><i data-lucide="map-pin" style="width:14px;height:14px;"></i> Gyms</button>
+                    <button type="button" class="settings-tab" role="tab" data-tab="sync" onclick="switchSettingsTab('sync')"><i data-lucide="cloud" style="width:14px;height:14px;"></i> Sync &amp; Backup</button>
+                    <button type="button" class="settings-tab" role="tab" data-tab="email" onclick="switchSettingsTab('email')"><i data-lucide="mail" style="width:14px;height:14px;"></i> Email</button>
+                </div>
                 <div id="modal-settings-body">
-                    <div style="margin-bottom: 2rem;">
-                        <h4 style="margin-bottom: 0.5rem;">Preferences</h4>
-                        <div class="flex items-center justify-between" style="padding: 0.6rem 0; border-bottom: 1px solid var(--border);">
+                  <div class="settings-panel active" data-panel="general">
+                    <div class="settings-card">
+                        <h4 class="settings-card-title"><i data-lucide="sliders-horizontal" style="width:18px;height:18px;"></i> Preferences</h4>
+                        <div class="settings-row flex items-center justify-between" style="padding: 0.6rem 0; border-bottom: 1px solid var(--border);">
                             <span>Weight Unit</span>
                             <select id="settings-unit" style="width: 100px;" onchange="updateUnit(this.value)">
                                 <option value="lbs">lbs</option>
                                 <option value="kg">kg</option>
                             </select>
                         </div>
-                        <div class="flex items-center justify-between" style="padding: 0.6rem 0; border-bottom: 1px solid var(--border);">
+                        <div class="settings-row flex items-center justify-between" style="padding: 0.6rem 0; border-bottom: 1px solid var(--border); gap: 0.75rem;">
                             <div>
                                 <div style="font-weight: 500;">App Font / Typography</div>
                                 <div class="text-muted" style="font-size: 0.75rem;">Select font styling across the app</div>
@@ -1910,7 +1934,9 @@
                             </select>
                         </div>
                     </div>
+                  </div>
 
+                  <div class="settings-panel" data-panel="appearance">
                     <!-- Appearance Section -->
                     <div class="appearance-section" id="settings-appearance">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.25rem;">
@@ -1966,8 +1992,11 @@
                         </div>
                     </div>
 
+                  </div>
+
+                  <div class="settings-panel" data-panel="gyms">
                     <!-- Gym Locations Section -->
-                    <div style="margin-bottom: 2rem; padding: 1.25rem; background-color: var(--surface-offset); border-radius: var(--radius-base); border: 1px solid var(--border);">
+                    <div class="settings-card">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
                             <h4 style="margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
                                 <i data-lucide="map-pin" style="width: 18px; height: 18px; color: var(--primary);"></i>
@@ -1991,7 +2020,10 @@
                         </div>
                     </div>
 
-                    <div style="margin-bottom: 2rem; padding: 1.25rem; background-color: var(--surface-offset); border-radius: var(--radius-base); border: 1px solid var(--border);">
+                  </div>
+
+                  <div class="settings-panel" data-panel="sync">
+                    <div class="settings-card">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
                             <h4 style="margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
                                 <i data-lucide="cloud" style="width: 18px; height: 18px; color: var(--primary);"></i>
@@ -2050,7 +2082,24 @@
                         </div>
                     </div>
 
-                    <div id="settings-auto-email" style="margin-bottom: 2rem; padding: 1.25rem; background-color: var(--surface-offset); border-radius: var(--radius-base); border: 1px solid var(--border);">
+                    <div class="settings-card">
+                        <h4 class="settings-card-title"><i data-lucide="hard-drive" style="width:18px;height:18px;"></i> Local Data Backup</h4>
+                        <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.9rem;">Export your workout data to a file to keep it safe, or import a previous backup.</p>
+                        <div class="flex gap-2 items-center">
+                            <button class="btn" onclick="exportData()">
+                                <i data-lucide="download" style="width:16px; height:16px;"></i>
+                                <span>Export Data</span>
+                            </button>
+                            <label class="btn" style="cursor:pointer; margin:0;">
+                                <i data-lucide="upload" style="width:16px; height:16px;"></i>
+                                <span>Import Data</span>
+                                <input type="file" accept=".json" class="hidden" id="import-file" onchange="importData(event)">
+                            </label>
+                        </div>
+                    </div>
+                  </div>
+                  <div class="settings-panel" data-panel="email">
+                    <div id="settings-auto-email" class="settings-card">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; gap: 0.5rem; flex-wrap: wrap;">
                             <h4 style="margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1rem;">
                                 <i data-lucide="mail" style="width: 18px; height: 18px; color: var(--primary);"></i>
@@ -2118,7 +2167,7 @@
                                 </div>
                             </div>
                             <div class="text-muted" style="font-size: 0.73rem; line-height: 1.35;">
-                                Uses your Google OAuth Client ID above. Requires the <strong>Gmail API</strong> to be enabled in your Google Cloud Console project.
+                                Uses the Google OAuth Client ID from the <strong>Sync &amp; Backup</strong> tab. Requires the <strong>Gmail API</strong> to be enabled in your Google Cloud Console project.
                             </div>
                         </div>
 
@@ -2127,21 +2176,7 @@
                         </button>
                     </div>
 
-                    <div style="margin-bottom: 2rem;">
-                        <h4 style="margin-bottom: 0.5rem;">Local Data Backup</h4>
-                        <p class="text-muted" style="margin-bottom: 1rem; font-size: 0.9rem;">Export your workout data to a file to keep it safe, or import a previous backup.</p>
-                        <div class="flex gap-2 items-center">
-                            <button class="btn" onclick="exportData()">
-                                <i data-lucide="download" style="width:16px; height:16px;"></i>
-                                <span>Export Data</span>
-                            </button>
-                            <label class="btn" style="cursor:pointer; margin:0;">
-                                <i data-lucide="upload" style="width:16px; height:16px;"></i>
-                                <span>Import Data</span>
-                                <input type="file" accept=".json" class="hidden" id="import-file" onchange="importData(event)">
-                            </label>
-                        </div>
-                    </div>
+                  </div>
                 </div>
             </div>
         </div>
@@ -4975,6 +5010,7 @@
             updateAutoEmailUI();
             renderSettingsGyms();
             renderAppearanceSettings();
+            switchSettingsTab('general');
             openModal('modal-settings');
         };
 
@@ -5113,8 +5149,19 @@
             if (window.lucide) lucide.createIcons({ root: document.getElementById('settings-auto-email') });
         }
 
+        window.switchSettingsTab = (tab) => {
+            document.querySelectorAll('#modal-settings .settings-tab').forEach(b => {
+                const on = b.dataset.tab === tab;
+                b.classList.toggle('active', on);
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            document.querySelectorAll('#modal-settings .settings-panel').forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
+            try { sessionStorage.setItem('gymlog_settings_tab', tab); } catch (e) {}
+        };
+
         window.openAutoEmailSettings = () => {
             openSettingsModal();
+            switchSettingsTab('email');
             setTimeout(() => {
                 const section = document.getElementById('settings-auto-email');
                 if (section && typeof section.scrollIntoView === 'function') {
