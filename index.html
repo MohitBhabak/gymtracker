@@ -7367,11 +7367,24 @@
                     <button type="button" class="btn btn-primary" onclick="proceedToLogExercises('${dateStr}', '${safeType}')" style="flex:1; min-width:160px; justify-content:center; padding:0.7rem 1rem; font-weight:700; display:inline-flex; align-items:center; gap:0.4rem;">
                         <i data-lucide="dumbbell" style="width:16px;height:16px;"></i> Add Exercises →
                     </button>
+                    <button type="button" class="btn" onclick="pasteFromQuickLogScreen('${dateStr}', '${safeType}')" style="flex-basis:100%; justify-content:center; padding:0.65rem 1rem; font-weight:600; background:var(--surface-offset); border:1px solid var(--border); display:inline-flex; align-items:center; gap:0.4rem;">
+                        <i data-lucide="clipboard-paste" style="width:16px;height:16px;color:var(--primary);"></i> Or Paste Workout from Notes
+                    </button>
                 </div>
             `;
             modalBody.innerHTML = html;
             populateGymSelect('quick-log-gym', defaultGym);
             lucide.createIcons({ root: modalBody });
+        };
+
+        // Open Quick Paste carrying over the type / time / gym chosen on this screen
+        window.pasteFromQuickLogScreen = (dateStr, type) => {
+            openQuickPasteModal(dateStr, {
+                type,
+                gym: document.getElementById('quick-log-gym')?.value || '',
+                time: pendingQuickLogTime || '',
+                notes: document.getElementById('quick-log-notes')?.value.trim() || ''
+            });
         };
 
         window.saveWorkoutOnly = (dateStr, type) => {
@@ -7918,20 +7931,22 @@
             }
         };
 
-        window.openQuickPasteModal = (dateStr) => {
+        let pendingQuickPasteNotes = '';
+        window.openQuickPasteModal = (dateStr, preset = null) => {
+            pendingQuickPasteNotes = preset?.notes || '';
             const currentDate = dateStr || document.getElementById('log-date')?.value || new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
             const dateInput = document.getElementById('quick-paste-date');
             if (dateInput) dateInput.value = currentDate;
             
             const existingLog = appState.workoutLogs[currentDate];
-            const existingType = existingLog?.type || document.getElementById('log-type')?.value || 'Push';
+            const existingType = preset?.type || existingLog?.type || document.getElementById('log-type')?.value || 'Push';
             const typeSelect = document.getElementById('quick-paste-type');
             if (typeSelect) typeSelect.value = existingType;
 
-            const existingGym = existingLog?.gym || document.getElementById('log-gym')?.value || '';
+            const existingGym = preset?.gym || existingLog?.gym || document.getElementById('log-gym')?.value || '';
             populateGymSelect('quick-paste-gym', existingGym || (appState.gyms && appState.gyms[0]) || '');
 
-            const existingTime = existingLog?.timeOfDay || document.getElementById('log-time')?.value || '';
+            const existingTime = (preset ? preset.time : null) ?? (existingLog?.timeOfDay || document.getElementById('log-time')?.value || '');
             const timeSelect = document.getElementById('quick-paste-time');
             if (timeSelect) timeSelect.value = existingTime;
 
@@ -8088,6 +8103,11 @@
             document.getElementById('log-time').value = timeOfDay || '';
             if (!isAppend) {
                 document.getElementById('log-notes').value = appState.workoutLogs[dateStr]?.notes || '';
+            }
+            if (pendingQuickPasteNotes) {
+                const notesEl = document.getElementById('log-notes');
+                notesEl.value = notesEl.value ? `${notesEl.value}\n${pendingQuickPasteNotes}` : pendingQuickPasteNotes;
+                pendingQuickPasteNotes = '';
             }
             
             renderLogExercises();
