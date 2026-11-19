@@ -2542,6 +2542,9 @@
                     <button type="button" class="search-preset-chip" data-preset="split" onclick="selectSearchPreset('split')">
                         <i data-lucide="dumbbell" style="width: 13px; height: 13px; color: var(--primary);"></i> By Split
                     </button>
+                    <button type="button" class="search-preset-chip" data-preset="gym" onclick="selectSearchPreset('gym')">
+                        <i data-lucide="map-pin" style="width: 13px; height: 13px; color: #14b8a6;"></i> By Gym
+                    </button>
                     <button type="button" class="search-preset-chip" data-preset="notes" onclick="selectSearchPreset('notes')">
                         <i data-lucide="file-text" style="width: 13px; height: 13px; color: #ec4899;"></i> Notes Search
                     </button>
@@ -3986,6 +3989,9 @@
                 renderPresetMonthlyWorkouts(currentSearchParam);
             } else if (currentSearchPreset === 'split') {
                 renderPresetSplitFilter(currentSearchParam);
+            } else if (currentSearchPreset === 'gym') {
+                renderPresetGymFilter(currentSearchParam);
+                currentSearchParam = null;
             } else if (currentSearchPreset === 'notes') {
                 renderPresetNotesSearch();
             } else if (currentSearchPreset === 'stats') {
@@ -4189,6 +4195,16 @@
                         <div style="flex:1;">
                             <div style="font-weight:700; font-size:0.88rem; color:var(--text); margin-bottom:0.15rem;">Workouts by Split</div>
                             <div class="text-muted" style="font-size:0.75rem; line-height:1.35;">Filter and view past Push, Pull, Legs, Upper, Lower logs.</div>
+                        </div>
+                    </div>
+
+                    <div class="search-preset-card" onclick="selectSearchPreset('gym')">
+                        <div class="search-preset-icon-wrap" style="background:rgba(20, 184, 166, 0.15); color:#14b8a6;">
+                            <i data-lucide="map-pin" style="width:18px;height:18px;"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-weight:700; font-size:0.88rem; color:var(--text); margin-bottom:0.15rem;">Workouts by Gym</div>
+                            <div class="text-muted" style="font-size:0.75rem; line-height:1.35;">Find sessions at a gym, or a split / exercise done there.</div>
                         </div>
                     </div>
 
@@ -4600,6 +4616,147 @@
             `;
         }
 
+        // Gym search helpers
+        const attrEsc = str => escapeHtml(str).replace(/"/g, '&quot;');
+        function getKnownGyms() {
+            const seen = new Map();
+            (appState.gyms || []).forEach(g => { if (g) seen.set(g.toLowerCase(), g); });
+            Object.values(appState.workoutLogs || {}).forEach(l => { if (l && l.gym && !seen.has(l.gym.toLowerCase())) seen.set(l.gym.toLowerCase(), l.gym); });
+            return [...seen.values()].sort((a, b) => a.localeCompare(b));
+        }
+        const fmtSearchSet = st => (st.isBodyweight || !st.weight) ? `BW × ${st.reps || 0}` : `${st.weight} × ${st.reps || 0}`;
+        function pickBestSet(sets) {
+            return sets.reduce((best, st) => {
+                const bw = st.isBodyweight || !st.weight;
+                if (bw) return (st.reps || 0) > (best.reps || 0) ? st : best;
+                return ((st.weight || 0) > (best.weight || 0) || ((st.weight || 0) === (best.weight || 0) && (st.reps || 0) > (best.reps || 0))) ? st : best;
+            }, sets[0]);
+        }
+        const fmtSearchDate = dateStr => {
+            const [y, m, d] = dateStr.split('-').map(Number);
+            return new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(y, m - 1, d));
+        };
+
+        // 4b. Gym Filter Preset (gym + optional split + optional exercise)
+        let gymSearch = { gym: '', split: '', exercise: '' };
+        window.setGymSearch = (key, value) => {
+            gymSearch[key] = value || '';
+            if (key === 'gym') gymSearch.exercise = '';
+            renderPresetGymFilter();
+            lucide.createIcons({ root: document.getElementById('search-modal-body') });
+        };
+
+        function renderPresetGymFilter(param) {
+            const body = document.getElementById('search-modal-body');
+            if (param === undefined) {
+                // keep current selection (re-render from a control)
+            } else if (param === null) {
+                // keep as is
+            } else if (typeof param === 'string') {
+                gymSearch = { gym: param, split: '', exercise: '' };
+            } else if (typeof param === 'object') {
+                gymSearch = { gym: param.gym || '', split: param.split || '', exercise: param.exercise || '' };
+            }
+            const logs = appState.workoutLogs || {};
+            const gyms = getKnownGyms();
+            const splits = ['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Arms & Delts', 'Abs', 'Cardio'];
+            const gymL = gymSearch.gym.toLowerCase();
+            const splitL = gymSearch.split.toLowerCase();
+            const exL = gymSearch.exercise.toLowerCase();
+
+            // Sessions at gym / split (before exercise filter) feed the exercise dropdown
+            const baseSessions = [];
+            Object.keys(logs).sort().reverse().forEach(date => {
+                const log = logs[date];
+                if (!log) return;
+                if (gymL && (log.gym || '').toLowerCase() !== gymL) return;
+                if (splitL && (log.type || '').toLowerCase() !== splitL) return;
+                baseSessions.push({ date, log });
+            });
+            const exCounts = new Map();
+            baseSessions.forEach(({ log }) => {
+                const names = new Set((log.exercises || []).filter(e => e.sets && e.sets.length).map(e => e.name));
+                names.forEach(n => exCounts.set(n, (exCounts.get(n) || 0) + 1));
+            });
+            const exOptions = [...exCounts.keys()].sort((a, b) => a.localeCompare(b));
+            if (gymSearch.exercise && !exCounts.has(gymSearch.exercise)) {
+                // selected exercise isn't present for this gym/split: keep it visible so the empty result is explained
+                exOptions.push(gymSearch.exercise);
+            }
+
+            const results = [];
+            baseSessions.forEach(({ date, log }) => {
+                if (!exL) { results.push({ date, log, instances: [] }); return; }
+                const instances = (log.exercises || []).filter(e => e.name.toLowerCase() === exL && e.sets && e.sets.length);
+                if (instances.length) results.push({ date, log, instances });
+            });
+
+            const chip = (label, active, onclick, extra = '') => `<button type="button" class="search-preset-chip ${active ? 'active' : ''}" ${onclick} style="font-size:0.8rem; padding:0.35rem 0.75rem; ${extra}">${label}</button>`;
+            const gymChips = chip('All gyms', !gymSearch.gym, `onclick="setGymSearch('gym','')"`) +
+                gyms.map(g => chip(escapeHtml(g), g.toLowerCase() === gymL, `data-v="${attrEsc(g)}" onclick="setGymSearch('gym', this.dataset.v)"`)).join('');
+            const selStyle = 'flex:1; min-width:140px; padding:0.4rem 0.5rem; font-size:0.8rem;';
+            const splitSelect = `<select style="${selStyle}" onchange="setGymSearch('split', this.value)" aria-label="Filter by split">
+                    <option value="">Any split</option>
+                    ${splits.map(sp => `<option value="${attrEsc(sp)}" ${sp.toLowerCase() === splitL ? 'selected' : ''}>${escapeHtml(sp)}</option>`).join('')}
+                </select>`;
+            const exSelect = `<select style="${selStyle}" onchange="setGymSearch('exercise', this.value)" aria-label="Filter by exercise">
+                    <option value="">Any exercise</option>
+                    ${exOptions.map(n => `<option value="${attrEsc(n)}" ${n.toLowerCase() === exL ? 'selected' : ''}>${escapeHtml(n)}${exCounts.has(n) ? ` (${exCounts.get(n)})` : ''}</option>`).join('')}
+                </select>`;
+
+            // Summary
+            const where = gymSearch.gym ? ` at <strong>${escapeHtml(gymSearch.gym)}</strong>` : '';
+            let summaryHTML = '';
+            if (exL && results.length) {
+                const all = results.flatMap(r => r.instances.map(i => ({ date: r.date, best: pickBestSet(i.sets) })));
+                let top = all[0];
+                all.forEach(x => { if (pickBestSet([top.best, x.best]) === x.best && x.best !== top.best) top = x; });
+                summaryHTML = `<div class="text-muted" style="font-size:0.8rem; margin-bottom:0.75rem;">${results.length} session${results.length === 1 ? '' : 's'} of <strong>${escapeHtml(gymSearch.exercise)}</strong>${where} · best ${fmtSearchSet(top.best)} ${appState.unit === 'kg' ? 'kg' : (top.best.isBodyweight || !top.best.weight ? '' : 'lbs')} on ${fmtSearchDate(top.date)}</div>`;
+            }
+
+            let listHTML = '';
+            if (results.length === 0) {
+                listHTML = `<div style="text-align:center; padding:2rem 1rem; color:var(--text-muted);"><p>No matching sessions${where}${gymSearch.split ? ` for ${escapeHtml(gymSearch.split)}` : ''}${gymSearch.exercise ? ` with ${escapeHtml(gymSearch.exercise)}` : ''}.</p></div>`;
+            } else {
+                results.forEach(({ date, log, instances }) => {
+                    const exNames = (log.exercises || []).map(e => e.name).join(', ');
+                    const instHTML = instances.map(i => {
+                        const best = pickBestSet(i.sets);
+                        return `<div style="font-size:0.78rem; margin-top:0.2rem;"><strong>${fmtSearchSet(best)}</strong> <span class="text-muted">best · ${i.sets.length} set${i.sets.length === 1 ? '' : 's'}: ${i.sets.map(fmtSearchSet).join(', ')}</span>${i.notes ? `<div class="text-muted" style="font-size:0.72rem;">💬 ${escapeHtml(i.notes)}</div>` : ''}</div>`;
+                    }).join('');
+                    listHTML += `
+                        <div class="search-result-item" onclick="navigateToDayFromSearch('${date}')">
+                            <div style="overflow:hidden; flex:1;">
+                                <div style="display:flex; align-items:center; gap:0.4rem; margin-bottom:0.2rem; flex-wrap:wrap;">
+                                    <span class="badge ${getWorkoutColorClass(log.type)}" style="font-size:0.72rem;">${escapeHtml(log.type || '')}</span>
+                                    <strong style="font-size:0.85rem;">${fmtSearchDate(date)}</strong>
+                                    ${log.gym ? `<span class="text-muted" style="font-size:0.75rem;">• ${escapeHtml(log.gym)}</span>` : ''}
+                                </div>
+                                ${instHTML || `<div class="text-muted" style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${exNames ? escapeHtml(exNames) : (log.notes ? `📝 ${escapeHtml(log.notes)}` : 'No exercises logged')}</div>`}
+                            </div>
+                            <i data-lucide="chevron-right" class="text-muted" style="width:14px;height:14px;flex-shrink:0;"></i>
+                        </div>`;
+                });
+            }
+
+            body.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                    <div style="font-weight:700; font-size:0.88rem; display:flex; align-items:center; gap:0.4rem;">
+                        <i data-lucide="map-pin" style="width:16px;height:16px;color:#14b8a6;"></i> Workouts by Gym
+                    </div>
+                    <button class="btn btn-sm" onclick="selectSearchPreset('all')" style="padding:0.2rem 0.6rem; font-size:0.75rem;">← Presets</button>
+                </div>
+                <div class="flex" style="flex-wrap:wrap; gap:0.4rem; margin-bottom:0.75rem;">${gymChips}</div>
+                <div class="flex gap-2" style="flex-wrap:wrap; margin-bottom:1rem;">${splitSelect}${exSelect}</div>
+                ${summaryHTML}
+                <div class="search-section-title">
+                    <span>${results.length} Session${results.length === 1 ? '' : 's'}</span>
+                    <span style="font-weight:400; font-size:0.7rem;">Click to view</span>
+                </div>
+                <div style="max-height:300px; overflow-y:auto;">${listHTML}</div>
+            `;
+        }
+
         // 5. Notes Search Preset
         function renderPresetNotesSearch() {
             const body = document.getElementById('search-modal-body');
@@ -4781,44 +4938,74 @@
             const exercises = appState.exercises || [];
 
             // 1. Matched Exercises
-            const matchedExercises = exercises.filter(e => {
-                return e.name.toLowerCase().includes(q) || (e.category && e.category.toLowerCase().includes(q));
-            });
+            const exTermForList = (() => {
+                const gy = getKnownGyms().filter(g => q.includes(g.toLowerCase())).sort((a, b) => b.length - a.length)[0];
+                if (!gy) return q;
+                return q.replace(gy.toLowerCase(), ' ').replace(/(^|\s)(at|@|in|from|gym|workouts?|sessions?)(?=\s|$)/g, ' ').replace(/\s+/g, ' ').trim();
+            })();
+            const gymInQuery = exTermForList !== q;
+            // With a gym in the query, only list exercises by name (a split word like "push" is a session filter there)
+            const matchedExercises = exTermForList ? exercises.filter(e => {
+                return e.name.toLowerCase().includes(exTermForList) || (!gymInQuery && e.category && e.category.toLowerCase().includes(exTermForList));
+            }) : [];
 
             // 2. Matched Workouts & Dates & Notes & Gyms
+            // Gym-aware queries: "iron works", "push at iron works", "bench @ iron works"
+            const knownGyms = getKnownGyms();
+            const queryGym = knownGyms
+                .filter(g => q.includes(g.toLowerCase()))
+                .sort((a, b) => b.length - a.length)[0] || null;
+            let term = q;
+            if (queryGym) {
+                term = q.replace(queryGym.toLowerCase(), ' ')
+                    .replace(/(^|\s)(at|@|in|from|gym|workouts?|sessions?)(?=\s|$)/g, ' ')
+                    .replace(/\s+/g, ' ').trim();
+            }
+            const queryGymL = queryGym ? queryGym.toLowerCase() : null;
+            const categoryOf = name => ((exercises.find(e => e.name.toLowerCase() === name.toLowerCase()) || {}).category || '').toLowerCase();
+
             const matchedWorkouts = [];
             Object.keys(logs).sort().reverse().forEach(date => {
                 const log = logs[date];
-                const typeMatches = (log.type || '').toLowerCase().includes(q);
-                const gymMatches = (log.gym || '').toLowerCase().includes(q);
-                const dateMatches = date.toLowerCase().includes(q);
-                const notesMatches = (log.notes || '').toLowerCase().includes(q);
-                
+                if (queryGymL && (log.gym || '').toLowerCase() !== queryGymL) return;
+                const t = term;
+                const typeMatches = t ? (log.type || '').toLowerCase().includes(t) : false;
+                const gymMatches = queryGymL ? true : (log.gym || '').toLowerCase().includes(q);
+                const dateMatches = t ? date.toLowerCase().includes(t) : false;
+                const notesMatches = t ? (log.notes || '').toLowerCase().includes(t) : false;
+
                 let matchedExNotes = '';
                 let hasExNameMatch = false;
-                if (log.exercises) {
-                    log.exercises.forEach(ex => {
-                        if (ex.name.toLowerCase().includes(q)) hasExNameMatch = true;
-                        if (ex.notes && ex.notes.toLowerCase().includes(q)) {
-                            matchedExNotes = `${ex.name}: ${ex.notes}`;
+                const matchedExerciseLines = [];
+                (log.exercises || []).forEach(ex => {
+                    const nameHit = t && (ex.name.toLowerCase().includes(t) || categoryOf(ex.name) === t);
+                    if (nameHit) {
+                        hasExNameMatch = true;
+                        if (ex.sets && ex.sets.length) {
+                            matchedExerciseLines.push(`${ex.name}: ${fmtSearchSet(pickBestSet(ex.sets))} best · ${ex.sets.length} set${ex.sets.length === 1 ? '' : 's'}`);
                         }
-                    });
-                }
+                    }
+                    if (t && ex.notes && ex.notes.toLowerCase().includes(t)) {
+                        matchedExNotes = `${ex.name}: ${ex.notes}`;
+                    }
+                });
 
-                if (typeMatches || gymMatches || dateMatches || notesMatches || matchedExNotes || hasExNameMatch) {
+                const termHit = typeMatches || dateMatches || notesMatches || matchedExNotes || hasExNameMatch;
+                if (queryGymL ? (!t || termHit) : (gymMatches || termHit)) {
                     matchedWorkouts.push({
                         date,
                         type: log.type || '',
                         gym: log.gym || '',
                         notes: log.notes || '',
                         matchedExNotes,
+                        matchedExerciseLines,
                         exercises: log.exercises || []
                     });
                 }
             });
 
             // 3. Matched Fonts & Typography
-            const matchedFonts = Object.keys(FONT_PRESETS).filter(key => {
+            const matchedFonts = queryGym ? [] : Object.keys(FONT_PRESETS).filter(key => {
                 const p = FONT_PRESETS[key];
                 return q.includes('font') || q.includes('typo') || q.includes('theme') || key.includes(q) || p.name.toLowerCase().includes(q);
             });
@@ -4828,7 +5015,7 @@
                     <div style="text-align:center; padding:2.5rem 1rem; color:var(--text-muted);">
                         <i data-lucide="search-x" style="width:36px;height:36px;opacity:0.4;margin-bottom:0.6rem;"></i>
                         <h4 style="margin:0 0 0.25rem 0; color:var(--text);">No results found for "${escapeHtml(rawQuery)}"</h4>
-                        <p style="font-size:0.8rem; margin:0 0 1rem 0;">Try searching for an exercise name (e.g. "Pull-up"), a split (e.g. "Push"), a date, or a font style.</p>
+                        <p style="font-size:0.8rem; margin:0 0 1rem 0;">Try an exercise name (e.g. "Pull-up"), a split (e.g. "Push"), a gym (e.g. "Push at Iron Works"), a date, or a font style.</p>
                         <button class="btn btn-sm" onclick="clearSearchInput()">Clear Search</button>
                     </div>
                 `;
@@ -4837,6 +5024,14 @@
             }
 
             let resultsHTML = '';
+
+            if (queryGym) {
+                resultsHTML += `
+                    <div class="flex items-center justify-between" style="gap:0.5rem; padding:0.55rem 0.75rem; margin-bottom:0.85rem; background:rgba(20,184,166,0.1); border:1px solid rgba(20,184,166,0.3); border-radius:var(--radius-tight); font-size:0.8rem;">
+                        <span><i data-lucide="map-pin" style="width:13px;height:13px;vertical-align:middle;margin-right:0.25rem;color:#14b8a6;"></i>Showing sessions at <strong>${escapeHtml(queryGym)}</strong>${term ? ` matching "<strong>${escapeHtml(term)}</strong>"` : ''}</span>
+                        <button class="btn btn-sm" data-g="${attrEsc(queryGym)}" onclick="selectSearchPreset('gym', this.dataset.g)" style="padding:0.2rem 0.55rem; font-size:0.72rem; flex-shrink:0;">Gym view</button>
+                    </div>`;
+            }
 
             // Render Font Options Section
             if (matchedFonts.length > 0) {
@@ -4918,12 +5113,14 @@
                     </div>
                     <div>
                 `;
-                matchedWorkouts.slice(0, 10).forEach(log => {
+                matchedWorkouts.slice(0, queryGym ? 25 : 10).forEach(log => {
                     const [y, m, d] = log.date.split('-').map(Number);
                     const formattedDate = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(y, m - 1, d));
                     
                     let noteSnippet = '';
-                    if (log.notes) {
+                    if (log.matchedExerciseLines && log.matchedExerciseLines.length) {
+                        noteSnippet = log.matchedExerciseLines.map(l => `<div style="font-size:0.75rem; color:var(--text); margin-top:0.15rem;">🏋️ ${escapeHtml(l)}</div>`).join('');
+                    } else if (log.notes) {
                         noteSnippet = `<div style="font-size:0.75rem; color:var(--text); margin-top:0.15rem;">📝 "${escapeHtml(log.notes)}"</div>`;
                     } else if (log.matchedExNotes) {
                         noteSnippet = `<div style="font-size:0.75rem; color:var(--primary); margin-top:0.15rem;">💬 ${escapeHtml(log.matchedExNotes)}</div>`;
